@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Registry (реестр)</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li class="active"><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drugoe/registry-reestr/" rel="bookmark"
+           title="Permalink to Registry (реестр)">Registry (реестр)</a></h1>
+<a href="http://twitter.com/share" class="twitter-share-button" data-width="80" data-count="horizontal" data-via="dizballanze" style="display:inline-block;">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+<div class="fb-like" data-send="false" data-layout="button_count" data-width="110" data-show-faces="true" data-font="trebuchet ms" style="display:inline-block;"></div>
+
+<g:plusone size="medium" width="110" height="22" annotation="inline"></g:plusone>
+
+<script type="text/javascript">
+window.___gcfg = {
+lang: 'en-US'
+  };
+
+  (function() {
+var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+po.src = 'https://apis.google.com/js/plusone.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+})();
+</script>
+
+<!-- Put this script tag to the <head> of your page -->
+<script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+<script type="text/javascript">
+  VK.init({apiId: 2478358, onlyWidgets: true});
+</script>
+
+<!-- Put this div tag to the place, where the Like block will be -->
+<div id="vk_like" style="display: inline-block; width: 110px;"></div>
+<script type="text/javascript">
+VK.Widgets.Like("vk_like", {type: "button"});
+</script>    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-02-28T21:38:00+03:00">
+                пн 28 февраля 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/global-variables/">global variables</a><a href="/tag/interfaces/">interfaces</a><a href="/tag/json/">json</a><a href="/tag/magic-methods/">magic methods</a><a href="/tag/php/">PHP</a><a href="/tag/registry/">registry</a><a href="/tag/serialize/">serialize</a><a href="/tag/singleton/">singleton</a><a href="/tag/oop/">ООП</a><a href="/tag/patterny-proektirovaniia/">Паттерны проектирования</a></p>
+</footer><!-- /.post-info -->      <p><img alt="registry" src="/media/2011/02/Windows-7-Registry-Tricks-150x150.jpg" title="registry" /></p>
+<p>Рассмотрим паттерн проектирования - реестр. Данный паттерн является
+чем-то вроде безопасной замены глобальных переменных. При помощи данного
+шаблона вы сможете обмениваться данными в многоуровневом приложении.</p>
+<h2>Описание</h2>
+<p>Наверное все сложные системы являются многоуровневыми, иначе мы бы
+просто не смогли уследить за всеми зависимостями и связями внутри
+системы. Разбивая систему на независимые уровни обменивающиеся данными
+только через строго определённый интерфейс мы получаем возможность
+менять реализацию отдельных уровней не опасаясь потерять
+работоспособность системы. Но при этом мы получаем ряд ограничений,
+главным из которых является сложность реализации обмена данными между не
+смежными уровнями. Вот тут-то мы и вспоминаем о том, как хорошо было
+использовать глобальные переменные и не заботится о том, что-бы данные
+были доступны в определённом месте приложения. Но т.к. причины отказа от
+использования глобальных переменных были более чем серьёзными нам нужно
+искать другое решение проблемы.</p>
+<p>К счастью мы не первые, кто столкнулся с подобной проблемой. Решение уже
+было найдено и им является - паттерн Registry. Данный паттерн
+представляет собой класс, который хранит в себе некоторые данные (часто
+объекты, но не обязательно) и предоставляет к ним доступ через
+статические методы или как шаблон <a href="/PHP/singleton-odinochka/">одиночка</a>. Т.к. получить доступ к
+такому классу можно из любой точки приложения, то мы получаем все
+преимущества глобальных переменных без некоторых их недостатков. Теперь,
+например, вы не сможете случайно затереть важные данные, т.к. это может
+произойти с глобальными переменными.</p>
+<h2>Реализация</h2>
+<p>Типичным примером паттерна реестр является объект хранящий параметры
+системы в виде древовидной структуры. Т.к. доступ к конфигурациям
+системы может потребоваться на любом уровне приложения, то мы можем
+воспользоваться паттерном реестр. Обеспечив единою точку для доступа к
+параметрам мы получаем дополнительные преимущества, например, мы
+перестаем зависеть от способа хранения конфигураций и можем легко
+перейти от хранения параметров в ini-файле к хранению в БД или в
+memcache. Итак, реализуем такой класс на языке php:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="sd">/**</span>
+<span class="sd"> * Интерфейс загрузчиков ресурсов, отвечает за загрузку ресурсов из хранилища, </span>
+<span class="sd"> * должен возвращать массив параметров</span>
+<span class="sd"> */</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Loader</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">load</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="sd">/**</span>
+<span class="sd"> * Класс загрузчик параметров из файла содержащего сериализованные данные</span>
+<span class="sd"> */</span>
+<span class="k">class</span> <span class="nc">Serialize_File_Loader</span> <span class="k">extends</span> <span class="nx">Loader</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="nb">strlen</span><span class="p">(</span><span class="nv">$path</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Должен быть указан путь к файлу с параметрами в формате сериализавонного массива php&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span> <span class="o">=</span> <span class="nv">$path</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">load</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">file_exists</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_readable</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Файл не существует или его невозможно считать&#39;</span><span class="p">);</span>
+        <span class="nv">$array</span> <span class="o">=</span> <span class="nb">unserialize</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">));</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$array</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$array</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Некорректный формат файла&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nv">$array</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="sd">/**</span>
+<span class="sd"> * Класс загрузчик параметров из файла содержащего данные в формате JSON</span>
+<span class="sd"> */</span>
+<span class="k">class</span> <span class="nc">JSON_File_Loader</span> <span class="k">extends</span> <span class="nx">Loader</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="nb">strlen</span><span class="p">(</span><span class="nv">$path</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Должен быть указан путь к файлу с параметрами в формате JSON&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span> <span class="o">=</span> <span class="nv">$path</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">load</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">file_exists</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_readable</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Файл не существует или его невозможно считать&#39;</span><span class="p">);</span>
+        <span class="nv">$array</span> <span class="o">=</span> <span class="nb">json_decode</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">),</span> <span class="k">true</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$array</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$array</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Некорректный формат файла&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nv">$array</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">Parameters_Registry</span> <span class="k">implements</span> <span class="nx">Countable</span><span class="p">,</span> <span class="nx">Iterator</span><span class="p">{</span>
+    <span class="sd">/**</span>
+<span class="sd">     * Собственно данные</span>
+<span class="sd">     * @var array</span>
+<span class="sd">     */</span>
+    <span class="k">protected</span> <span class="nv">$data</span> <span class="o">=</span> <span class="k">array</span><span class="p">();</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Статическая переменная - ссылается на экземпляр данного класса</span>
+<span class="sd">     * @var type </span>
+<span class="sd">     */</span>
+    <span class="k">static</span> <span class="k">protected</span> <span class="nv">$instance</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Метод инициализации, необходимо запускать перед началом работы</span>
+<span class="sd">     * @param Loader $loader - загрузчик параметров</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">init</span><span class="p">(</span><span class="nx">Loader</span> <span class="nv">$loader</span><span class="p">){</span>
+        <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parameters_Registry</span><span class="p">(</span><span class="nv">$loader</span><span class="o">-&gt;</span><span class="na">load</span><span class="p">());</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Реализуем паттерн Singleton</span>
+<span class="sd">     * @return type </span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">getInstance</span><span class="p">(){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">is_null</span><span class="p">(</span><span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">))</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Реест должен быть инициализирован перед использованием!&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Закрытый конструктор, необходим для реализации Singleton</span>
+<span class="sd">     * @param array $data </span>
+<span class="sd">     */</span>
+    <span class="k">protected</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="k">Array</span> <span class="nv">$data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span> <span class="o">=</span> <span class="nv">$data</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Магические методы и реализация интерфейсов</span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__get</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">)){</span>
+            <span class="nb">trigger_error</span><span class="p">(</span><span class="s1">&#39;Неизвестный параметр: &#39;</span> <span class="o">.</span> <span class="nv">$name</span><span class="p">,</span> <span class="nx">E_USER_NOTICE</span><span class="p">);</span>
+            <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">];</span>
+        <span class="c1">// Если массив, то создаём ещё один экземпляр класса параметров, инициализируем</span>
+        <span class="c1">// его данными этого массива, ставим на его место в массиве данных</span>
+        <span class="c1">// и возвращаем.</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parameters_Registry</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]);</span> <span class="c1">// %)</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__set</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$value</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$value</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">count</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nb">count</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__isset</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nb">isset</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__unset</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">))</span>
+            <span class="nb">unset</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">rewind</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nb">reset</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">current</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$key</span> <span class="o">=</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">__get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">key</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">next</span><span class="p">(){</span>
+        <span class="nb">next</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+        <span class="nv">$key</span> <span class="o">=</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">__get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">valid</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$key</span> <span class="o">=</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
+        <span class="k">return</span> <span class="p">((</span><span class="k">false</span> <span class="o">!==</span> <span class="nv">$key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="k">null</span> <span class="o">!==</span> <span class="nv">$key</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Вот собственно полная иерархия классов необходимых для того, что-бы раз
+и на всегда решить ваши проблемы с доступом к конфигурациям ;). А если
+серьезно, то у нас есть иерархия классов наследующих Loader, они
+отвечают за загрузку данных из внешних источников и должны возвращать
+массив. Также у нас есть класс Parameters_Registry, который отвечает за
+предоставление глобального доступа к параметрам. На первый взгляд он
+является реализацией шаблона Одиночка, но это не совсем так, для
+реализации "цепочек" запросов к иерархии я создаю ещё экземпляры данного
+класса, но только для внутреннего использования. В глобальной области
+видимости осуществляется доступ только к одному объекту, который
+создается при вызове статического метода init. Я добавил в этот класс
+несколько полезных функций:</p>
+<ul>
+<li>Интерфейс Iterator - позволяет перебирать объект, как массив при
+    помощи foreach и функций для работы с массивами</li>
+<li>Интерфейс Countable - позволяет вычислять количество параметров при
+    помощи функции count</li>
+<li>Chaining - для доступа к определённым элементам иерархии, как к
+    свойствам объекта</li>
+</ul>
+<p>Я уверен, что Вы без проблем придумаете новый, нужный вам функционал.
+Например вы можете добавить другие типы Loader'ов или расширите
+функционал реестра.</p>
+<p>Теперь давайте протестируем полученные классы и разберемся с тем как же
+можно их использовать. Генерируем тесты:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// Готовим данные для тестирования</span>
+<span class="nv">$array</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
+    <span class="s1">&#39;db&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
+        <span class="s1">&#39;db_name&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;test_db&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;db_host&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;db_port&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;3301&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;db_type&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;MySQL&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;db_pass&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;ololo&#39;</span>
+    <span class="p">),</span>
+    <span class="s1">&#39;test&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
+        <span class="s1">&#39;test2&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
+            <span class="s1">&#39;test3&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
+                <span class="s1">&#39;last_one&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;Фааааак йеееех ;[&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">);</span>
+<span class="nb">file_put_contents</span><span class="p">(</span><span class="s1">&#39;test.ser&#39;</span><span class="p">,</span> <span class="nb">serialize</span><span class="p">(</span><span class="nv">$array</span><span class="p">));</span>
+<span class="nb">file_put_contents</span><span class="p">(</span><span class="s1">&#39;test.json&#39;</span><span class="p">,</span> <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$array</span><span class="p">));</span>
+</pre></div>
+
+
+<p>Первый тест:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nx">Parameters_Registry</span><span class="o">::</span><span class="na">init</span><span class="p">(</span><span class="k">new</span> <span class="nx">JSON_File_Loader</span><span class="p">(</span><span class="s1">&#39;test.json&#39;</span><span class="p">));</span>
+<span class="nv">$registry</span> <span class="o">=</span> <span class="nx">Parameters_Registry</span><span class="o">::</span><span class="na">getInstance</span><span class="p">();</span>
+<span class="k">echo</span> <span class="nb">count</span><span class="p">(</span><span class="nv">$registry</span><span class="o">-&gt;</span><span class="na">db</span><span class="p">)</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="nv">$registry</span><span class="o">-&gt;</span><span class="na">db</span> <span class="k">as</span> <span class="nv">$key</span><span class="o">=&gt;</span><span class="nv">$value</span><span class="p">){</span>
+    <span class="k">echo</span> <span class="nv">$key</span> <span class="o">.</span> <span class="s1">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$value</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Здесь я демонстрирую Countable и Iterator. В результате выполнения
+предыдущего теста получим следующее:</p>
+<div class="highlight"><pre>5
+db_name:test_db
+db_host:localhost
+db_port:3301
+db_type:MySQL
+db_pass:ololo
+</pre></div>
+
+
+<p>Второй тест:</p>
+<div class="highlight"><pre><span class="x">Parameters_Registry::init(new Serialize_File_Loader(&#39;test.ser&#39;));</span>
+<span class="x">$registry = Parameters_Registry::getInstance();</span>
+<span class="x">echo $registry-&gt;test-&gt;test2-&gt;test3-&gt;last_one;</span>
+</pre></div>
+
+
+<p>Здесь вы можете увидеть, как работает chaining. Результат:</p>
+<div class="highlight"><pre>Фааааак йеееех ;[
+</pre></div>
+
+
+<h2>Заключение</h2>
+<p>В заключении подведем итог всему вышеизложенному. Паттерн Registry
+позволяет нам получать доступ к необходим данным на различных уровнях
+приложения, предоставляя единую точку доступа для всех уровней. Таким
+образом мы используем более корректный вариант глобальных переменных,
+который НЕ будет случайно перезаписан, НЕ засоряет глобальную область
+видимости, НЕ будет иметь риск слишком поздней инициализации и тд. Но
+т.к. этот паттерн все таки имеет глобальную точку доступа, он добавляет
+некоторую степень связанности, поэтому его следует использовать только
+тогда, когда без него не обойтись. В общем если вы не будете им
+злоупотреблять, то он сделает ваше приложение более прозрачным и более
+простым в расширении за счёт отсутствия необходимости в постоянной
+передачи глобальных параметров от объекта к объекту. Спасибо всем, кто
+дочитал, подписывайтесь на RSS, оставляйте свои комментарии!</p>
+    </div><!-- /.entry-content -->
+    <div class="comments">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_identifier = "drugoe/registry-reestr/";
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://dizballanze.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+    </div>
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

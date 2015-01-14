@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Очередь сообщений на node.js и memcacheq</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li class="active"><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/nodejs/ochered-soobshchenii-na-nodejs-i-memcacheq/" rel="bookmark"
+           title="Permalink to Очередь сообщений на node.js и memcacheq">Очередь сообщений на node.js и memcacheq</a></h1>
+<a href="http://twitter.com/share" class="twitter-share-button" data-width="80" data-count="horizontal" data-via="dizballanze" style="display:inline-block;">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+<div class="fb-like" data-send="false" data-layout="button_count" data-width="110" data-show-faces="true" data-font="trebuchet ms" style="display:inline-block;"></div>
+
+<g:plusone size="medium" width="110" height="22" annotation="inline"></g:plusone>
+
+<script type="text/javascript">
+window.___gcfg = {
+lang: 'en-US'
+  };
+
+  (function() {
+var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+po.src = 'https://apis.google.com/js/plusone.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+})();
+</script>
+
+<!-- Put this script tag to the <head> of your page -->
+<script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+<script type="text/javascript">
+  VK.init({apiId: 2478358, onlyWidgets: true});
+</script>
+
+<!-- Put this div tag to the place, where the Like block will be -->
+<div id="vk_like" style="display: inline-block; width: 110px;"></div>
+<script type="text/javascript">
+VK.Widgets.Like("vk_like", {type: "button"});
+</script>    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-10-07T23:24:00+04:00">
+                пт 07 октября 2011
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/memcacheq/">memcacheq</a><a href="/tag/nodejs/">node.js</a><a href="/tag/php/">PHP</a><a href="/tag/ochered-soobshchenii/">очередь сообщений</a></p>
+</footer><!-- /.post-info -->      <p>Привет! Столкнулся с необходимостью использования очередей сообщений в
+текущем проекте. Знаю что есть готовые решения, но я все же решил
+написать свой небольшой велосипед. Итак, поехали...</p>
+<h2>Описание</h2>
+<p><img alt="scheme" src="/media/2011/10/png" /></p>
+<p>В поставленной передо мной задаче необходимо выполнять ресурсоемкие
+операции (такие как работа с сетью, декодирование mp3-файлов), а также
+обращаться к бизнес-логике приложения для потока входных данных.
+Приложение написано на php, поэтому очевидно что удобнее всего писать
+worker'ы на этом языке в виде cli скриптов. В моем случае это сделать
+очень просто, т.к. в проекте используется yii, а в нем есть
+замечательная поддержка написания консольных команд при этом можно
+использовать весь код бизнес-логики используемый в основном приложении.</p>
+<p>Для реализации хранения заданий отличным решением стало memcacheq.
+Memcacheq - это сервис поддержки очередей с использованием api
+memcached. Подробнее узнать о том что это за зверь можете на <a href="http://memcachedb.org/memcacheq/">офф.
+сайте</a>. Стоит отметить что в связи с использованием BerkleyDB в
+memcacheq есть ограничение на размер сообщения в очереди, которое
+составляет около 64Кб, если для вас этого мало, то стоит подумать о
+другом решении.</p>
+<p>Также потребуется менеджер очереди, который будет контролировать работу
+воркеров (порождать, отслеживать статус выполнения, получать
+результаты). Очевидно что менеджер должен работать постоянно и
+периодически проверять нет ли новых заданий. Для реализации менеджера я
+выбрал Node.js, как мне кажется это очень подходящая технология для этих
+целей. В основном выбор пал на node из-за его асинхронности, возможности
+легко и быстро написать демон, который будет вписываться в архитектуру
+проекта и также на меня повлиял предыдущий опыт работы с данной
+технологией, который оставил в основном положительные впечатления.</p>
+<h2>Реализация</h2>
+<p>На данном этапе у вас уже должен быть настроен и запущен memcacheq,
+установлен nodejs. Также нам понадобиться модуль nodejs под названием
+memcached. Установить его можно следующей командой:</p>
+<div class="highlight"><pre>npm install memcached
+</pre></div>
+
+
+<p>Основные составляющие части менеджера очереди:</p>
+<ul>
+<li>Бесконечный цикл опроса очереди на наличие заданий. При этом также в
+    цикле должна проводиться проверка на состояние запущенных worker'ов.
+    Т.к. мы не можем себе позволить создание worker'ов в таком
+    количестве в котором доступны задания, то нам необходимо ввести
+    ограничение на количество одновременно обрабатываемых заданий. В
+    данном цикле перед созданием новых потоков проверяется наличие
+    свободного места, т.е. worker создается только в случае если
+    количество текущих worker'ов меньше установленного ограничения.</li>
+<li>Объект worker'а - представляет из себя оболочку над процессом
+    worker'а и хранит его состояние.</li>
+<li>Создание worker'а - процесс инициализации объекта worker'а на основе
+    данных полученных от memcacheq</li>
+<li>Мониторинг. Для отслеживания состояния выполнения заданий создадим
+    web-сервер который будет отвечать информацией о текущем статусе
+    выполнения каждого выполняемого worker'а.</li>
+<li>Т.к. в моя задача связанна с передачей большого объема данных, то
+    появилось необходимость ввести поправку на возможную ошибку передачи
+    данных. Это подразумевает повторное занесение задания в очередь в
+    случае если worker вернет ошибку передачи, которая может быть
+    определена проверкой контрольной суммы передаваемых данных.</li>
+</ul>
+<p>Теперь собственно исходный код:</p>
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;util&#39;</span><span class="p">),</span>
+    <span class="nx">exec</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">exec</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Memcached</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./lib/memcached.js&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">memcached</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcached</span><span class="p">(</span><span class="s1">&#39;127.0.0.1:22201&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">maxValue</span><span class="o">:</span><span class="mi">65000</span><span class="p">,</span> <span class="nx">reconnect</span><span class="o">:</span><span class="mi">2000</span><span class="p">,</span> <span class="nx">retry</span><span class="o">:</span><span class="mi">1000</span><span class="p">,</span> <span class="nx">timeout</span><span class="o">:</span><span class="mi">10000</span><span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">creating</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">workers_count</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">transmit_error_retry_count</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">workers</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">var</span> <span class="nx">tasks</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">var</span> <span class="nx">transmit_errors</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">var</span> <span class="nx">command_line</span> <span class="o">=</span> <span class="s1">&#39;/path/to/worker/script&#39;</span><span class="p">;</span>
+
+<span class="c1">// Возможные состояния процесса</span>
+<span class="kd">var</span> <span class="nx">WORKER_SUCCESS_DONE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">WORKER_TRANSMIT_ERROR</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nx">WORKER_CRITICAL_ERROR</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">WORKER_IN_WORKING_PROCESS</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+<span class="c1">// Функция выполняемая в бесконечном цикле</span>
+<span class="kd">function</span> <span class="nx">check_feeds</span><span class="p">(){</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="k">in</span> <span class="nx">workers</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">==</span> <span class="nx">WORKER_SUCCESS_DONE</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">undefined</span><span class="p">)</span>
+                <span class="k">delete</span> <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">delete</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">delete</span> <span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">==</span> <span class="nx">WORKER_TRANSMIT_ERROR</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">==</span> <span class="kc">undefined</span><span class="p">)</span>
+                <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="k">else</span>
+                <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nx">transmit_error_retry_count</span><span class="p">)</span>
+                <span class="nx">push_back</span><span class="p">(</span><span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="k">else</span><span class="p">{</span>
+                <span class="k">delete</span> <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+                <span class="k">delete</span> <span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="p">}</span>
+            <span class="k">delete</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">!=</span> <span class="nx">WORKER_IN_WORKING_PROCESS</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">undefined</span><span class="p">)</span>
+                <span class="k">delete</span> <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">delete</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Если есть свободные места вызываем функцию</span>
+    <span class="c1">// создающую worker&#39;ов</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">creating</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">obj_count</span><span class="p">(</span><span class="nx">workers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nx">workers_count</span><span class="p">))</span>
+        <span class="nx">create_worker</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">// Возвращение задания в очередь</span>
+<span class="kd">function</span> <span class="nx">push_back</span><span class="p">(</span><span class="nx">task</span><span class="p">){</span>
+    <span class="nx">memcached</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="nx">task</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Функция выполняющая создание новых worker&#39;ов</span>
+<span class="kd">function</span> <span class="nx">create_worker</span><span class="p">(){</span>
+    <span class="nx">creating</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="nx">memcached</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">)</span>
+            <span class="nx">creating</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">else</span><span class="p">{</span>
+            <span class="nx">check_feeds</span><span class="p">();</span>
+            <span class="nx">work</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+            <span class="nx">tasks</span><span class="p">[</span><span class="nx">work</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nx">work</span><span class="p">;</span>
+            <span class="nx">workers</span><span class="p">[</span><span class="nx">work</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Worker</span><span class="p">(</span><span class="nx">work</span><span class="p">);</span>
+            <span class="c1">// Если все ещё есть свободные места</span>
+            <span class="c1">// то делаем рекурсивный вызов</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">obj_count</span><span class="p">(</span><span class="nx">workers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nx">workers_count</span><span class="p">){</span>
+                <span class="nx">create_worker</span><span class="p">();</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="nx">creating</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="c1">// Конструктор объекта worker&#39;а</span>
+<span class="kd">function</span> <span class="nx">Worker</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">WORKER_IN_WORKING_PROCESS</span><span class="p">;</span>
+
+    <span class="c1">// Здесь можно сформировать </span>
+    <span class="c1">// параметры командной строки</span>
+    <span class="kd">var</span> <span class="nx">params</span><span class="p">;</span>
+
+    <span class="nx">exec</span><span class="p">(</span><span class="nx">command_line</span> <span class="o">+</span> <span class="nx">params</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+            <span class="nx">workers</span><span class="p">[</span><span class="nx">id</span><span class="p">].</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">WORKER_CRITICAL_ERROR</span><span class="p">;</span>
+        <span class="k">else</span>
+            <span class="nx">workers</span><span class="p">[</span><span class="nx">id</span><span class="p">].</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">check_feeds</span><span class="p">();</span>
+<span class="p">},</span> <span class="mi">100</span><span class="p">);</span>
+
+<span class="c1">// Monitoring server</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">});</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="k">in</span> <span class="nx">workers</span><span class="p">){</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">i</span> <span class="o">+</span><span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">+</span> <span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">// Для того чтобы заработал след. код</span>
+    <span class="c1">// необходимо внести изменения</span>
+    <span class="c1">// в модуль memcache (см. ниже)</span>
+    <span class="nx">memcached</span><span class="p">.</span><span class="nx">queue</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s1">&#39;Queue:&#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8080</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">);</span>
+
+<span class="c1">// Stuff</span>
+<span class="kd">function</span> <span class="nx">obj_count</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">j</span> <span class="k">in</span> <span class="nx">obj</span><span class="p">)</span> <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">i</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Для того чтобы корректно обрабатывать статусы выполнения задания
+worker'ы должны возвращать определенные заранее значения. В моем случае
+worker может вернуть одно из 3х состояний обозначенных в начале
+исходного кода.</p>
+<p>Также стоит отметить, что для реализации отображения количества задач в
+очереди memcacheq необходимо выполнить запрос stats queue, но модуль
+memcached по всей видимости его не поддерживает. По-этому я внес
+небольшие дополнения чтобы реализовать данный функционал. Исходный код
+модуля доступен <a href="http://pastebin.com/MgSFU6Gb">по ссылке</a>.</p>
+<h2>In the end..</h2>
+<p>Стоит заметить, что при помощи подобной организации системы вы сможете
+распараллелить ресурсоемкие вычисления. Особенно это удобно, когда вам
+необходимо обращаться к бизнес-логике написанной, например, на PHP. В
+завершении хочу добавить что полученная система очереди сообщений сильно
+направленная на реализацию поставленной передо мной задачи. Но я считаю,
+что вы без проблем сможете доработать код для реализации нужного вам
+функционала. Спасибо за внимание, буду рад ответить на возникшие
+вопросы.</p>
+    </div><!-- /.entry-content -->
+    <div class="comments">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_identifier = "nodejs/ochered-soobshchenii-na-nodejs-i-memcacheq/";
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://dizballanze.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+    </div>
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Паттерны проектирования в PHP</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li class="active"><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drugoe/patterny-proektirovaniia-v-php/" rel="bookmark"
+           title="Permalink to Паттерны проектирования в PHP">Паттерны проектирования в PHP</a></h1>
+<a href="http://twitter.com/share" class="twitter-share-button" data-width="80" data-count="horizontal" data-via="dizballanze" style="display:inline-block;">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+<div class="fb-like" data-send="false" data-layout="button_count" data-width="110" data-show-faces="true" data-font="trebuchet ms" style="display:inline-block;"></div>
+
+<g:plusone size="medium" width="110" height="22" annotation="inline"></g:plusone>
+
+<script type="text/javascript">
+window.___gcfg = {
+lang: 'en-US'
+  };
+
+  (function() {
+var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+po.src = 'https://apis.google.com/js/plusone.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+})();
+</script>
+
+<!-- Put this script tag to the <head> of your page -->
+<script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+<script type="text/javascript">
+  VK.init({apiId: 2478358, onlyWidgets: true});
+</script>
+
+<!-- Put this div tag to the place, where the Like block will be -->
+<div id="vk_like" style="display: inline-block; width: 110px;"></div>
+<script type="text/javascript">
+VK.Widgets.Like("vk_like", {type: "button"});
+</script>    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-01-02T16:43:00+03:00">
+                вс 02 января 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/php.html">PHP</a><a href="/tag/oop.html">ООП</a><a href="/tag/patterny-proektirovaniia.html">Паттерны проектирования</a></p>
+</footer><!-- /.post-info -->      <p>Здравствуйте, товарищи программисты!</p>
+<p>Данным топиком я открываю цикл статей про паттерны(шаблоны)
+проектирования в общем и их реализацию на php в частном. Каждый
+программист, который разрабатывает действительно масштабные проекты со
+временем начинает замечать, что сталкивается с одними и теми же
+проблемами. Здесь речь идет не о использовании библиотек и фреймворков,
+а о проблемах, которые возникают при проектировании совершенно различных
+программных продуктов. К таким проблемам можно отнести организацию
+правильных иерархий классов, которая позволила бы масштабировать
+систему, как горизонтально так и вертикально или например замену
+глобальных переменных объектом, который инкапсулирует доступ к данным.
+Каждый раз приходится придумывать решения этих проблем, что приводит к
+трате драгоценного времени, которое можно посвятить более приятным
+занятиям. Наверняка вы не первый сталкиваетесь с данными проблемами,
+соответственно кто-то уже придумал оптимальное решения и почему бы им не
+воспользоваться. Паттерны проектирования - это как раз таки решения этих
+часто возникающих проблем проектирования. Шаблон проектирование не
+подразумевает конкретную реализацию кода, т.к. они являются по своей
+природе универсальными и могут быть реализованы практически в любом
+современном объектно-ориентированном языке программирования. Но в
+зависимости от используемого языка программирования могут быть свои
+особенности, поэтому я буду реализовывать небольшие примеры на php.
+Кроме того на примере всегда проще разбираться.</p>
+<p>Архитекторы первыми додумались использовать паттерны для своих
+архитектурных целей. Программисты же начали использовать шаблоны с
+развитием ООП и соответственно с появлением возможности более удобного
+повторного использования написанного кода. Наиболее авторитетными
+авторами являются так называемая банда четырех -</p>
+<p>это группа, которая написала книгу "Design Patterns" и описала в ней
+основные шаблоны проектирования.</p>
+<h2>Шаблоны проектирования в PHP</h2>
+<p>PHP начал своё развитие с небольшой библиотеки написанной на perl,
+основной функцией которой являлась обработка форм. Но с тех времён
+многое изменилось и сейчас php является очень мощным инструментом для
+написания приложений любого масштаба. Пусть для некоторых он так и
+останется надстройкой над html, но эти люди сами себя ограничивают, т.к.
+отрицать несомненного лидера в области web-разработки по крайней мере
+нерозумно.</p>
+<p>Начиная с 4 версии php приобрел объектно-ориентированные возможности.
+Конечно тогда были свои недостатки, например передача объектов по
+значению, является мягко говоря спорным решением, но тем не менее писать
+ООП приложения уже было возможно. Именно тогда программисты своей
+активностью в данном направлении положили путь развития PHP, как
+объектно-ориентированного языка программирования. В пятой версии были
+добавлены новые функции:</p>
+<ul>
+<li>контроль типа</li>
+<li>передача объектов по ссылке</li>
+<li>ключевое слово static</li>
+<li>Ключевое слово final</li>
+<li>Автоматическая загрузка объектов</li>
+<li>Константы в объектах</li>
+<li>Абстрактные классы</li>
+<li>Интерфейсы</li>
+<li>Магические методы</li>
+<li>Клонирование объектов</li>
+</ul>
+<p>Всё это благодаря использованию движка Zend Engine 2.</p>
+<p>Как вы видите в PHP 5 есть все необходимые средства для написания
+объектно-ориентированных программ и соответственно использования
+шаблонов проектирования. В следующих топиках данного цикла я постараюсь
+рассмотреть основные шаблоны проектирования и их реализацию с учётом
+особенностей нашего любимого языка - PHP :)</p>
+<h2>Навигация по циклу:</h2>
+<ul>
+<li>
+<p>Базовые шаблоны</p>
+<ul>
+<li><a href="/PHP/gateway-shliuz/">Gateway (шлюз)</a></li>
+<li><a href="/PHP/special-case-osobyi-sluchai/">Special Case (особый случай)</a></li>
+</ul>
+</li>
+<li>
+<p>Шаблоны генерации объектов</p>
+<ul>
+<li><a href="/PHP/singleton-odinochka/">Singleton (одиночка)</a></li>
+<li><a href="/PHP/factory-method-fabrichnyi-metod/">Factory Method (фабричный метод)</a></li>
+<li><a href="/PHP/abstract-factory-abstraktnaia-fabrika/">Abstract Factory (абстрактная фабрика)</a></li>
+<li><a href="/PHP/prototype-prototip/">Prototype (прототип)</a></li>
+<li><a href="/PHP/builder-stroitel/">Builder (строитель)</a></li>
+<li><a href="/PHP/lazy-initialization-otlozhennaia-initsializatsiia/">Lazy Initialization (отложенная инициализация)</a></li>
+</ul>
+</li>
+<li>
+<p>Шаблоны корпоративных приложений</p>
+<ul>
+<li><a href="/PHP/registry-reestr/">Registry (реестр)</a></li>
+</ul>
+</li>
+</ul>
+    </div><!-- /.entry-content -->
+    <div class="comments">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_identifier = "drugoe/patterny-proektirovaniia-v-php/";
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://dizballanze.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+    </div>
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

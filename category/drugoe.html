@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Tech blog by @dizballanze - Другое</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li class="active"><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+        
+        
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/drugoe/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/">Функциональное тестирование Yii приложений с Selenium</a></h1> 
+<footer class="post-info">
+        <abbr class="published" title="2012-04-04T02:31:00+04:00">
+                ср 04 апреля 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/functional-testing/">functional testing</a><a href="/tag/selenium/">selenium</a><a href="/tag/testing/">testing</a><a href="/tag/yii/">yii</a></p>
+</footer><!-- /.post-info --><p><img alt="selenium" src="/media/2012/04/big-logo.png" title="selenium-logo" /></p>
+<p>В последних проектах активно использую Selenium для функционального
+тестирования. В процессе написания тестов столкнулся с несколькими
+подводными камнями и в данном посте хочу рассказать о том как с ними
+бороться. Я думаю пост будет полезен тем, кто только начал использовать
+Selenium, в том числе для тестирования Yii приложений. Итак, поехали...</p>
+<h2>Настраиваем Url Manager</h2>
+<p>Перед тем как начать написание тестов, нужно настроить приложение. Я
+заметил что на старте чаще всего сталкиваются с проблемой формирования
+корректных url для того, чтобы тесты работали правильно. Важным здесь
+является, то что все запросы должны идти через <code>index-test.php</code>. Таким
+образом мы добиваемся корректной инициализации тестового окружения,
+вместо config/main.php подгружается <code>config/test.php</code>.</p>
+<p>Если вы скрыли index.php в url, то нужно снова включить его отображение
+для тестового окружения. Для этого добавим в <code>config/test.php</code> в
+components следующие строки:</p>
+<div class="highlight"><pre><span class="x">&#39;urlManager&#39; =&gt; array(</span>
+<span class="x">    &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
+<span class="x">    &#39;showScriptName&#39; =&gt; true,</span>
+<span class="x">),</span>
+</pre></div>
+
+
+<p>При этом стоит отметить, что дублировать здесь все маршруты нет
+необходимости, т.к. yii сам корректным образом объединяет тестовые
+параметры с "боевыми" и все маршруты описанные в main.php останутся
+доступными в тестовом окружении.</p>
+<p>Для получения корректного uri нужно всегда использовать метод
+<code>Yii::app()-&gt;createUrl()</code>. Важно не забывать генерировать uri через
+данный метод для задания атрибута action форм, иначе вы рискуете
+провести много времени в борьбе с призраками в непонимании почему данные
+сохраняются не в тестовую БД, а в боевую.</p>
+<p>В тестах, для того чтобы всегда открывать правильный url, нужно также
+пользоваться <code>Yii::app()-&gt;createUrl()</code>. Например, так:
+<code>$this-&gt;open(Yii::app()-&gt;createUrl('/settings'));</code></p>
+<h2>Element locators</h2>
+<p>Практически во всех методах, которые предоставляет selenium api, первым
+аргументом принимается locator - строка, которая позволяет указать
+элемент DOM дерева с которым будет работать метод. Рассмотрим виды:</p>
+<ul>
+<li><code>id=:id</code> - выбираем атрибут с элементом id равным заданному
+    значению. Например: <code>$this-&gt;submitAndWait('id=reg-form');</code></li>
+<li><code>link=:textPattern</code> - выбираем ссылку с заданным текстом. Например:
+    <code>$this-&gt;clickAndWait('link=Войти');</code></li>
+<li><code>css=cssSelectorSyntax</code> - часто, наиболее удобный способ. Будет
+    знаком всем, кто любит jquery. Например:
+    <code>$this-&gt;assertElementContainsText('css=.sidebar-menu .sidebar-menu-sub sup', 'some text');</code></li>
+</ul>
+<p>Для того чтобы <em>проверить значение атрибута элемента</em>, нужно добавить к
+locator название атрибута после знака @, например:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertAttribute</span><span class="p">(</span><span class="s1">&#39;css=.sidebar-fb-list li:eq(0) img@alt&#39;</span><span class="p">,</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">getFullName</span><span class="p">());</span>
+</pre></div>
+
+
+<h2>Создание скриншотов</h2>
+<p>Часто после каких-то значительных изменений падает много тестов, т.к.
+скорость их выполнения не радует для облегчения отладки можно настроить
+selenium на создание скриншотов, после того как тест падает. Для этого
+достаточно добавить следующие строки в метод <code>WebTestCase::setUp():</code></p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// директория в которую будут сохранятся </span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">screenshotPath</span> <span class="o">=</span> <span class="s1">&#39;/var/www/report/&#39;</span><span class="p">;</span>
+<span class="c1">// Url, по которому доступна директория указанная в предыдущей строке</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">screenshotUrl</span> <span class="o">=</span> <span class="s2">&quot;http://localhost/report&quot;</span><span class="p">;</span>
+<span class="c1">// Включаем создание скриншотов</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">captureScreenshotOnFailure</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+</pre></div>
+
+
+<p>После этого скриншоты будут сохранятся в указанную директорию, а в
+терминале будет выводится ссылка, через которую можно будет быстро
+открыть определенный скриншот. Скриншоты можно создавать только в
+firefox, к сожалению webkit пока не поддерживается.</p>
+<h2>Выполнение javascript</h2>
+<p>Хотя Selenium и дает казалось бы все нужные средства для работы с
+браузером, но иногда его возможностей не хватает. В таких случаях можно
+подключить всю мощь клиентского javascript к нашим тестам. Например,
+так:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$items_count</span> <span class="o">=</span> <span class="p">(</span><span class="nx">int</span><span class="p">)</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getEval</span><span class="p">(</span><span class="s1">&#39;selenium.browserbot.getCurrentWindow().jQuery(&quot;.item&quot;).size()&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nx">Item</span><span class="o">::</span><span class="na">PER_PAGE</span><span class="p">,</span> <span class="nv">$items_count</span><span class="p">);</span>
+</pre></div>
+
+
+<h2>Избавляемся от появляющихся окон браузера</h2>
+<p>Для того чтобы избавится от надоедливых всплывающих окон браузера в
+linux можно использовать утилиту Xvfb. В интернете можно найти <a href="http://goo.gl/gmkj2">много
+подробных руководств</a> на эту тему.</p>
+<h2>Ожидание выполнения ajax-запросов</h2>
+<p>Если ваше приложение использует ajax, значит после инициации запроса,
+необходимо подождать его завершения, чтобы проверить, например,
+изменение какого-то блока на странице. Для этого добавим в класс
+WebTestCase метод:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">waitForAjax</span><span class="p">(){</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">waitForCondition</span><span class="p">(</span><span class="s1">&#39;selenium.browserbot.getCurrentWindow().jQuery.active == 0&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Естественно, что данное решение будет работать, только если вы
+используете jquery, но для других фреймворков, я думаю, не составит
+труда найти аналогичное решение. Пример использования:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">&#39;id=field&#39;</span><span class="p">,</span> <span class="nv">$value</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">click</span><span class="p">(</span><span class="s1">&#39;css=#ajax-form input[type=&quot;submit&quot;]&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">waitForAjax</span><span class="p">();</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">verifyElementPresent</span><span class="p">(</span><span class="s1">&#39;id=result-block &#39;</span><span class="p">,</span> <span class="nv">$value</span><span class="p">);</span>
+</pre></div>
+
+
+<h2>Боремся с дублированием кода</h2>
+<p>Часто будут встречаться повторяющиеся операции, например, аутентификация
+пользователя. Для того чтобы избежать дублирования, можно просто вынести
+общие для нескольких тестов алгоритмы в родительский класс
+(WebTestCase). Наример:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">login</span><span class="p">(){</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">open</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">createUrl</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">));</span>
+    <span class="nv">$user</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">users</span><span class="p">(</span><span class="s1">&#39;first_user&#39;</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">&#39;id=f_username&#39;</span><span class="p">,</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">user_name</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">&#39;id=f_password&#39;</span><span class="p">,</span> <span class="s1">&#39;111111&#39;</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">submitAndWait</span><span class="p">(</span><span class="s1">&#39;id=login-form&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nv">$user</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h2>Автодополнение</h2>
+<p>У меня автодополнение кода для методов selenium api работает не совсем
+корректно. Присутствуют не все методы, а те что присутствуют с
+некорректными аргументами. Для того чтобы было удобнее работать я
+добавил описание наиболее часто используемых мной методов в описание
+WebTestCase. В будущем планирую описать все методы, которые доступны и
+выложить здесь в блоге. Вот некоторые методы, может кому-то пригодится:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="sd">/**</span>
+<span class="sd"> * @method assertTextPresent($pattern)</span>
+<span class="sd"> * @method assertTextNotPresent($pattern)</span>
+<span class="sd"> * @method assertText($locator, $pattern)</span>
+<span class="sd"> * @method assertNotText($locator, $pattern)</span>
+<span class="sd"> * @method assertTitle($pattern)</span>
+<span class="sd"> * @method assertNotTitle($pattern)</span>
+<span class="sd"> * @method verifyElementPresent($locator)</span>
+<span class="sd"> * @method verifyElementNotPresent($locator)</span>
+<span class="sd"> * @method assertVisible($locator)</span>
+<span class="sd"> * @method assertNotVisible($locator)</span>
+<span class="sd"> * @method assertAttribute ($attributeLocator, $pattern)</span>
+<span class="sd"> */</span>
+</pre></div>
+
+
+<h2>P.S.</h2>
+<p>Для того чтобы ознакомится со всеми возможностями selenium api,
+рекомендую прочитать следующий док - <a href="http://release.seleniumhq.org/selenium-core/1.0.1/reference.html">selenium reference</a>. Если есть
+какие-то вопросы-дополнения-etc пишите в комментарии, постараюсь
+ответить.</p><p><a href="/drugoe/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/#disqus_thread">comments</a></p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Остальные статьи</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/yii-selenium-na-debian-6/" rel="bookmark"
+                           title="Permalink to Yii + Selenium на debian 6">Yii + Selenium на debian 6</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-03-08T23:07:00+04:00">
+                чт 08 марта 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/selenium.html">selenium</a><a href="/tag/yii.html">yii</a><a href="/tag/magiia.html">магия</a></p>
+</footer><!-- /.post-info -->                <p>Для функционального тестирования в Yii используется Selenium. На debian
+и ubuntu при запуске тестов выдается ошибка:</p>
+<div class="highlight"><pre>Result is neither &quot;true&quot; nor &quot;false&quot;: &#39;OR Server Exception: sessionId led to start new browser session: Browser not supported
+</pre></div>
+
+
+<p>В попытках решить данную проблему были испробованы чуть меньше чем все
+версии selenium и огромное ...</p>
+                <a class="readmore" href="/drugoe/yii-selenium-na-debian-6/">читать дальше</a>
+<p><a href="/drugoe/yii-selenium-na-debian-6/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/codeception-problema-s-russkimi-simvolami-v-utf-8/" rel="bookmark"
+                           title="Permalink to Codeception проблема с русскими символами в utf-8">Codeception проблема с русскими символами в utf-8</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-02-29T13:57:00+04:00">
+                ср 29 февраля 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/acceptance.html">acceptance</a><a href="/tag/codeception.html">codeception</a><a href="/tag/testing.html">testing</a><a href="/tag/utf-8.html">utf-8</a></p>
+</footer><!-- /.post-info -->                <p>Разбираюсь с <a href="http://codeception.com/">codeception</a>. В acceptance тестах возникла проблема с
+распознаванием русских символов в utf-8:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="nv">$I</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebGuy</span><span class="p">(</span><span class="nv">$scenario</span><span class="p">);</span>
+
+<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">wantTo</span><span class="p">(</span><span class="s1">&#39;see right title&#39;</span><span class="p">);</span>
+<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">amOnPage</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
+<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">see</span><span class="p">(</span><span class="s1">&#39;Заголовок на русском&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>При этом тест фейлится, хотя логах можно увидеть, что заголовок
+установлен правильно. Для решения этой проблемы необходимо установить
+следующий ...</p>
+                <a class="readmore" href="/drugoe/codeception-problema-s-russkimi-simvolami-v-utf-8/">читать дальше</a>
+<p><a href="/drugoe/codeception-problema-s-russkimi-simvolami-v-utf-8/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/uskoriaem-obrabotku-izobrazhenii/" rel="bookmark"
+                           title="Permalink to Ускоряем обработку изображений">Ускоряем обработку изображений</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-02-24T00:07:00+04:00">
+                пт 24 февраля 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/benchmark.html">benchmark</a><a href="/tag/graphicsmagick.html">GraphicsMagick</a><a href="/tag/resizing.html">resizing</a><a href="/tag/uploadclassphp.html">upload.class.php</a></p>
+</footer><!-- /.post-info -->                <p>Всем привет! Сегодняшний пост посвящен производительности при обработке
+изображений. Почти в каждом проекте требуется обработка изображений,
+например, ресайзинг, поворот, обесцвечивание и т.д. Для этих целей я
+использовал широко известное решение, написанное на php и работающее с
+расширением GD - <a href="http://www.verot.net/php_class_upload.htm">class.upload.php</a>. До тех пор пока в проектах в
+основном ...</p>
+                <a class="readmore" href="/drugoe/uskoriaem-obrabotku-izobrazhenii/">читать дальше</a>
+<p><a href="/drugoe/uskoriaem-obrabotku-izobrazhenii/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/poluchaem-http-zagolovki-zaprosa-v-php/" rel="bookmark"
+                           title="Permalink to Получаем HTTP-заголовки запроса в PHP">Получаем HTTP-заголовки запроса в PHP</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-02-08T22:51:00+04:00">
+                ср 08 февраля 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/http-headers.html">HTTP headers</a><a href="/tag/php.html">PHP</a><a href="/tag/php-fcgi.html">php fcgi</a></p>
+</footer><!-- /.post-info -->                <p>Привет всем! Краткая заметка на тему того, как получить http headers
+запроса, который инициировал выполнение скрипта. Также стоит отметить,
+что в данном случае я использую php, как fastcgi, по-этому некоторые
+функции, которые позволяют решить поставленную задачу, не подходят.</p>
+<p>Как выяснилось все очень просто и все передаваемые http-заголовки
+запроса благополучно хранятся ...</p>
+                <a class="readmore" href="/drugoe/poluchaem-http-zagolovki-zaprosa-v-php/">читать дальше</a>
+<p><a href="/drugoe/poluchaem-http-zagolovki-zaprosa-v-php/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/multiple-select-v-php/" rel="bookmark"
+                           title="Permalink to Multiple select в PHP">Multiple select в PHP</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-01-01T21:39:00+04:00">
+                вс 01 января 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/multiple-select/">multiple select</a><a href="/tag/php/">PHP</a></p>
+</footer><!-- /.post-info -->                <p><img alt="php logo" src="/media/2012/01/wordpress-e-gli-script-segreti-per-evitare-lu-L-1-300x182.jpg" title="php logo" /></p>
+<p>Всех с новым годом! Сегодня решил сделать краткую заметку по работе с
+multiple select в php. Думаю кому-нибудь пригодится.</p>
+<p>Для примера возьмем форму содержащую multiple select:</p>
+<div class="highlight"><pre><span class="nt">&lt;form</span> <span class="na">type=</span><span class="s">&quot;post&quot;</span> <span class="na">action=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;select</span> <span class="na">name=</span><span class="s">&quot;fruits&quot;</span> <span class="na">multiple</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>apples<span class="nt">&lt;/option&gt;</span>
+    <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>oranges<span class="nt">&lt;/option&gt;</span>
+    <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;3&quot;</span><span class="nt">&gt;</span>bananas<span class="nt">&lt;/option&gt;</span>
+<span class="nt">&lt;/select ...</span></pre></div>
+                <a class="readmore" href="/drugoe/multiple-select-v-php/">читать дальше</a>
+<p><a href="/drugoe/multiple-select-v-php/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/sphinx-poisk-po-prefiksam/" rel="bookmark"
+                           title="Permalink to Sphinx - поиск по префиксам">Sphinx - поиск по префиксам</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-11-09T11:37:00+04:00">
+                ср 09 ноября 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/live-search/">live search</a><a href="/tag/sphinx/">sphinx</a></p>
+</footer><!-- /.post-info -->                <p><img alt="sphinx logo" src="/media/2011/11/sphinx.jpg" title="sphinx logo" /></p>
+<p>Приветствую вас! Сегодня мы обсудим настройку sphinx для посимвольного
+поиска по префиксам слов.</p>
+<h2>Проблема</h2>
+<p>Передо мной была поставлена задача реализовать "живой" поиск, т.е. поиск
+с обновлением результатов по мере ввода. Однако, настроив sphinx
+привычным образом было замечено что поиск осуществляется не совсем
+корректно, а именно ведется по целым словам ...</p>
+                <a class="readmore" href="/drugoe/sphinx-poisk-po-prefiksam/">читать дальше</a>
+<p><a href="/drugoe/sphinx-poisk-po-prefiksam/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/zend-framework-day/" rel="bookmark"
+                           title="Permalink to Zend Framework Day">Zend Framework Day</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-10-13T17:07:00+04:00">
+                чт 13 октября 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/events.html">events</a><a href="/tag/zend-framework.html">zend framework</a><a href="/tag/zend-framework-days.html">zend framework days</a></p>
+</footer><!-- /.post-info -->                <p><img alt="Zend Framework Day" src="http://frameworksdays.com/uploads/events/zend-framework-day.png" />12 ноября, в Киеве, пройдет конференция "Zend
+Framework Day" - посвященная популярному PHP фреймворку Zend Framework.
+Среди докладчиков непосредственные разработчики компонент Zend
+Framework. Событие соберет лучших PHP и Zend Framework специалистов из
+Украины, России, Белоруссии и других стран СНГ.</p>
+<p>С текущим списком тем и докладчиков можно ознакомиться на <a href="http://frameworksdays.com/event/zend-framework-day-2011/speakers">странице</a>.</p>
+<p>Событие будет ...</p>
+                <a class="readmore" href="/drugoe/zend-framework-day/">читать дальше</a>
+<p><a href="/drugoe/zend-framework-day/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/opredeliaem-poiskovyi-zapros-sredstvami-js/" rel="bookmark"
+                           title="Permalink to Определяем поисковый запрос средствами JS">Определяем поисковый запрос средствами JS</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-06-28T20:41:00+04:00">
+                вт 28 июня 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/java-script/">java script</a><a href="/tag/referrer/">referrer</a><a href="/tag/poiskovye-sistemy/">поисковые системы</a></p>
+</footer><!-- /.post-info -->                <p><img alt="searchengines" src="/media/2011/06/441.png" title="searchengines" /></p>
+<p>Здравствуйте! Сегодня я покажу вам, как можно определить поисковый
+запрос и поисковую систему, которые привели пользователя на сайт. Для
+этого напишем javascript-функцию, которая бы вытягивала данную
+информацию из браузера и позволяла бы легко добавлять новые поисковые
+системы. Информация о странице с которой был осуществлен переход
+хранится в свойстве объекта Document ...</p>
+                <a class="readmore" href="/drugoe/opredeliaem-poiskovyi-zapros-sredstvami-js/">читать дальше</a>
+<p><a href="/drugoe/opredeliaem-poiskovyi-zapros-sredstvami-js/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/praktikum-zend-framework-chast-tretiazend_acl/" rel="bookmark"
+                           title="Permalink to Практикум Zend Framework. Часть третья:Zend_Acl">Практикум Zend Framework. Часть третья:Zend_Acl</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-06-22T11:04:00+04:00">
+                ср 22 июня 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/acl/">acl</a><a href="/tag/zend_acl/">zend_acl</a></p>
+</footer><!-- /.post-info -->                <p><img alt="ZendFramework" src="/media/2011/06/ZendFramework-logo-640x1691.png" title="ZendFramework" /></p>
+<p>Сегодня мы рассмотрим пример создания Acl для системы с большим
+количеством ролей и ресурсов.</p>
+<ul>
+<li>
+<p><a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/"><strong>Часть первая</strong></a></p>
+<ul>
+<li><a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/#auth"><strong>Аутентификация</strong></a> - вход пользователей в систему</li>
+<li><a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"><strong>ACL</strong></a> - распределение прав доступа</li>
+</ul>
+</li>
+<li>
+<p><strong>Часть вторая</strong></p>
+<ul>
+<li><a href="#route"><strong>Маршрутизация</strong></a> - настройка url для различных компонентов
+    системы</li>
+<li><a href="#registry"><strong>Registry</strong></a> - быстрый доступ к системным константам</li>
+</ul>
+</li>
+<li>
+<p><strong>Часть третья</strong></p>
+<ul>
+<li><a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"><strong>Acl</strong></a> - расширенный пример</li>
+</ul>
+</li>
+</ul>
+<p>Хабраюзер <a href="http://anexroid.habrahabr.ru/">Anexroid</a> любезно предоставил описание ...</p>
+                <a class="readmore" href="/drugoe/praktikum-zend-framework-chast-tretiazend_acl/">читать дальше</a>
+<p><a href="/drugoe/praktikum-zend-framework-chast-tretiazend_acl/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+            </ol><!-- /#posts-list -->
+<p class="paginator">
+    Страница 1 / 3
+        <a href="/category/drugoe2.html">&raquo;</a>
+</p>
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

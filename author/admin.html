@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Tech blog by @dizballanze - Admin</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+        
+        
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/linux/nginx-kak-smtp-proxy-server/">Nginx как SMTP proxy-сервер</a></h1> 
+<footer class="post-info">
+        <abbr class="published" title="2014-04-17T01:15:00+04:00">
+                чт 17 апреля 2014
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/nginx/">nginx</a><a href="/tag/smtp/">smtp</a><a href="/tag/debugmail/">debugmail</a></p>
+</footer><!-- /.post-info --><blockquote>
+<p>Данный пост прежде всего будет интересен разработчикам, системные администраторы врятле вынесут из него что-то полезное.</p>
+</blockquote>
+<p><img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx" /></p>
+<h2>Зачем нужен proxy для SMTP и почему именно Nginx</h2>
+<p>Если в вашем приложении нужно реализовать кастомный SMTP-сервер, (например, наш <a href="http://debugmail.io/">Debug Mail</a> или сервисы вроде Mailjet, Mailgun и тд.), то для вас SMTP proxy-сервер будет полезен для следующих целей:</p>
+<ul>
+<li>отсев несанкционированных попыток отправки писем до попадания писем в кастомный бекенд,</li>
+<li>фильтрация флуда,</li>
+<li>балансировка - можно выбирать на какой сервер целесообразнее отправить обработку письма.</li>
+</ul>
+<p>Nginx из коробки предоставляет полнофункциональный smtp proxy с свойственной для него отличной производительностью. В моем случае в проекте уже использовался Nginx для проксирования запросов к Node.js приложению и для отдачи статики, по-этому выбор в его пользу был очевиден.</p>
+<p>Далее мы рассмотрим процесс настройки proxy-сервера и способы его взаимодействия с приложением.</p>
+<h2>Настройка</h2>
+<p>Пример конфигурации SMTP proxy-сервера (должен быть определен или подключен в корне nginx.conf):</p>
+<div class="highlight"><pre><span class="k">mail</span> <span class="p">{</span>
+    <span class="kn">auth_http</span>  <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8000</span><span class="s">/auth</span><span class="p">;</span>
+
+    <span class="kn">starttls</span>        <span class="no">on</span><span class="p">;</span>
+    <span class="kn">ssl_certificate</span> <span class="s">/etc/nginx/cert.pem</span><span class="p">;</span>
+    <span class="kn">ssl_certificate_key</span> <span class="s">/etc/nginx/key.pem</span><span class="p">;</span>
+    <span class="kn">auth_http_header</span> <span class="s">X-Auth-Key</span> <span class="s">wow_so_secret</span><span class="p">;</span>
+
+    <span class="c1"># Generic port</span>
+    <span class="kn">server</span> <span class="p">{</span>
+        <span class="kn">server_name</span>     <span class="s">debugmail</span><span class="p">;</span>
+        <span class="kn">listen</span>          <span class="mi">25</span><span class="p">;</span>
+        <span class="kn">protocol</span>        <span class="s">smtp</span><span class="p">;</span>
+        <span class="kn">proxy</span>           <span class="no">on</span><span class="p">;</span>
+        <span class="kn">proxy_pass_error_message</span> <span class="no">on</span><span class="p">;</span>
+        <span class="kn">smtp_auth</span>       <span class="s">login</span> <span class="s">plain</span><span class="p">;</span>
+        <span class="kn">xclient</span>         <span class="no">on</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Рассмотрим некоторые параметры:</p>
+<ul>
+<li><code>server_name</code> - имя сервера, которое используется в приветствии SMTP-сервера,</li>
+<li><code>listen</code> - задает адрес и порт который будет слушать proxy,</li>
+<li><code>protocol</code> - smtp, также поддерживается imap и pop3, но их описание выходит за рамки данного поста,</li>
+<li><code>proxy_pass_error_message</code> - задает необходимость передачи сообщений об ошибке клиенту от проксируемого SMTP-сервера.</li>
+</ul>
+<p>Остальные параметры рассмотрим в следующих разделах.</p>
+<blockquote>
+<p>Вы наверное заметили, что нигде не задается адрес проксируемого сервера.
+Чтобы узнать откуда Nginx узнает его адрес см. следующий раздел.</p>
+</blockquote>
+<h3>Аутентификация</h3>
+<p>Nginx поддерживает 3 метода аутентификации SMTP: <code>login</code>, <code>plaint</code> и <code>cram-md5</code>. Для задания активных методов необходимо использовать параметр <code>smtp_auth</code> значением которого является список методов через пробел. Также можно полностью отключить аутентификацию задав значение <code>none</code>.</p>
+<h4>HTTP Auth сервер</h4>
+<p>Для проверки аутентификации необходимо реализовать сервер, который будет принимать по HTTP запросы от proxy сервера и возвращать результат проверки. Адрес такого сервера задается при помощи параметра <code>auth_http</code>.</p>
+<p>Логин и пароль для проверки отправляются на сервер аутентификации через заголовки <code>Auth-User</code> и <code>Auth-Pass</code> соответственно. В заголовке <code>Auth-Login-Attempt</code> proxy сервер передает номер попытки аутентификации. После проверки в зависимости от результата сервер должен вернуть в ответе следующие заголовки:</p>
+<ul>
+<li>Если проверка выполнена успешно:<ul>
+<li><code>Auth-Status: OK</code>,</li>
+<li><code>Auth-Server: &lt;host&gt;</code> - хост проксируемого сервера, на который нужно отправить письмо,</li>
+<li><code>Auth-Port: &lt;port&gt;</code> - порт проксируемого сервера,</li>
+</ul>
+</li>
+<li>Если возникла ошибка:<ul>
+<li><code>Auth-Status: &lt;error-message&gt;</code> - сообщение об ошибке, которое будет возвращено пользователю,</li>
+<li><code>Auth-Wait: &lt;count&gt;</code> - количество оставшихся попыток аутентифкации, если данный заголовок не возвращать, то соединение будет закрыто.</li>
+</ul>
+</li>
+</ul>
+<p>Независимо от результата proxy сервер ждет ответ со статусом <code>HTTP/1.0 200 OK</code>.</p>
+<p>Как вы видите адрес проксируемого сервера возвращает сервер аутентификации, что дает широкие возможности в плане балансировки нагрузки/логгирования/фильтрации и тд. Например, в зависимости от ip-адреса клиента (который передается в заголовке <code>Client-IP</code>), можно направить письмо на сервер, который географически ближе к данному клиенту (GeoIP). Или можно использовать другой способ балансировки, например, в зависимости от домена пользователя, даты его регистрации или любых других данных которые предаставляет proxy сервер или которые хранятся в БД.</p>
+<h4>auth_http_header</h4>
+<p>Я не рекомендую делать ваш сервер аутентификации доступным из вне, но если у вас есть веские причины для этого, то Nginx предоставляет возможность простой способ проверки запроса при помощи <code>shared secret</code>. Для настройки используется параметр <code>auth_http_header &lt;header-name&gt; &lt;shared-secret-key&gt;</code>. При отправки запроса на аутентификацию proxy также будет отправлять заголовок с именем <code>&lt;header-name&gt;</code> и значением <code>&lt;shared-secret-key&gt;</code>. На сервере аутентификации соответственно нужно выполнять проверку данного значения.</p>
+<p>Как альтернативный или дополнительный вариант, можно выполнять проверку по IP-адресу proxy сервера, который вероятно является фиксированным.</p>
+<h4>XCLIENT</h4>
+<p>Nginx поддерживает <a href="http://www.postfix.org/XCLIENT_README.html">расширение XCLIENT</a>. Для активации данной возможности используется параметр <code>xclient: on</code>. </p>
+<p>После активации xclient на бекенд (SMTP-сервер) будет приходить команда примерно следующего вида: <code>XCLIENT &lt;attr1=value1&gt; &lt;attr2=value2&gt;</code>. Среди атрибутов команды можно выделить <code>LOGIN</code>, который (как вы наверное догадались) передает логин при помощи которого пользователь аутентифицировался.</p>
+<p>В <a href="http://debugmail.io/">Debug Mail</a> у нас пароль является идентификатором проекта, к которому нужно в итоге прикрепить письмо. Соответственно одного логина нам было недостаточно, для того, чтобы понять куда сохранять email. К счастью Nginx позволяет переопределить значение атрибута <code>LOGIN</code> передаваемого на бекенд. Для этого необходимо (в случае успешной проверки) возвращать дополнительный заголовок <code>Auth-User</code> от сервера аутентификации, например так:</p>
+<div class="highlight"><pre><span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-Status&quot;</span><span class="p">,</span> <span class="s">&quot;OK&quot;</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-Server&quot;</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">smtp_host</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-Port&quot;</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">smtp_port</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-User&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">login</span><span class="si">}</span><span class="s">#</span><span class="si">#{</span><span class="nx">password</span><span class="si">}</span><span class="s">&quot;</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span>
+</pre></div>
+
+
+<h3>SSL / TLS</h3>
+<p>Если вам нужно добавить поддержку ssl или tls, то в Nginx есть всё для этого. Для включения ssl необходимо задать параметр <code>ssl: on</code>. Если же вы предпочитаете TLS, то необходимо использовать параметр <code>starttls: on</code>, при этом использование TLS будет опциональным и будет зависеть от клиента. Чтобы сделать использование TLS обязательным нужно вместо <code>on</code> задать значение <code>only</code>.</p>
+<p>Для дальнейшей настройки нам потребуется сертификат и секретный ключ в формате PEM. Для примера сгенерируем self-signed сертификат (для реального проекта вам вероятно потребуется купить сертификат выданный сертификационным центром):</p>
+<div class="highlight"><pre>openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes
+</pre></div>
+
+
+<p>Далее задаем пути к сертификату и ключу в настройках Nginx (параметры <code>ssl_certificate</code> и <code>ssl_certificate_key</code> соответственно).</p>
+<h3>P.S.</h3>
+<p>Полная документация по всем параметрам смотрите на <a href="http://nginx.org/ru/docs/">официальном сайте Nginx</a>.</p><p><a href="/linux/nginx-kak-smtp-proxy-server/#disqus_thread">comments</a></p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Остальные статьи</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/nodejs/servernaia-arkhitektura-debugmail/" rel="bookmark"
+                           title="Permalink to Серверная архитектура DebugMail">Серверная архитектура DebugMail</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2014-03-15T23:46:00+04:00">
+                сб 15 марта 2014
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/nodejs/">node.js</a><a href="/tag/mongodb/">mongodb</a><a href="/tag/faye/">faye</a><a href="/tag/debugmail/">debugmail</a></p>
+</footer><!-- /.post-info -->                <p><img alt="debugmail-logo" src="/media/2014/3/debugmail.jpg" title="DebugMail" /></p>
+<p>На днях <a href="http://wbtech.ru">мы</a> запустили <a href="http://debugmail.io/">DebugMail</a> - сервис, который помогает упростить тестирование email-рассылок на этапе разработки сайта/приложения/etc. Сервис позволяет сразу после регистрации получить свой виртуальный smtp-сервер, просматривать отправляемые письма, совместно работать над рассылками вместе с коллегами. В этом посте я расскажу про то, как разрабатывался backend сервиса, какие технологии использовались ...</p>
+                <a class="readmore" href="/nodejs/servernaia-arkhitektura-debugmail/">читать дальше</a>
+<p><a href="/nodejs/servernaia-arkhitektura-debugmail/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/nodejs/ispolzuem-sessiiu-express-v-socketio/" rel="bookmark"
+                           title="Permalink to Используем сессию express в socket.io">Используем сессию express в socket.io</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2013-04-19T13:33:00+04:00">
+                пт 19 апреля 2013
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/nodejs.html">node.js</a><a href="/tag/express.html">express</a><a href="/tag/socketio.html">socket.io</a></p>
+</footer><!-- /.post-info -->                <p>При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.</p>
+<h2>Используемые пакеты</h2>
+<p>Нам нужно установить несколько пакетов, которые пригодятся для решения поставленной задачи (предполагается что express и soket.io уже установлены):</p>
+<div class="highlight"><pre>npm install cookie express-session-mongo
+</pre></div>
+
+
+<ul>
+<li><code>cookie</code> - модуль ...</li></ul>
+                <a class="readmore" href="/nodejs/ispolzuem-sessiiu-express-v-socketio/">читать дальше</a>
+<p><a href="/nodejs/ispolzuem-sessiiu-express-v-socketio/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/nodejs/masshtabirovanie-nodejs-prilozhenii/" rel="bookmark"
+                           title="Permalink to Масштабирование Node.js приложений">Масштабирование Node.js приложений</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2013-02-17T01:17:00+04:00">
+                вс 17 февраля 2013
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/cluster/">cluster</a><a href="/tag/load-balancing/">load balancing</a><a href="/tag/clustering/">clustering</a><a href="/tag/scaling/">scaling</a></p>
+</footer><!-- /.post-info -->                <p>Все мы знаем, что node.js так популярен благодаря своей производительности. Он работает быстро благодаря разным факторам, таким как использование движка Google V8 и асинхронному i/o. Именно такая высокая производительность позволяет достаточно долго не задумываться о масштабировании приложения, т.к. даже один запущенный Node.js процесс может обслуживать сотни ...</p>
+                <a class="readmore" href="/nodejs/masshtabirovanie-nodejs-prilozhenii/">читать дальше</a>
+<p><a href="/nodejs/masshtabirovanie-nodejs-prilozhenii/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/nodejs/coffeescript-nodejs-dev-server/" rel="bookmark"
+                           title="Permalink to CoffeeScript & node.js dev-сервер">CoffeeScript & node.js dev-сервер</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2013-01-19T22:10:00+04:00">
+                сб 19 января 2013
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/coffeescript.html">coffeescript</a><a href="/tag/forever.html">forever</a><a href="/tag/nodejs.html">node.js</a></p>
+</footer><!-- /.post-info -->                <p>CoffeeScript - язык программирования, компилируемый в javascript. Используя <a href="http://coffeescript.org/">CoffeeScript</a> для разработки на <a href="/tag/nodejs/">node.js</a> мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
+<img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script" />
+Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.</p>
+<h1>Устанавливаем пакеты</h1>
+<p>Для выполнения нашей цели необходимо установить ...</p>
+                <a class="readmore" href="/nodejs/coffeescript-nodejs-dev-server/">читать дальше</a>
+<p><a href="/nodejs/coffeescript-nodejs-dev-server/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/" rel="bookmark"
+                           title="Permalink to Используем npm для управления зависимостями">Используем npm для управления зависимостями</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2013-01-04T20:10:00+04:00">
+                пт 04 января 2013
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/npm.html">npm</a><a href="/tag/packagejson.html">package.json</a></p>
+</footer><!-- /.post-info -->                <p>npm - пакетный менеджер для <a href="/tag/nodejs/" title="Node.js">node.js</a>. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.</p>
+<p><img alt="npm package management" src="media/2013/01/npm.png" title="node packaged modules" /></p>
+<h1>Установка npm</h1>
+<p>Если у вас не установлен <code>npm</code>, то сделать это можно выполнив следующую команду:</p>
+<div class="highlight"><pre>curl https://npmjs.org/install.sh <span class="p">|</span> sh
+</pre></div>
+
+
+<h1>Установка пакетов</h1>
+<p>Для того чтобы установить пакет при помощи <code>npm ...</code></p>
+                <a class="readmore" href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/">читать дальше</a>
+<p><a href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/nodejs/nasledovanie-svoistv-modelei-v-mongoose/" rel="bookmark"
+                           title="Permalink to Наследование свойств моделей в Mongoose">Наследование свойств моделей в Mongoose</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2013-01-02T02:41:00+04:00">
+                ср 02 января 2013
+        </abbr>
+<p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
+<p>теги: <a href="/tag/mongoose.html">mongoose</a><a href="/tag/mongodb.html">mongodb</a><a href="/tag/nodejs.html">node.js</a><a href="/tag/sugarjs.html">sugar.js</a></p>
+</footer><!-- /.post-info -->                <p>Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
+моделей в <a href="http://mongoosejs.com/" title="Mongoose ODM">ODM Mongoose</a>. Для тех, кто не знает mongoose - это 
+ODM (object document mapper) для node.js и <a href="http://www.mongodb.org/" title="MongoDB">MongoDB</a>. </p>
+<h2>Применение</h2>
+<p>Часто бывает необходимо в рамках одной коллекции объектов выделить несколько
+типов с некоторыми различиями в наборе свойств. Т ...</p>
+                <a class="readmore" href="/nodejs/nasledovanie-svoistv-modelei-v-mongoose/">читать дальше</a>
+<p><a href="/nodejs/nasledovanie-svoistv-modelei-v-mongoose/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/" rel="bookmark"
+                           title="Permalink to Настраиваем dev-сервер для удобной разработки на django">Настраиваем dev-сервер для удобной разработки на django</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-12-22T22:55:00+04:00">
+                сб 22 декабря 2012
+        </abbr>
+<p>категория: <a href="/category/python.html">Python</a>. </p>
+<p>теги: <a href="/tag/bitbucket/">bitbucket</a><a href="/tag/django/">django</a><a href="/tag/git/">git</a><a href="/tag/github/">github</a><a href="/tag/nginx/">nginx</a><a href="/tag/nodejs/">nodejs</a><a href="/tag/pip/">pip</a><a href="/tag/python/">python</a><a href="/tag/south/">south</a></p>
+</footer><!-- /.post-info -->                <p>При разработке не хочется тратить время, которого и так не хватает, на
+рутинные действия. После каждой отправки изменений в репозиторий,
+необходимо выполнить обновление кода на dev-сервере, применить миграции
+и тд. Сегодня мы рассмотрим, как быстро настроить автоматический deploy
+django-приложения на dev-сервер. Я рассмотрю максимально простое
+решение, которое подойдет для небольших ...</p>
+                <a class="readmore" href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/">читать дальше</a>
+<p><a href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/python/python-27-v-debian-6-squeeze/" rel="bookmark"
+                           title="Permalink to Python 2.7 в Debian 6 Squeeze">Python 2.7 в Debian 6 Squeeze</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-07-22T09:26:00+04:00">
+                вс 22 июля 2012
+        </abbr>
+<p>категория: <a href="/category/python.html">Python</a>. </p>
+<p>теги: <a href="/tag/python/">python</a><a href="/tag/virtualenv/">virtualenv</a></p>
+</footer><!-- /.post-info -->                <p><img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo" /></p>
+<p>Приветствую! На данный момент в stable репозитарии Debian squeeze лежит
+python 2.6.6. Однако, последней (на момент написания поста) стабильной
+версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
+несколько версий python и использовать их независимо.</p>
+<h2>Устанавливаем Python 2.7.3</h2>
+<p>Скомпилируем python 2.7.3 ...</p>
+                <a class="readmore" href="/python/python-27-v-debian-6-squeeze/">читать дальше</a>
+<p><a href="/python/python-27-v-debian-6-squeeze/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/drugoe/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/" rel="bookmark"
+                           title="Permalink to Функциональное тестирование Yii приложений с Selenium">Функциональное тестирование Yii приложений с Selenium</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2012-04-04T02:31:00+04:00">
+                ср 04 апреля 2012
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/functional-testing/">functional testing</a><a href="/tag/selenium/">selenium</a><a href="/tag/testing/">testing</a><a href="/tag/yii/">yii</a></p>
+</footer><!-- /.post-info -->                <p><img alt="selenium" src="/media/2012/04/big-logo.png" title="selenium-logo" /></p>
+<p>В последних проектах активно использую Selenium для функционального
+тестирования. В процессе написания тестов столкнулся с несколькими
+подводными камнями и в данном посте хочу рассказать о том как с ними
+бороться. Я думаю пост будет полезен тем, кто только начал использовать
+Selenium, в том числе для тестирования Yii приложений. Итак, поехали ...</p>
+                <a class="readmore" href="/drugoe/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/">читать дальше</a>
+<p><a href="/drugoe/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+            </ol><!-- /#posts-list -->
+<p class="paginator">
+    Страница 1 / 6
+        <a href="/author/admin2.html">&raquo;</a>
+</p>
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Tech blog by @dizballanze - network</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+        
+        
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/">Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация</a></h1> 
+<footer class="post-info">
+        <abbr class="published" title="2011-02-23T17:50:00+03:00">
+                ср 23 февраля 2011
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/debian/">debian</a><a href="/tag/dhcp/">dhcp</a><a href="/tag/dns/">dns</a><a href="/tag/network/">network</a><a href="/tag/route/">route</a><a href="/tag/ubuntu/">ubuntu</a><a href="/tag/administrirovanie/">администрирование</a></p>
+</footer><!-- /.post-info --><p><img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet" />Приветствую вас, товарищи линуксоиды! Сегодня мы
+продолжим рассмотрение настройки сети и интернета в linux. В данной
+части статьи я постараюсь раскрыть темы DHCP, DNS и маршрутизация. Перед
+прочтением данной статьи прочитайте <a href="/Linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/">первую часть</a>.</p>
+<h2>Автоматическая настройка сети через DHCP</h2>
+<p>Часто для настройки компьютеров в сети используется протокол DHCP
+(dynamic host configuration protocol). Данный протокол позволяет быстро
+настраивать параметры сети автоматически при помощи запроса к
+DHCP-серверу. Получив запрос DHCP-сервер назначает клиенту ip-адрес из
+числа свободных и клиент может использовать его для работы в сети до
+следующей реконфигурации. Также сервер может выдавать клиентам другие
+параметры сети, такие как маска подсети, dns-сервера и шлюзы, но о них
+мы поговорим позже. Перед тем, как выполнять запрос на получение
+параметров от сети, необходимо правильно настроить сетевой интерфейс,
+для этого необходимо отредактировать уже знакомый вам файл
+/etc/network/interfaces. В данном файле необходимо добавить строку на
+подобии следующей:</p>
+<div class="highlight"><pre>iface eth0 inet dhcp
+</pre></div>
+
+
+<p>Итак, для того что-бы вручную осуществить запрос к dhcp серверу на
+получение настроек необходимо выполнить следующую команду:</p>
+<div class="highlight"><pre>dhclient eth0
+</pre></div>
+
+
+<p>Параметром команде dhclient мы передаем название сетевого интерфейса.
+После этого будет выполнена автоматическая настройка параметров.
+Зачастую параметры сети будут настраиваться автоматически при включении
+компьютера или активации сетевого подключения. Но иногда может
+понадобится выполнить этот запрос вручную, например в случае
+необходимости смены адреса или при недоступности DHCP-сервера в момент
+активации интерфейса.</p>
+<p>Иногда вам может потребоваться освободить занятый вашим компьютером
+адрес, для этого выполните следующую команду:</p>
+<div class="highlight"><pre>dhclient -r eth0
+</pre></div>
+
+
+<h2>Настройка DNS</h2>
+<p>DNS (domain name system) - распределенная система отвечающая за
+установление соответствия между символьными и цифровыми адресами
+компьютеров в сети. Т.е. данная система позволяет нам обращаться к
+компьютерам в сети по простому символическому имени, которое намного
+проще запомнить чем ip-адрес. Для того что-бы узнать ip-адрес машины по
+её доменному имени необходимо воспользоваться командой host:</p>
+<div class="highlight"><pre>host www.google.com
+www.google.com is an <span class="nb">alias </span><span class="k">for</span> www.l.google.com.
+www.l.google.com has address 74.125.87.99
+www.l.google.com has address 74.125.87.104
+</pre></div>
+
+
+<p>Как вы видите 74.125.87.104 ip-адрес всеми известной поисковой системы.
+И если вы наберете его в адресной строке своего браузера, то вы увидите
+что это google. Часто в локальных сетях есть свои dns-сервера, например
+если вы подключены к городской сети и получаете через неё доступ к
+Интернет, то в вашей сети должен быть свой сервер имён. Для того что-бы
+ваша система могла корректно обращаться к нему, вам необходимо настроить
+параметры dns, добавив ip-адрес dns-сервера в конфигурационный файл.
+Итак, отредактируйте от пользователя root файл /etc/resolve.conf:</p>
+<div class="highlight"><pre>nameserver 10.32.0.1
+</pre></div>
+
+
+<p>Теперь ваша машина будет знать, что 10.32.0.1 - это сервер имён.</p>
+<h2>Настройка параметров маршрутизации (шлюза)</h2>
+<p>Для настройки маршрутизации воспользуемся утилитой route. Стандартной
+задачей является установка шлюза по-умолчанию, часто это бывает
+необходимо для настройки доступа к интернет. Для того чтобы установить
+стандартный шлюз (gateway) воспользуйтесь следующей командой:</p>
+<div class="highlight"><pre>route add default gw 10.32.0.1
+</pre></div>
+
+
+<p>Данной командой мы устанавливаем стандартный шлюз (10.32.0.1), который
+будет принимать пакеты из сети при отсутствии других доступных
+маршрутов. После настройки всех маршрутов можно проверить правильность
+роутинга при помощи следующей команды:</p>
+<div class="highlight"><pre>route
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+localnet        *               255.255.252.0   U     <span class="m">0</span>      <span class="m">0</span>        <span class="m">0</span> eth0
+default         10.32.0.1     0.0.0.0         UG    <span class="m">0</span>      <span class="m">0</span>        <span class="m">0</span> eth0
+</pre></div>
+
+
+<p>Если вам нужно более детальная настройка маршрутизации, то я рекомендую
+вам прочитать справочное руководство к команде route.</p>
+<p>Эти настройки действительны только до следующей перезагрузки системы,
+для того, чтобы настройки устанавливались автоматически необходимо
+добавить в файл /etc/network/interface следующие строки(от пользователя
+root):</p>
+<div class="highlight"><pre>gateway 10.32.0.1
+</pre></div>
+
+
+<h2>Проверка соединения</h2>
+<p>После настройки сети полезно поверить работоспособность всех внесенных
+изменений. Для начала лучше перезагрузить сетевые параметры для этого
+выполните от root:</p>
+<div class="highlight"><pre>/etc/init.d/networking restart
+</pre></div>
+
+
+<p>Теперь можно проверить доступность какого-либо узла сети, для этого
+воспользуемся утилитой ping:</p>
+<div class="highlight"><pre>ping -c <span class="m">4</span> 10.32.0.1
+PING 10.32.0.1 <span class="o">(</span>10.32.0.1<span class="o">)</span> 56<span class="o">(</span>84<span class="o">)</span> bytes of data.
+<span class="m">64</span> bytes from 10.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">1</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nb">time</span><span class="o">=</span>2.11 ms
+<span class="m">64</span> bytes from 10.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">2</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nb">time</span><span class="o">=</span>1.86 ms
+<span class="m">64</span> bytes from 10.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">3</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nb">time</span><span class="o">=</span>1.25 ms
+<span class="m">64</span> bytes from 10.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">4</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nb">time</span><span class="o">=</span>2.00 ms
+
+--- 10.32.0.1 ping statistics ---
+<span class="m">4</span> packets transmitted, <span class="m">4</span> received, 0% packet loss, <span class="nb">time </span>3003ms
+rtt min/avg/max/mdev <span class="o">=</span> 1.255/1.809/2.110/0.334 ms
+</pre></div>
+
+
+<p>Данной командой я отправляю 4 эхо-пакета на узел 10.32.0.1. Сервер
+обязан ответить мне обратно, что он и делает. Команда выводит информацию
+по каждому пакету и в конце статистику по всем пакетам указывая время
+передачи, процент потерянных пакетов и тд.</p>
+<p>Для проверки параметров маршрутизации пакетов часто бывает удобно
+воспользоваться утилитой traceroute:</p>
+<div class="highlight"><pre>traceroute www.google.com
+traceroute to www.google.com <span class="o">(</span>74.125.87.99<span class="o">)</span>, <span class="m">30</span> hops max, <span class="m">60</span> byte packets
+ <span class="m">1</span>  ti.holl.net <span class="o">(</span>10.32.0.1<span class="o">)</span>  5.595 ms * *
+ <span class="m">2</span>  192.168.1.1 <span class="o">(</span>192.168.1.1<span class="o">)</span>  7.374 ms  7.370 ms  7.842 ms
+ <span class="m">3</span>  * * *
+ <span class="m">4</span>  10.50.19.34 <span class="o">(</span>10.50.19.34<span class="o">)</span>  83.307 ms  87.352 ms  87.350 ms
+ <span class="m">5</span>  82.207.106.42 <span class="o">(</span>82.207.106.42<span class="o">)</span>  136.875 ms  139.480 ms  139.478 ms
+ <span class="m">6</span>  209.85.241.54 <span class="o">(</span>209.85.241.54<span class="o">)</span>  135.527 ms  129.398 ms  131.854 ms
+ <span class="m">7</span>  72.14.239.14 <span class="o">(</span>72.14.239.14<span class="o">)</span>  136.508 ms  136.780 ms  136.592 ms
+ <span class="m">8</span>  209.85.248.39 <span class="o">(</span>209.85.248.39<span class="o">)</span>  131.577 ms 209.85.248.41 <span class="o">(</span>209.85.248.41<span class="o">)</span>  138.317 ms  102.821 ms
+ <span class="m">9</span>  72.14.232.221 <span class="o">(</span>72.14.232.221<span class="o">)</span>  100.853 ms  102.081 ms 72.14.238.101 <span class="o">(</span>72.14.238.101<span class="o">)</span>  106.566 ms
+<span class="m">10</span>  hb-in-f99.1e100.net <span class="o">(</span>74.125.87.99<span class="o">)</span>  107.843 ms  114.659 ms  110.048 ms
+</pre></div>
+
+
+<p>Данная команда подробно показывает маршрут прохождения пакета, отображая
+каждый узел через который проходит пакет и временные характеристики.
+Изучая отчёты данной команды можно выявлять ошибки маршрутизации,
+которые могут состоять в не оптимальном прохождении пакета по сети.</p>
+<h2>Заключение</h2>
+<p>Этот топик завершает тему настройки сети/интернета в linux. Если есть,
+какие-то вопросы по данной теме, которые я не рассмотрел, отписывайтесь
+в комментариях. Спасибо за внимание!</p><p><a href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/#disqus_thread">comments</a></p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Остальные статьи</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+        
+
+ 
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/" rel="bookmark"
+                           title="Permalink to Настройка сети и интернета в Debian/Ubuntu - часть 1 - Настройка сетевых интерфейсов">Настройка сети и интернета в Debian/Ubuntu - часть 1 - Настройка сетевых интерфейсов</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-02-22T13:17:00+03:00">
+                вт 22 февраля 2011
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/debian/">debian</a><a href="/tag/ifconfig/">ifconfig</a><a href="/tag/ifdown/">ifdown</a><a href="/tag/ifup/">ifup</a><a href="/tag/interfaces/">interfaces</a><a href="/tag/network/">network</a><a href="/tag/ubuntu/">ubuntu</a><a href="/tag/administrirovanie/">администрирование</a></p>
+</footer><!-- /.post-info -->                <p>Здравствуйте, товарищи линуксоиды ;[</p>
+<p><img alt="network" src="/media/2011/02/network-300x225.jpg" title="network" />В данном топике я хочу рассказать всё что может
+потребоваться для настройки сети и подключения к интернету в linux. Я
+буду рассматривать на примере своего любимого дистрибутива - Debian, но
+я думаю это будет действительно и для других дистрибутивов, особенно для
+Ubuntu, т.к. эти дистрибутивы близкие родственники ...</p>
+                <a class="readmore" href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/">читать дальше</a>
+<p><a href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+            </ol><!-- /#posts-list -->
+<p class="paginator">
+    Страница 1 / 1
+</p>
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

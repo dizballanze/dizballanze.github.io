@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Prototype (прототип)</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li class="active"><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/drugoe/prototype-prototip/" rel="bookmark"
+           title="Permalink to Prototype (прототип)">Prototype (прототип)</a></h1>
+<a href="http://twitter.com/share" class="twitter-share-button" data-width="80" data-count="horizontal" data-via="dizballanze" style="display:inline-block;">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+<div class="fb-like" data-send="false" data-layout="button_count" data-width="110" data-show-faces="true" data-font="trebuchet ms" style="display:inline-block;"></div>
+
+<g:plusone size="medium" width="110" height="22" annotation="inline"></g:plusone>
+
+<script type="text/javascript">
+window.___gcfg = {
+lang: 'en-US'
+  };
+
+  (function() {
+var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+po.src = 'https://apis.google.com/js/plusone.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+})();
+</script>
+
+<!-- Put this script tag to the <head> of your page -->
+<script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+<script type="text/javascript">
+  VK.init({apiId: 2478358, onlyWidgets: true});
+</script>
+
+<!-- Put this div tag to the place, where the Like block will be -->
+<div id="vk_like" style="display: inline-block; width: 110px;"></div>
+<script type="text/javascript">
+VK.Widgets.Like("vk_like", {type: "button"});
+</script>    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-02-19T23:47:00+03:00">
+                сб 19 февраля 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/oop/">ООП</a><a href="/tag/patterny-proektirovaniia/">Паттерны проектирования</a></p>
+</footer><!-- /.post-info -->      <p>Следующий порождающий объекты шаблон, который мы рассмотрим - прототип.
+Данный шаблон является более гибкой версией шаблона Abstract Factory.</p>
+<h2>Описание</h2>
+<p>Часто приходится отказываться от затеи использовать шаблон <a href="/PHP/abstract-factory-abstraktnaia-fabrika/">абстрактная
+фабрика</a> из-за необходимости поддерживать дополнительные иерархии
+классов. С этой проблемой нам может помочь шаблон prototype, который
+основан на использовании средства clone языка php для создания копий
+объектов.</p>
+<p><img alt="prototype pattern" src="/media/2011/02/clone-wars-9.jpg" title="prototype pattern" /></p>
+<p>Данный шаблон подразумевает наличие класса,
+объекты которого хранят внутри себя, как свойство некоторые эталонные
+экземпляры порождаемых классов. При этом условием начала работы с
+объектом-прототипом есть инициализация его этими эталонными объектами,
+как правило они передаются в конструктор, но могут быть установлены и
+при помощи других методов прототипа. После инициализации прототипа к
+нему можно обращаться непосредственно для генерации объектов, что
+приведет к созданию полностью идентичной копии эталонного объекта и
+возврату его вызывающему коду. Так как мы используем готовые объекты для
+инициализации прототипа, то нам больше не нужно создавать параллельные
+иерархии классов. Но это не единственно преимущество данного шаблона.
+Если копнуть глубже, то можно найти много новых возможностей, например
+из-за того что мы получаем точную копию эталонного объекта, а не новый
+объект, как в шаблоне абстрактная фабрика, мы получаем дополнительные
+возможности в виде настройки эталонного объекта (изменение значения
+свойств). Также гибкость достигается и в не обязательном соответствии
+комбинаций взаимосвязанных классов, так как это было в шаблоне
+абстрактная фабрика.</p>
+<h2>Реализация</h2>
+<p>Давайте разберем простой пример реализации данного шаблона. Представим,
+что нам нужно спроектировать иерархию классов которая буде отвечать за
+стиль отображения страницы документа. Ограничимся настройкой стилей
+параграфов, заголовков и списков. Для каждого из элементов у нас будет
+своя иерархия классов которая позволит выводить данный элемент скажем на
+принтер и браузер. Теперь собственно пример такой иерархии (без
+реализации, т.к. нас интересует только логические понятия, а не сам
+функционал):</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Paragraph</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">format</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Header</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">header_big</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">header_small</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Lists</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">numeric</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">alpha</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PrintedParagraph</span> <span class="k">extends</span> <span class="nx">Paragraph</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">format</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PrintedHeader</span> <span class="k">extends</span> <span class="nx">Header</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_big</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_small</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PrintedLists</span> <span class="k">extends</span> <span class="nx">Lists</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">numeric</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">alpha</span><span class="p">(</span><span class="nv">$data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">BrowsedParagraph</span> <span class="k">extends</span> <span class="nx">Paragraph</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">format</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">BrowsedHeader</span> <span class="k">extends</span> <span class="nx">Header</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_big</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_small</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">BrowsedLists</span> <span class="k">extends</span> <span class="nx">Lists</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">numeric</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">alpha</span><span class="p">(</span><span class="nv">$data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">DocumentPrototype</span> <span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$_paragraph</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$_header</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$_list</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nx">Paragraph</span> <span class="nv">$paragraph</span><span class="p">,</span> <span class="nx">Header</span> <span class="nv">$header</span><span class="p">,</span> <span class="nx">Lists</span> <span class="nv">$list</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_paragraph</span> <span class="o">=</span> <span class="nv">$paragraph</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_header</span> <span class="o">=</span> <span class="nv">$header</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_list</span> <span class="o">=</span> <span class="nv">$list</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getParagraph</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="k">clone</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_paragraph</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getHeader</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="k">clone</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_header</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getList</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="k">clone</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_list</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Итак, что мы тут видим. У нас имеется 3 иерархии классов, которые
+позволяют форматировать различные элементы документа и нам необходимо
+создавать экземпляры этих классов в процессе работы программы,
+экземпляры каких именно классов нам нужно создавать заранее не известно.
+По-этому мы реализовываем ещё один класс - DocumentPrototype, который
+как вы уже наверное догадались, представляет собой паттерн прототип. Как
+вы видите данный класс принимает в конструкторе эталонные экземпляры
+классов-элементов документа и потом умеет создавать их копии при помощи
+соответствующих методов. Рассмотрим пример использования данного класса:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$document</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DocumentPrototype</span><span class="p">(</span><span class="k">new</span> <span class="nx">BrowsedParagraph</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedHeader</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedLists</span><span class="p">());</span>
+<span class="nv">$list</span> <span class="o">=</span> <span class="nv">$document</span><span class="o">-&gt;</span><span class="na">getList</span><span class="p">();</span>
+<span class="nv">$list</span><span class="o">-&gt;</span><span class="na">numeric</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;first&#39;</span><span class="p">,</span><span class="s1">&#39;second&#39;</span><span class="p">,</span> <span class="s1">&#39;third&#39;</span><span class="p">));</span>
+<span class="nv">$header</span> <span class="o">=</span> <span class="nv">$document</span><span class="o">-&gt;</span><span class="na">getHeader</span><span class="p">();</span>
+<span class="nv">$header</span><span class="o">-&gt;</span><span class="na">header_big</span><span class="p">(</span><span class="s1">&#39;Test&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Мы получаем возможность создавать объекты без поддержки дополнительных
+иерархий классов. Теперь давайте представим, что нам нужно создать
+документ у которого бы параграфы выводились так, как если бы они
+выводились на печать, а заголовки и списки, так, как на web-странице:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$document</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DocumentPrototype</span><span class="p">(</span><span class="k">new</span> <span class="nx">PrintedParagraph</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedHeader</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedLists</span><span class="p">());</span>
+</pre></div>
+
+
+<p>Всё довольно просто, мы всего лишь заменили один аргумент конструктора
+на другой и получили такой отличный результат. К примеру каждый из этих
+классов может принимать массив параметров в котором указываются какие-то
+настройки стиля отображения элементов, теперь нам для того что-бы скажем
+увеличить размер шрифта заголовка нужно всего лишь изменить эталонный
+объект следующим образом:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$header</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BrowsedHeader</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;font-size&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;200%&#39;</span><span class="p">));</span>
+<span class="nv">$document</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DocumentPrototype</span><span class="p">(</span><span class="k">new</span> <span class="nx">PrintedParagraph</span><span class="p">(),</span> <span class="nv">$header</span><span class="p">,</span> <span class="k">new</span> <span class="nx">BrowsedLists</span><span class="p">());</span>
+</pre></div>
+
+
+<p>Вот таким простым способом мы увеличили размер шрифта всех заголовков
+документа.</p>
+<p>В подведении итогов перечислим преимущества паттерна Prototype:</p>
+<ul>
+<li>Нет необходимости сопровождать дополнительные иерархии классов</li>
+<li>Гибкость настройки эталонных объектов</li>
+<li>Гибкость композиции</li>
+<li>Простое масштабирование порождаемой иерархии</li>
+<li>Гибкость во времени выполнения программы</li>
+</ul>
+<p>Спасибо за внимание, до встречи в мире ООП ;)</p>
+<p><em>Comments - welcome!</em></p>
+    </div><!-- /.entry-content -->
+    <div class="comments">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_identifier = "drugoe/prototype-prototip/";
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://dizballanze.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+    </div>
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

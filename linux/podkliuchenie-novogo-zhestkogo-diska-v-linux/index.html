@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Подключение нового жесткого диска в Linux</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li class="active"><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/linux/podkliuchenie-novogo-zhestkogo-diska-v-linux/" rel="bookmark"
+           title="Permalink to Подключение нового жесткого диска в Linux">Подключение нового жесткого диска в Linux</a></h1>
+<a href="http://twitter.com/share" class="twitter-share-button" data-width="80" data-count="horizontal" data-via="dizballanze" style="display:inline-block;">Tweet</a>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+<div class="fb-like" data-send="false" data-layout="button_count" data-width="110" data-show-faces="true" data-font="trebuchet ms" style="display:inline-block;"></div>
+
+<g:plusone size="medium" width="110" height="22" annotation="inline"></g:plusone>
+
+<script type="text/javascript">
+window.___gcfg = {
+lang: 'en-US'
+  };
+
+  (function() {
+var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+po.src = 'https://apis.google.com/js/plusone.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+})();
+</script>
+
+<!-- Put this script tag to the <head> of your page -->
+<script type="text/javascript" src="//vk.com/js/api/openapi.js?75"></script>
+
+<script type="text/javascript">
+  VK.init({apiId: 2478358, onlyWidgets: true});
+</script>
+
+<!-- Put this div tag to the place, where the Like block will be -->
+<div id="vk_like" style="display: inline-block; width: 110px;"></div>
+<script type="text/javascript">
+VK.Widgets.Like("vk_like", {type: "button"});
+</script>    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2010-11-26T21:14:00+03:00">
+                пт 26 ноября 2010
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/linux.html">Linux</a><a href="/tag/administrirovanie.html">администрирование</a></p>
+</footer><!-- /.post-info -->      <p>Доброго времени суток, товарищи линуксоиды!!</p>
+<p>В этой статье я хочу рассказать о процессе подключения нового жёсткого
+диска в ОС Linux.</p>
+<p>Подключив жёсткий диск убедитесь, что система распознаёт его. Для этого
+можно обратиться к программе конфигурации BIOS. Убедившись в том что
+жёсткий диск успешно подключён можно приступать к загрузке системы.</p>
+<p>Сразу после загрузки необходимо проверить существует ли файл устройств
+для нового диска. В Linux жёсткие диски обозначаются в формате
+/dev/sdXN, где X — буква латинского алфавита, означает диск, а N номер
+раздела на жёстком диске.</p>
+<p>Убедившись в том что файл устройства существует можно приступать к
+разбивке диска на разделы. В моём случае файл устройства называется
+/dev/sdb, т.к. это второй диск в системе (первый как вы наверное
+догадались /dev/sda).</p>
+<p>Итак для создания разделам будем использовать утилиту fdisk.</p>
+<div class="highlight"><pre>fdisk /dev/sdb
+
+:::text
+Device contains neither a valid DOS partition table, nor Sun, SGI or OSF disklabel
+Building a new DOS disklabel with disk identifier 0x07611c35.
+Changes will remain in memory only, <span class="k">until</span> you decide to write them.
+After that, of course, the previous content won<span class="err">&#39;</span>t be recoverable.
+The number of cylinders <span class="k">for</span> this disk is <span class="nb">set </span>to 60801.
+There is nothing wrong with that, but this is larger than 1024,
+and could in certain setups cause problems with:
+1<span class="o">)</span> software that runs at boot <span class="nb">time</span> <span class="o">(</span>e.g., old versions of LILO<span class="o">)</span>
+2<span class="o">)</span> booting and partitioning software from other OSs
+<span class="o">(</span>e.g., DOS FDISK, OS/2 FDISK<span class="o">)</span>
+Warning: invalid flag 0x0000 of partition table <span class="m">4</span> will be corrected by w<span class="o">(</span>rite<span class="o">)</span>
+</pre></div>
+
+
+<p>Утилита выводит информацию о жёстком диске: идентификатор диска,
+количество цилиндров. Потом она ожидает ввода команды, для вывода
+справочной информации о всех доступных командах введите m. Мы будем
+использовать три инструкции:</p>
+<p><code>n (new)</code> - создать новый раздел.</p>
+<p><code>p (print)</code> - вывести информацию о разделах</p>
+<p><code>w (write)</code> — записать таблицу разделов на диск</p>
+<p>Я создам только один раздел, который будет занимать весь доступный объём
+диска. Для этого я ввожу команду new, номер раздела 1, первый цилиндр 1
+и последний цилиндр 60801 (значение по умолчанию). Если вы хотите
+создать большее количество разделов, то просто аналогичным образом
+добавьте необходимое количество разделов. Размер раздела можно задавать
+в цилиндрах, как в показанном примере, или более простым способом, в
+байтах (мегабайтах или гигабайтах) .</p>
+<div class="highlight"><pre>Command (m for help): new
+Command action
+e extended
+p primary partition (1-4)
+p
+Partition number (1-4): 1
+First cylinder (1-60801, default 1): 1
+Last cylinder or +size or +sizeM or +sizeK (1-60801, default 60801):
+Using default value 60801
+</pre></div>
+
+
+<p>Выводим информацию о разделах при помощи команды print.</p>
+<div class="highlight"><pre>Command (m for help): print
+
+Disk /dev/sdb: 500.1 GB, 500107862016 bytes
+255 heads, 63 sectors/track, 60801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x07611c35
+
+Device Boot Start End Blocks Id System
+/dev/sdb1 1 60801 488384001 83 Linux
+</pre></div>
+
+
+<p>Убедившись что разделы созданы так как вы рассчитывали записываем
+таблицу разделов на диск при помощи команды <code>write</code>.</p>
+<div class="highlight"><pre>Command (m for help): write
+The partition table has been altered!
+Calling ioctl() to re-read partition table.
+Syncing disks.
+</pre></div>
+
+
+<p>Теперь можно приступить к форматировании разделов.</p>
+<p>Для этого мы будем использовать команду <code>mke2fs -j</code>, указав в качестве
+аргумента имя раздела.</p>
+<div class="highlight"><pre>mke2fs -j /dev/sdb1
+mke2fs 1.41.3 <span class="o">(</span>12-Oct-2008<span class="o">)</span>
+Filesystem <span class="nv">label</span><span class="o">=</span>
+OS <span class="nb">type</span>: Linux
+Block <span class="nv">size</span><span class="o">=</span><span class="m">4096</span> <span class="o">(</span><span class="nv">log</span><span class="o">=</span>2<span class="o">)</span>
+Fragment <span class="nv">size</span><span class="o">=</span><span class="m">4096</span> <span class="o">(</span><span class="nv">log</span><span class="o">=</span>2<span class="o">)</span>
+<span class="m">30531584</span> inodes, <span class="m">122096000</span> blocks
+<span class="m">6104800</span> blocks <span class="o">(</span>5.00%<span class="o">)</span> reserved <span class="k">for</span> the super user
+First data <span class="nv">block</span><span class="o">=</span>0
+Maximum filesystem <span class="nv">blocks</span><span class="o">=</span>0
+<span class="m">3727</span> block groups
+<span class="m">32768</span> blocks per group, <span class="m">32768</span> fragments per group
+<span class="m">8192</span> inodes per group
+Superblock backups stored on blocks:
+32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
+102400000
+
+Writing inode tables: <span class="k">done</span>
+Creating journal <span class="o">(</span><span class="m">32768</span> blocks<span class="o">)</span>: <span class="k">done</span>
+Writing superblocks and filesystem accounting information: <span class="k">done</span>
+
+This filesystem will be automatically checked every <span class="m">34</span> mounts or
+<span class="m">180</span> days, whichever comes first. Use tune2fs -c or -i to override.
+</pre></div>
+
+
+<p>Теперь необходимо настроить монтирование новых разделов. Сначала
+создадим каталог, который мы будем использовать как точку монтирования.</p>
+<div class="highlight"><pre>mkdir /media/mediahdd
+</pre></div>
+
+
+<p>Пробуем монтировать раздел.</p>
+<div class="highlight"><pre>mount /dev/sdb1 /media/mediahdd
+</pre></div>
+
+
+<p>Теперь необходимо добавить информацию о новом разделе в файл <code>/etc/fstab</code>
+для, того чтобы раздел автоматически монтировался при каждой загрузке
+системы. Для этого открываем этот файл в любом текстовом редакторе.</p>
+<div class="highlight"><pre>nano /etc/fstab
+</pre></div>
+
+
+<p>Добавляем строку формата: <code>имя_раздела</code> <code>точка_монтирования</code>
+<code>файловая_система</code> <code>частота_создания_резервных_копий</code>
+<code>кол-во_запусков_fsck</code></p>
+<div class="highlight"><pre>/dev/sdb1 /media/mediahdd ext3 defaults 0 0
+</pre></div>
+    </div><!-- /.entry-content -->
+    <div class="comments">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_identifier = "linux/podkliuchenie-novogo-zhestkogo-diska-v-linux/";
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://dizballanze.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+    </div>
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Tech blog by @dizballanze - hosts</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+        
+        
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/linux/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/">Быстрое добавление виртуальных хостов Apache в Ubuntu/Debian</a></h1> 
+<footer class="post-info">
+        <abbr class="published" title="2011-05-31T17:51:00+04:00">
+                вт 31 мая 2011
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/apache/">apache</a><a href="/tag/debian/">debian</a><a href="/tag/hosts/">hosts</a><a href="/tag/linux/">Linux</a><a href="/tag/administrirovanie/">администрирование</a></p>
+</footer><!-- /.post-info --><p><img alt="apache" src="/media/2011/05/feather.gif" title="apache" /></p>
+<p>Если вы web-разработчик, который работает сразу над несколькими
+проектами, то вам может показаться не удобным использование localhost и
+под-директорий для разграничения проектов. Кроме того такой подход
+иногда не позволяет приблизится к боевому окружению, когда сайт висит на
+отдельном хосте. Поэтому удобно было бы создавать отдельный виртуальный
+хост для каждого разрабатываемого проекта, который будет доступен по
+удобному адресу. Сейчас мы рассмотрим как произвести быстрое добавление
+виртуального хоста в ОС Linux. Я как всегда буду рассматривать настройку
+на примере Debian Linux, но я думаю, что процесс не будет очень сильно
+отличаться для других дистрибутивов.</p>
+<h2>Создание виртуального хоста</h2>
+<p>Для начала необходимо скопировать стандартный файл конфигурации хоста в
+apache. Мы будем использовать его в качестве основы для настройки новых
+хостов:</p>
+<div class="highlight"><pre><span class="nb">cd</span> /etc/apache2/sites-available/
+cp default <span class="nb">test</span>
+</pre></div>
+
+
+<p>Откроем файл test в любом текстовом редакторе и уведем приблизительно
+следующее:</p>
+<div class="highlight"><pre><span class="nt">&lt;VirtualHost</span> <span class="s">*:80</span><span class="nt">&gt;</span>
+    <span class="nb">ServerAdmin</span> webmaster@localhost
+    <span class="nb">DocumentRoot</span> <span class="sx">/var/www</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> FollowSymLinks
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/var/www/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> Indexes FollowSymLinks MultiViews
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+        <span class="nb">Order</span> allow,deny
+        <span class="nb">allow</span> from <span class="k">all</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nb">ErrorLog</span> ${APACHE_LOG_DIR}/error.log
+    <span class="nb">LogLevel</span> <span class="k">warn</span>
+    <span class="nb">CustomLog</span> ${APACHE_LOG_DIR}/access.log combined
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
+
+
+<p>Итак, допустим нам нужно настроить хост с корнем в директории
+/var/www/test/ в таком случае изменим файл конфигураций следующим
+образом:</p>
+<div class="highlight"><pre><span class="nt">&lt;VirtualHost</span> <span class="s">127.0.1.1:80</span><span class="nt">&gt;</span>
+    <span class="nb">ServerAdmin</span> webmaster@localhost
+    <span class="nb">DocumentRoot</span> <span class="sx">/var/www/test</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> FollowSymLinks
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/var/www/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> Indexes FollowSymLinks MultiViews
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+        <span class="nb">Order</span> allow,deny
+        <span class="nb">allow</span> from <span class="k">all</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nb">ErrorLog</span> ${APACHE_LOG_DIR}/error.log
+    <span class="nb">LogLevel</span> <span class="k">warn</span>
+    <span class="nb">CustomLog</span> ${APACHE_LOG_DIR}/access.log combined
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
+
+
+<p>С конфигурацией apache мы закончили, теперь нужно создать символическую
+ссылку на наш файл конфигураций в директории /etc/apache2/sites-enabled/
+для этого выполним следующую команду:</p>
+<div class="highlight"><pre>ln -s /etc/apache2/sites-available/test /etc/apache2/sites-enabled/test
+</pre></div>
+
+
+<p>или</p>
+<div class="highlight"><pre>a2ensite <span class="nb">test</span>
+</pre></div>
+
+
+<h2>Создание символического имени</h2>
+<p>Т.к. в начале мы указали адрес 127.0.1.1 теперь необходимо связать его с
+символическим именем добавив следующую строку в файл /etc/hosts:</p>
+<div class="highlight"><pre>127.0.1.1  test.loc
+</pre></div>
+
+
+<p>На этом все настройки закончены, можно выполнить перезапуск apache:</p>
+<div class="highlight"><pre>/etc/init.d/apache2 restart
+</pre></div>
+
+
+<p>Теперь вы можете открыть в браузере http://test.loc или 127.0.1.1 и
+увидеть то что находится в директории /var/www/test. Таким образом вы
+можете настроить столько хостов, сколько вам нужно, главное выбирать для
+каждого из них свой ip-адрес и символическое имя.</p>
+<h2>Бонус</h2>
+<p>Для тех кто работает с Zend Framework полезным будет настройка хоста с
+корнем в директории public. Для этого очевидно нужно просто изменить
+путь после DocumentRoot на путь к проекту включающий /public.</p>
+<h2>UPD</h2>
+<p>Более простой способ:</p>
+<div class="highlight"><pre><span class="nt">&lt;VirtualHost</span> <span class="s">*:80</span><span class="nt">&gt;</span>
+   <span class="nb">DocumentRoot</span> <span class="s2">&quot;/var/www/skeleton/public&quot;</span>
+   <span class="nb">ServerName</span> skeleton.local
+   <span class="c"># This should be omitted in the production environment</span>
+   <span class="nb">SetEnv</span> APPLICATION_ENV development
+   <span class="nt">&lt;Directory</span> <span class="s">&quot;/var/www/skeleton/public&quot;</span><span class="nt">&gt;</span>
+       <span class="nb">Options</span> Indexes MultiViews FollowSymLinks
+       <span class="nb">AllowOverride</span> <span class="k">All</span>
+       <span class="nb">Order</span> allow,deny
+       <span class="nb">Allow</span> from <span class="k">all</span>
+   <span class="nt">&lt;/Directory&gt;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
+
+
+<p>После этого добавляем в /etc/hosts:</p>
+<div class="highlight"><pre>127.0.0.1 skeleton.local
+</pre></div>
+
+
+<p>Включаем хост и рестартим апач:</p>
+<div class="highlight"><pre>a2ensite skeleton# /etc/init.d/apache2 restart
+</pre></div><p><a href="/linux/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/#disqus_thread">comments</a></p>                </article>
+<p class="paginator">
+    Страница 1 / 1
+</p>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

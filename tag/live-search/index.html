@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Tech blog by @dizballanze - live search</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/avtor/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+        
+        
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/drugoe/sphinx-poisk-po-prefiksam/">Sphinx - поиск по префиксам</a></h1> 
+<footer class="post-info">
+        <abbr class="published" title="2011-11-09T11:37:00+04:00">
+                ср 09 ноября 2011
+        </abbr>
+<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
+<p>теги: <a href="/tag/live-search/">live search</a><a href="/tag/sphinx/">sphinx</a></p>
+</footer><!-- /.post-info --><p><img alt="sphinx logo" src="/media/2011/11/sphinx.jpg" title="sphinx logo" /></p>
+<p>Приветствую вас! Сегодня мы обсудим настройку sphinx для посимвольного
+поиска по префиксам слов.</p>
+<h2>Проблема</h2>
+<p>Передо мной была поставлена задача реализовать "живой" поиск, т.е. поиск
+с обновлением результатов по мере ввода. Однако, настроив sphinx
+привычным образом было замечено что поиск осуществляется не совсем
+корректно, а именно ведется по целым словам или их формам. Например, при
+поиске слова "деревья" я начинаю вводить "д" и получаю много
+результатов, затем я ввожу вторую букву "е" и результат пропадает.
+Только после ввода части "деревь" я получаю необходимый результат.
+Давайте решим эту проблему!</p>
+<h2>Конфигурация Sphinx</h2>
+<p>Нас интересует блок index конфигурационного файла. Здесь необходимо
+добавить две директивы к уже существующим:</p>
+<ul>
+<li><strong>enable_star = 1</strong> - включает поиск с использованием оператора
+    "*", т.е. введя поисковую фразу "дере*" мы получим совпадение с
+    словом "деревья"</li>
+<li><strong>min_prefix_len = 1</strong> - минимальную длину префикса устанавливаем
+    в один символ, для живого поиска это необходимое требование, чтобы
+    пользователь мог видеть результат уже с первого введенного символа</li>
+</ul>
+<p>После этих изменений блок index моего конфигурационного файла принял
+следующий вид:</p>
+<div class="highlight"><pre>index testIndex
+{
+        # Источник, который будет хранить данный индекса
+        source                  = testSource
+        path                    = /var/sphinx
+
+        # Тип хранения аттрибутов
+        docinfo                 = extern
+
+        mlock                   = 0
+
+        # Используемые морфологические движки
+        morphology              = stem_enru, soundex, metaphone
+
+        # Кодировака данных из источника        
+        charset_type            = utf-8
+
+    enable_star         = 1
+    min_prefix_len      = 1
+}
+</pre></div>
+
+
+<h2>Работа с клиентом sphinx</h2>
+<p>Далее нам необходимо преобразовывать запрос пришедший от пользователя,
+добавляя к каждому слову знак "*" в конце. У меня получилось что-то
+вроде этого:</p>
+<div class="highlight"><pre><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SphinxClient</span><span class="p">;</span>
+<span class="c1">// $q - запрос пришедший от пользователя</span>
+<span class="nv">$words</span> <span class="o">=</span> <span class="nb">explode</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="nv">$q</span><span class="p">);</span>
+<span class="nv">$query</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="nv">$words</span> <span class="k">as</span> <span class="nv">$word</span><span class="p">){</span>
+    <span class="nv">$word</span> <span class="o">=</span> <span class="nb">trim</span><span class="p">(</span><span class="nv">$word</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="nb">strlen</span><span class="p">(</span><span class="nv">$word</span><span class="p">))</span>
+    <span class="nv">$query</span> <span class="o">.=</span> <span class="nv">$word</span> <span class="o">.</span> <span class="s1">&#39;* &#39;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nv">$result</span> <span class="o">=</span> <span class="nv">$client</span><span class="o">-&gt;</span><span class="na">Query</span><span class="p">(</span><span class="nv">$query</span><span class="p">,</span> <span class="s1">&#39;tracksIndex&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>После внесения всех этих изменений живой поиск должен работать так, как
+ожидается. Если у вас возникнут вопросы - задавайте их в комментариях
+ниже.</p><p><a href="/drugoe/sphinx-poisk-po-prefiksam/#disqus_thread">comments</a></p>                </article>
+<p class="paginator">
+    Страница 1 / 1
+</p>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>
