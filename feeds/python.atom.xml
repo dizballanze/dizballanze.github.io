@@ -1,5 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/python.atom.xml" rel="self"></link><id>/</id><updated>2012-12-22T22:55:00+04:00</updated><entry><title>Настраиваем dev-сервер для удобной разработки на django</title><link href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/" rel="alternate"></link><updated>2012-12-22T22:55:00+04:00</updated><author><name>Admin</name></author><id>tag:,2012-12-22:python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/</id><summary type="html">&lt;p&gt;При разработке не хочется тратить время, которого и так не хватает, на
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/python.atom.xml" rel="self"></link><id>/</id><updated>2015-01-16T23:30:00+03:00</updated><entry><title>Python wheels для быстрой установки зависимостей</title><link href="/python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/" rel="alternate"></link><updated>2015-01-16T23:30:00+03:00</updated><author><name>Admin</name></author><id>tag:,2015-01-16:python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/</id><summary type="html">&lt;p&gt;Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;производительность - каждый раз необходима скачивать и собирать пакеты что занимает большое количество времени&lt;/li&gt;
+&lt;li&gt;работа в оффлайн режиме - без подключения к интернету не получится установить зависимости&lt;/li&gt;
+&lt;li&gt;стабильность - установка зависимостей невозможна в случае:&lt;ul&gt;
+&lt;li&gt;неполадок на стороне PyPI&lt;/li&gt;
+&lt;li&gt;неполадок на стороне VCS (GitHub, Bitbucket, etc)&lt;/li&gt;
+&lt;li&gt;нарушения зависимостей (удаление репозитория с Github, удаление пакета из PyPI и тд)&lt;/li&gt;
+&lt;li&gt;неполадок у хостинг провайдера, которые могут привести к недоступности необходимых сетевых ресурсов (PyPI, VSC, etc)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Для решения этой проблемы предлагается использование заранее подготовленных пакетов wheel для всех зависимостей и хранение их в репозитории системы.&lt;/p&gt;
+&lt;h2&gt;Создаем архив wheel пакетов&lt;/h2&gt;
+&lt;p&gt;Wheel - это современный формат распространения пакетов в Python среде, который пришел на замену eggs. Рассмотрим процесс создания архива wheel для всех зависимостей системы. &lt;/p&gt;
+&lt;p&gt;Представим типичный Python проект с файлом requirements.txt содержащим зависимости. Пример файла &lt;code&gt;requirements.txt&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;svgwrite&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.1.6&lt;/span&gt;
+&lt;span class="n"&gt;ipython&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;2.3.0&lt;/span&gt;
+&lt;span class="n"&gt;flask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.10.1&lt;/span&gt;
+&lt;span class="n"&gt;flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;mongoengine&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.7.1&lt;/span&gt;
+&lt;span class="n"&gt;flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;uploads&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.1.3&lt;/span&gt;
+&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="nl"&gt;git&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//github.com/Samael500/flask-principal.git@dab7f391f0eeb76a25fa1b3dae7308a0924c8a12#egg=flask-principal&lt;/span&gt;
+&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="nl"&gt;git&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//github.com/Samael500/flask-security.git@f1042b5db67147b8ddaa8b767b2dfe063bb56ffa#egg=flask-security&lt;/span&gt;
+&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Admin&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.0.8&lt;/span&gt;
+&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Session&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.1.1&lt;/span&gt;
+&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Script&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;2.0.5&lt;/span&gt;
+&lt;span class="n"&gt;gunicorn&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;19.1.1&lt;/span&gt;
+&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Testing&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.4.2&lt;/span&gt;
+&lt;span class="n"&gt;tornado&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;4.0.2&lt;/span&gt;
+&lt;span class="n"&gt;nose&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.3.4&lt;/span&gt;
+&lt;span class="n"&gt;pep8&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.5.7&lt;/span&gt;
+&lt;span class="n"&gt;Pillow&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;2.6.1&lt;/span&gt;
+&lt;span class="n"&gt;pyflakes&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.8.1&lt;/span&gt;
+&lt;span class="n"&gt;pylama&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;6.1.1&lt;/span&gt;
+&lt;span class="n"&gt;spec&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.11.1&lt;/span&gt;
+&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;bcrypt&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.4&lt;/span&gt;
+&lt;span class="n"&gt;WTForms&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.0.4&lt;/span&gt;
+&lt;span class="n"&gt;blessings&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.6&lt;/span&gt;
+&lt;span class="n"&gt;beautifulsoup4&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;4.3.2&lt;/span&gt;
+&lt;span class="n"&gt;lxml&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;3.4.1&lt;/span&gt;
+&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="nl"&gt;git&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//github.com/Samael500/jinja-assets-compressor.git@8e1639cec6f8b347794fe1334519daacc6b763b0#egg=jac&lt;/span&gt;
+&lt;span class="n"&gt;PyYAML&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;3.10&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;В нашем файле &lt;code&gt;requirements.txt&lt;/code&gt; есть зависимости из внешних ресурсов (не PyPI), которые предполагают загрузку пакетов из VCS (в данном случае из git репозиториев на Github). Скопируем старый &lt;code&gt;requirements.txt&lt;/code&gt; в &lt;code&gt;requirements-remote.txt&lt;/code&gt;, а в &lt;code&gt;requirements.txt&lt;/code&gt; заменим внешние ресурсы на обычные пакеты из PyPI и получим:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;svgwrite==1.1.6
+ipython==2.3.0
+flask==0.10.1
+flask-mongoengine==0.7.1
+flask-uploads==0.1.3
+flask-principal
+flask-security
+Flask-Admin==1.0.8
+Flask-Session==0.1.1
+Flask-Script==2.0.5
+gunicorn==19.1.1
+Flask-Testing==0.4.2
+tornado==4.0.2
+nose==1.3.4
+pep8==1.5.7
+Pillow==2.6.1
+pyflakes==0.8.1
+pylama==6.1.1
+spec==0.11.1
+py-bcrypt==0.4
+WTForms==1.0.4
+blessings==1.6
+beautifulsoup4==4.3.2
+lxml==3.4.1
+jac
+PyYAML==3.10
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Это делается для того, чтобы при установке из архива wheel пакетов не происходили запросы к внешним VCS, а брались локальные wheel, которые мы сейчас будем генерировать.&lt;/p&gt;
+&lt;p&gt;Cоздаем и активируем &lt;code&gt;venv&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;pyvenv venv
+. venv/bin/activate
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Устанавливаем все пакеты как обычно, но из &lt;code&gt;requirements-remote.txt&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;pip install -r requirements-remote.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Сгенерируем архив всех пакетов PyPI, всех их зависимостей и всех зависимостей внешних пакетов (VCS). Для этого нам потребуется свежая версия &lt;code&gt;pip&lt;/code&gt; и пакет &lt;code&gt;wheel&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;pip install -U pip
+pip install wheel
+mkdir wheels
+pip wheel -w wheels/ -r requirements-remote.txt --pre --allow-all-external
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;После этого получаем архив wheel пакетов для всех зависимостей кроме внешних (VCS). Для внешних пакетов устанавливаемых из исходников необходимо сгенерировать пакеты вручную при помощи &lt;code&gt;setup.py bdist_wheel&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;cd venv/src/flask-principal
+python setup.py bdist_wheel --dist-dir ../../../wheels/
+cd ../flask-security
+python setup.py bdist_wheel --dist-dir ../../../wheels/
+cd ../jac
+python setup.py bdist_wheel --dist-dir ../../../wheels/
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Теперь в директории &lt;code&gt;wheels&lt;/code&gt; есть все необходимые пакеты для установки всех зависимостей системы. Процесс уставновки зависимостей из локального архива пакетов выполняется так:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;pip install --no-index -f wheels/ -r requirements.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;обратите внимание, что используется файл &lt;code&gt;requirements.txt&lt;/code&gt;, а не &lt;code&gt;requirements-remote.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;h2&gt;Тестирование скорости установки&lt;/h2&gt;
+&lt;p&gt;Обычная установка со скачиванием пакетов из PyPI и VCS:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;time pip install -r requirements-remote.txt
+real    4m20.655s
+user    1m31.242s
+sys 0m55.539s
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Установка из локального архива wheels:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;time pip install --no-index -f wheels/ -r requirements.txt
+real    1m3.412s
+user    0m4.808s
+sys 0m31.210s
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Из результатов можно сделать вывод, что время установки пакетов из локального архива в нашем случае меньше в 4 раза.
+Что логично, т.к. пакеты заново не скачиваются из интернета и не компилируются.&lt;/p&gt;
+&lt;h2&gt;Бонус&lt;/h2&gt;
+&lt;p&gt;Для удобства написал &lt;a href="https://gist.github.com/dizballanze/070434f4eb3b5febae39"&gt;небольшой скрипт&lt;/a&gt;, автоматизирующий сборку пакетов установленных из исходников.&lt;/p&gt;
+&lt;p&gt;Пример использования скрипта:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;python build_wheels --sources-dir venv/src/ --wheels-dir wheels/
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Скрипт пройдется по всем поддиректориям &lt;code&gt;venv/src/&lt;/code&gt; и в каждой из них попробует собрать пакет в директорию &lt;code&gt;wheels/&lt;/code&gt;.&lt;/p&gt;</summary><category term="benchmark"></category><category term="innodb"></category><category term="myisam"></category><category term="MySQL"></category><category term="БД"></category></entry><entry><title>Настраиваем dev-сервер для удобной разработки на django</title><link href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/" rel="alternate"></link><updated>2012-12-22T22:55:00+04:00</updated><author><name>Admin</name></author><id>tag:,2012-12-22:python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/</id><summary type="html">&lt;p&gt;При разработке не хочется тратить время, которого и так не хватает, на
 рутинные действия. После каждой отправки изменений в репозиторий,
 необходимо выполнить обновление кода на dev-сервере, применить миграции
 и тд. Сегодня мы рассмотрим, как быстро настроить автоматический deploy
