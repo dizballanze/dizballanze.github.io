@@ -148,6 +148,8 @@ sys 0m31.210s
 
 Для удобства написал [небольшой скрипт](https://gist.github.com/dizballanze/070434f4eb3b5febae39), автоматизирующий сборку пакетов установленных из исходников.
 
+<script src="https://gist.github.com/dizballanze/070434f4eb3b5febae39.js"></script>
+
 Пример использования скрипта:
 ```
 python build_wheels --sources-dir venv/src/ --wheels-dir wheels/
