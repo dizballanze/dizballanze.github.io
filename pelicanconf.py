@@ -37,6 +37,9 @@ TAG_SAVE_AS = u'tag/{slug}/index.html'
 GITHUB_URL = 'https://github.com/dizballanze'
 TWITTER_USERNAME = 'dizballanze'
 
+# https://github.com/getpelican/pelican-plugins
+MD_EXTENSIONS = ['toc', 'extra']
+
 # Uncomment following line if you want document-relative URLs when developing
 RELATIVE_URLS = True
 
