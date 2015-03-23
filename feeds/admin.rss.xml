@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Tech blog by @dizballanze</title><link>/</link><description></description><atom:link href="http://dizballanze.com/feeds/admin.rss.xml" rel="self"></atom:link><lastBuildDate>Fri, 16 Jan 2015 23:30:00 +0300</lastBuildDate><item><title>Python wheels для быстрой установки зависимостей</title><link>/python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/</link><description>&lt;p&gt;Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:&lt;/p&gt;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Tech blog by @dizballanze</title><link>/</link><description></description><atom:link href="http://dizballanze.com/feeds/admin.rss.xml" rel="self"></atom:link><lastBuildDate>Mon, 23 Mar 2015 16:51:00 +0300</lastBuildDate><item><title>Эффективная совместная работа backend и frontend команд</title><link>/drugoe/frontend-and-backend-collaboration/</link><description>&lt;p&gt;&lt;img alt="teamwork" src="/media/2015/3/teamwork.jpg" title="Team work!" /&gt;&lt;/p&gt;
+&lt;p&gt;В &lt;a href="http://wbtech.ru/"&gt;WB–Tech&lt;/a&gt; мы любим разрабатывать проекты полного цикла, начиная от прототипов на салфетке и
+заканчивая деплоем на продакшн сервер и дальнейшей поддержкой. Часть этапов разработки проекта идет последовательно, 
+например, до тех пор пока не будут собраны все требования и готово ТЗ, мы не начинаем писать код. Основная же часть 
+процесса работы над проектом (непосредственно разработка) ведется параллельно backend и frontend командами. Такое 
+распараллеливание значительно уменьшает календарный срок разработки проекта и увеличивает качество конечного результата. 
+Но также как в программировании, в управления проектами распараллеливание создает определенные трудности. 
+Тому как мы решаем эти трудности и посвящен этот пост.&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://wbtech.ru/blog/frontend-and-backend-collaboration/"&gt;Читать пост в блоге WB–Tech&lt;/a&gt;.&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 23 Mar 2015 16:51:00 +0300</pubDate><guid>tag:,2015-03-23:drugoe/frontend-and-backend-collaboration/</guid><category>collaboration</category><category>vagrant</category><category>git</category><category>REST</category></item><item><title>Python wheels для быстрой установки зависимостей</title><link>/python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/</link><description>&lt;p&gt;Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;производительность - каждый раз необходима скачивать и собирать пакеты что занимает большое количество времени&lt;/li&gt;
 &lt;li&gt;работа в оффлайн режиме - без подключения к интернету не получится установить зависимости&lt;/li&gt;
