@@ -1,4 +1,4 @@
-Title: Применение Nginx + Lua для обработки простых форм
+Title: Применение Nginx + Lua для обработки контактной формы
 Slug: primenenie-nginx-lua-dlia-obrabotki-prostykh-form
 Date: 2015-06-08 18:25
 Author: Admin
