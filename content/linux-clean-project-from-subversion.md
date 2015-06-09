@@ -1,4 +1,5 @@
 Title: Очистка проекта от служебных файлов subversion
+Slug: ochistka-proekta-ot-sluzhebnykh-failov-subversion
 Date: 2011-06-07 20:32
 Author: Admin
 Category: Linux

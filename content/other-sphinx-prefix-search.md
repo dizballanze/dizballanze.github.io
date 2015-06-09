@@ -1,4 +1,5 @@
 Title: Sphinx - поиск по префиксам
+Slug: sphinx-поиск-по-префиксам
 Date: 2011-11-09 11:37
 Author: Admin
 Category: Другое

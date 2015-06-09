@@ -1,4 +1,5 @@
 Title: Автор
+Slug: автор
 Date: 2010-11-25 16:32
 Author: Admin
 
