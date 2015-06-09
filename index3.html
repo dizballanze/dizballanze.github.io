@@ -38,7 +38,7 @@
         <header id="banner" class="body">
                 <h1><a href="/">Tech blog by @dizballanze </a></h1>
                 <nav><ul>
-                    <li><a href="/avtor/">Автор</a></li>
+                    <li><a href="/автор/">Автор</a></li>
                     <li ><a href="/category/bd.html">БД</a></li>
                     <li ><a href="/category/drugoe.html">Другое</a></li>
                     <li ><a href="/category/linux.html">Linux</a></li>
@@ -52,6 +52,33 @@
  
                 <section id="content" class="body">
                     <ol id="posts-list" class="hfeed" start="9">
+            <li><article class="hentry">    
+                <header>
+                    <h1><a href="/linux/geoip-sredstvami-nginx/" rel="bookmark"
+                           title="Permalink to GeoIP средствами Nginx">GeoIP средствами Nginx</a></h1>
+                </header>
+                
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2011-10-21T22:03:00+04:00">
+                пт 21 октября 2011
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/geoip/">geoip</a><a href="/tag/nginx/">nginx</a></p>
+</footer><!-- /.post-info -->                <p><img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo" /></p>
+<p>Часто при разработке сайтов появляется необходимость определения
+местоположения пользователя. Например, таким образом можно выдавать
+различные версии сайта для аудитории из разных стран. Также можно
+использовать данную возможность для балансировки нагрузки и назначать
+пользователю тот сервер, который находится ближе всего. Для реализации
+данной функции можно воспользоваться средствами <a href="http://nginx.org/ru/">Nginx</a>, прикрутив к
+нему ...</p>
+                <a class="readmore" href="/linux/geoip-sredstvami-nginx/">читать дальше</a>
+<p><a href="/linux/geoip-sredstvami-nginx/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
+            </article></li>
+        
+
+ 
             <li><article class="hentry">    
                 <header>
                     <h1><a href="/drugoe/zend-framework-day/" rel="bookmark"
@@ -294,7 +321,8 @@ Zend Framework, как платформы для создания web-прило
 понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
 свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
 удалить все директории .svn нужно выполнить следующие команды:</p>
-<div class="highlight"><pre><span class="nb">cd</span> /var/www/projectfind . -name .svn -exec rm -R <span class="o">{}</span> <span class="se">\;</span> -print ...</pre></div>
+<pre><code>:::bash
+cd /var/www/projectfind . -name .svn -exec rm -R ...</code></pre>
                 <a class="readmore" href="/linux/ochistka-proekta-ot-sluzhebnykh-failov-subversion/">читать дальше</a>
 <p><a href="/linux/ochistka-proekta-ot-sluzhebnykh-failov-subversion/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
@@ -323,31 +351,6 @@ web-изданию - <img alt="ТИПО - правильно!" src="http://www.t
 параметров обработки ...</p>
                 <a class="readmore" href="/drugoe/php-klass-dlia-raboty-s-typografru/">читать дальше</a>
 <p><a href="/drugoe/php-klass-dlia-raboty-s-typografru/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
-            </article></li>
-        
-
- 
-            <li><article class="hentry">    
-                <header>
-                    <h1><a href="/drugoe/problema-s-keshem-facebook-i-url/" rel="bookmark"
-                           title="Permalink to Проблема с кэшем facebook и url">Проблема с кэшем facebook и url</a></h1>
-                </header>
-                
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2011-06-03T10:55:00+04:00">
-                пт 03 июня 2011
-        </abbr>
-<p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/cache/">cache</a><a href="/tag/facebook/">facebook</a><a href="/tag/url/">url</a></p>
-</footer><!-- /.post-info -->                <p><img alt="facebook" src="/media/2011/06/n20531316728_2183540_7053-300x99.jpg" title="facebook" /></p>
-<p>Здравствуйте! Недавно столкнулся с проблемой при использовании кнопки
-like от facebook. Проблема заключалась в том, что в open graph теге был
-указан некорректный url. Заметив данную оплошность я сразу её устранил,
-но это не повлекло за собой нужного эффекта. Как оказалось, дело в том
-что facebook кэширует данные о страницах ...</p>
-                <a class="readmore" href="/drugoe/problema-s-keshem-facebook-i-url/">читать дальше</a>
-<p><a href="/drugoe/problema-s-keshem-facebook-i-url/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
             </ol><!-- /#posts-list -->
 <p class="paginator">

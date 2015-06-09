@@ -306,10 +306,9 @@ geo-country.conf и geo-city.conf. Стоит учесть что из БД по
 понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
 свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
 удалить все директории .svn нужно выполнить следующие команды:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /var/www/projectfind . -name .svn -exec rm -R &lt;span class="o"&gt;{}&lt;/span&gt; &lt;span class="se"&gt;\;&lt;/span&gt; -print
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /var/www/projectfind . -name .svn -exec rm -R {} \; -print
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Я рекомендую выполнять удаление служебных файлов из копии проекта, если
 вы не уверены на 100% что не будете использовать svn в дальнейшем.&lt;/p&gt;</summary><category term="Linux"></category><category term="svn"></category></entry><entry><title>Быстрое добавление виртуальных хостов Apache в Ubuntu/Debian</title><link href="/linux/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/" rel="alternate"></link><updated>2011-05-31T17:51:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-05-31:linux/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/</id><summary type="html">&lt;p&gt;&lt;img alt="apache" src="/media/2011/05/feather.gif" title="apache" /&gt;&lt;/p&gt;
 &lt;p&gt;Если вы web-разработчик, который работает сразу над несколькими

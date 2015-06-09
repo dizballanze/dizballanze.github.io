@@ -1,5 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/admin.atom.xml" rel="self"></link><id>/</id><updated>2015-03-23T16:51:00+03:00</updated><entry><title>Эффективная совместная работа backend и frontend команд</title><link href="/drugoe/frontend-and-backend-collaboration/" rel="alternate"></link><updated>2015-03-23T16:51:00+03:00</updated><author><name>Admin</name></author><id>tag:,2015-03-23:drugoe/frontend-and-backend-collaboration/</id><summary type="html">&lt;p&gt;&lt;img alt="teamwork" src="/media/2015/3/teamwork.jpg" title="Team work!" /&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/admin.atom.xml" rel="self"></link><id>/</id><updated>2015-06-08T18:25:00+03:00</updated><entry><title>Применение Nginx + Lua для обработки простых форм</title><link href="/drugoe/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/" rel="alternate"></link><updated>2015-06-08T18:25:00+03:00</updated><author><name>Admin</name></author><id>tag:,2015-06-08:drugoe/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/</id><summary type="html">&lt;p&gt;&lt;img alt="lua" src="/media/2015/6/lua.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;Бывает, что нужно развернуть простой, почти полностью статический сайт. И все что мешает ограничится одним Nginx - это 
+простая контактная форма, которая должна только отправлять полученные данные по почте. Конечно можно прикрутить стороннее 
+решение, вроде Google Forms, но такие сторонние решения не всегда хорошо кастомизируются. Разворачивать какой-то свой бекенд 
+отдельно тоже не очень хочется, придется следить за тем, чтобы он всегда был запущен, усложняется деплой и тд.&lt;/p&gt;
+&lt;p&gt;Возможным решением  будет использовать nginx модуль &lt;a href="http://wiki.nginx.org/HttpLuaModule"&gt;ngx_lua&lt;/a&gt; и использовать 
+встраиваемый lua в Nginx. Это позволит нам ограничится Nginx и при этом реализовать кастомный обработчик формы прямо в 
+конфиге Nginx, который будет работать эффективно и который проще поддерживать чем отдельный бекенд.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Пару слов о Lua. Простой, скриптовый язык, чем-то напоминает javascript, но с более мощными конструкциями и без многих 
+недостатоков последнего. Хорошо зарекомендовал себя, как встраиваемый язык, из-за удобства встраивания и высокой скорости 
+исполнения. Широко применяется в gamedev (напр. используется в WoW).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="_1"&gt;Установка&lt;/h2&gt;
+&lt;p&gt;Нам понадобится установить несколько пакетов (в примерах показывается для debian/ubuntu систем):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;nginx-extras - пакет содержащий Nginx с кучей предустановленных модулей (в том числе ngx_lua)&lt;/li&gt;
+&lt;li&gt;lua5.1 - интерпретатор lua, просто для того, чтобы можно было что-то проверить в REPL (для ngx_lua он не нужен)&lt;/li&gt;
+&lt;li&gt;luarocks - менеджер модулей lua&lt;/li&gt;
+&lt;li&gt;git-core - для того, чтобы установить smtp модуль из GitHub&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code&gt;apt-get install nginx-extras lua5.1 luarocks git-core
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Теперь воспользуемся luarocks для установки модуля &lt;a href="https://github.com/duhoobo/lua-resty-smtp"&gt;lua-resty-smtp&lt;/a&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sudo luarocks install https://raw.githubusercontent.com/duhoobo/lua-resty-smtp/master/rockspec/resty.smtp-0.0.3-1.rockspec
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Вобщем-то это все, можно приступать к разработке.&lt;/p&gt;
+&lt;h2 id="0-hello-world"&gt;0: Hello world&lt;/h2&gt;
+&lt;p&gt;Сначала напишем классический hello world пример:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="nginx"&gt;server {
+    listen    80;
+
+    location /hi {
+        content_by_lua '
+            ngx.header[&amp;quot;Content-Type&amp;quot;] = &amp;quot;text/plain;charset=utf-8&amp;quot;
+            ngx.say(&amp;quot;Hello world!&amp;quot;);
+        ';
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;После перезапуска проверяем:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;➜  ~  curl http://10.1.1.97/hi
+Hello world!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Для обработки запроса мы используем директиву &lt;code&gt;content_by_lua&lt;/code&gt;, которая принимает строку lua кода и ожидает, что этот код 
+сгенерирует и вернет ответ используя Nginx API. Встраивать lua код в конфиг Nginx не обязательно, вместо этого можно использовать 
+директиву &lt;code&gt;content_by_lua_file&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Nginx предоставляет &lt;a href="http://wiki.nginx.org/HttpLuaModule#Nginx_API_for_Lua"&gt;полнофункциональный API&lt;/a&gt; с методами на все 
+случаи жизни. Все методы, с которыми мы будем работать в примерах данного поста, предоставляются через модуль &lt;code&gt;ngx&lt;/code&gt;, 
+который автоматически становится доступен нашим lua скриптам при запуске в Nginx.&lt;/p&gt;
+&lt;h2 id="1-smtp"&gt;1: SMTP&lt;/h2&gt;
+&lt;p&gt;Теперь попробуем выполнить отправку какого-либо тестового письма, просто чтобы убедиться, что это работает. Для отправки 
+письма будем использовать установленную нами ранее библиотеку lua-resty-smtp. Примерный код скрипта отправка письма через
+внешний SMTP будет выглядить так (используем &lt;a href="https://debugmail.io/"&gt;debugmail.io&lt;/a&gt; для тестирования):&lt;/p&gt;
+&lt;pre&gt;&lt;code class="lua"&gt;-- Загружаем библиотеку для работы с SMTP
+local smtp = require(&amp;quot;resty.smtp&amp;quot;)
+
+from = &amp;quot;&amp;lt;test@example.org&amp;gt;&amp;quot;
+to = &amp;quot;&amp;lt;rcpt@example.org&amp;gt;&amp;quot;
+
+-- Формируем данные письма
+mesgt = {
+    headers = {
+        to = to,
+        from = from,
+        subject = &amp;quot;Mail from Nginx and Lua&amp;quot;
+    },
+    body = &amp;quot;Hello from Nginx and Lua!&amp;quot;
+}
+
+source = smtp.message(mesgt)
+-- Выполняем отправку письма
+res, error = smtp.send{
+    from = from,
+    rcpt = to,
+    source = source,
+    user = &amp;quot;dizballanze@gmail.com&amp;quot;,
+    password = &amp;quot;&amp;lt;wow-very-secret&amp;gt;&amp;quot;,
+    server = &amp;quot;debugmail.io&amp;quot;,
+    port = 25
+}
+
+-- Формируем ответ сервера
+ngx.header[&amp;quot;Content-Type&amp;quot;] = &amp;quot;text/plain;charset=utf-8&amp;quot;
+if res then
+    ngx.say(&amp;quot;Success!&amp;quot;)
+else
+    -- Статус 500 в случае ошибки
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    ngx.say(&amp;quot;Error while send mail&amp;quot;)
+    ngx.say(error)
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Размещаем этот код в директиве &lt;code&gt;content_by_lua&lt;/code&gt; (или через внешний файл в &lt;code&gt;content_by_lua_file&lt;/code&gt;) в
+ и добавляем директиву resolver, чтобы nginx мог определить ip адрес debugmail.io:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;server {
+    listen 80;
+
+    location /send-mail {
+        resolver 8.8.8.8;
+        content_by_lua '...';
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Проверяем:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;➜  ~  curl http://10.1.1.97/send-mail
+Success!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Проверяем, что письмо пришло и содержит корректные данные на &lt;a href="http://bit.ly/1FNrev5"&gt;debugmail (смотреть письмо)&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Меняем пароль на неправильный и проверяем, выводится ли ошибка (не забываем перезапускать Nginx после изменений):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;➜  ~  curl http://10.1.1.97/send-mail
+Error while send mail
+535 5.7.0 Invalid login or password
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id="2-form-handling"&gt;2: Form Handling&lt;/h2&gt;
+&lt;p&gt;Для того, чтобы обработать обычную форму нужно добавить директиву &lt;code&gt;lua_need_request_body on;&lt;/code&gt;, чтобы 
+Nginx подготовил для нас тело запроса и lua мог его распарсить. Далее мы используем метод &lt;code&gt;ngx.req.get_post_args&lt;/code&gt;, который возвращает таблицу содержащую все параметры запроса.&lt;/p&gt;
+&lt;p&gt;Дальше дело техники, при помощи &lt;code&gt;string.format&lt;/code&gt; формируем тело письма и отправляем также, как мы делали 
+это в предыдущем примере.&lt;/p&gt;
+&lt;h2 id="_2"&gt;Заключение&lt;/h2&gt;
+&lt;p&gt;Полный пример обработчика формы с настроенным Vagrant, который можно легко запустить самому и потыкать, 
+можно найти на &lt;a href="https://github.com/dizballanze/nginx-lua-contact"&gt;гитхаб&lt;/a&gt;.&lt;/p&gt;</summary><category term="http"></category><category term="nginx"></category><category term="lua"></category></entry><entry><title>Эффективная совместная работа backend и frontend команд</title><link href="/drugoe/frontend-and-backend-collaboration/" rel="alternate"></link><updated>2015-03-23T16:51:00+03:00</updated><author><name>Admin</name></author><id>tag:,2015-03-23:drugoe/frontend-and-backend-collaboration/</id><summary type="html">&lt;p&gt;&lt;img alt="teamwork" src="/media/2015/3/teamwork.jpg" title="Team work!" /&gt;&lt;/p&gt;
 &lt;p&gt;В &lt;a href="http://wbtech.ru/"&gt;WB–Tech&lt;/a&gt; мы любим разрабатывать проекты полного цикла, начиная от прототипов на салфетке и
 заканчивая деплоем на продакшн сервер и дальнейшей поддержкой. Часть этапов разработки проекта идет последовательно, 
 например, до тех пор пока не будут собраны все требования и готово ТЗ, мы не начинаем писать код. Основная же часть 
@@ -1543,10 +1672,10 @@ multiple select в php. Думаю кому-нибудь пригодится.&l
 скрипт будет передаваться только один (последний выделенный) элемент.
 Для того чтобы получить все элементы достаточно заменить значение
 атрибута name тега select на "fruits[]", тогда в &lt;code&gt;$_POST['fruits']&lt;/code&gt; будет
-массив значений выделенных элементов.&lt;/p&gt;</summary><category term="multiple select"></category><category term="PHP"></category></entry><entry><title>Sphinx - поиск по префиксам</title><link href="/drugoe/sphinx-poisk-po-prefiksam/" rel="alternate"></link><updated>2011-11-09T11:37:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-11-09:drugoe/sphinx-poisk-po-prefiksam/</id><summary type="html">&lt;p&gt;&lt;img alt="sphinx logo" src="/media/2011/11/sphinx.jpg" title="sphinx logo" /&gt;&lt;/p&gt;
+массив значений выделенных элементов.&lt;/p&gt;</summary><category term="multiple select"></category><category term="PHP"></category></entry><entry><title>Sphinx - поиск по префиксам</title><link href="/drugoe/sphinx-%D0%BF%D0%BE%D0%B8%D1%81%D0%BA-%D0%BF%D0%BE-%D0%BF%D1%80%D0%B5%D1%84%D0%B8%D0%BA%D1%81%D0%B0%D0%BC/" rel="alternate"></link><updated>2011-11-09T11:37:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-11-09:drugoe/sphinx-поиск-по-префиксам/</id><summary type="html">&lt;p&gt;&lt;img alt="sphinx logo" src="/media/2011/11/sphinx.jpg" title="sphinx logo" /&gt;&lt;/p&gt;
 &lt;p&gt;Приветствую вас! Сегодня мы обсудим настройку sphinx для посимвольного
 поиска по префиксам слов.&lt;/p&gt;
-&lt;h2&gt;Проблема&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Проблема&lt;/h2&gt;
 &lt;p&gt;Передо мной была поставлена задача реализовать "живой" поиск, т.е. поиск
 с обновлением результатов по мере ввода. Однако, настроив sphinx
 привычным образом было замечено что поиск осуществляется не совсем
@@ -1555,7 +1684,7 @@ multiple select в php. Думаю кому-нибудь пригодится.&l
 результатов, затем я ввожу вторую букву "е" и результат пропадает.
 Только после ввода части "деревь" я получаю необходимый результат.
 Давайте решим эту проблему!&lt;/p&gt;
-&lt;h2&gt;Конфигурация Sphinx&lt;/h2&gt;
+&lt;h2 id="sphinx"&gt;Конфигурация Sphinx&lt;/h2&gt;
 &lt;p&gt;Нас интересует блок index конфигурационного файла. Здесь необходимо
 добавить две директивы к уже существующим:&lt;/p&gt;
 &lt;ul&gt;
@@ -1568,7 +1697,8 @@ multiple select в php. Думаю кому-нибудь пригодится.&l
 &lt;/ul&gt;
 &lt;p&gt;После этих изменений блок index моего конфигурационного файла принял
 следующий вид:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;index testIndex
+&lt;pre&gt;&lt;code&gt;:::text
+index testIndex
 {
         # Источник, который будет хранить данный индекса
         source                  = testSource
@@ -1588,29 +1718,26 @@ multiple select в php. Думаю кому-нибудь пригодится.&l
     enable_star         = 1
     min_prefix_len      = 1
 }
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Работа с клиентом sphinx&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="sphinx_1"&gt;Работа с клиентом sphinx&lt;/h2&gt;
 &lt;p&gt;Далее нам необходимо преобразовывать запрос пришедший от пользователя,
 добавляя к каждому слову знак "*" в конце. У меня получилось что-то
 вроде этого:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class="c1"&gt;// ...&lt;/span&gt;
-&lt;span class="nv"&gt;$client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;SphinxClient&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="c1"&gt;// $q - запрос пришедший от пользователя&lt;/span&gt;
-&lt;span class="nv"&gt;$words&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;explode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$q&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nv"&gt;$query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$words&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$word&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="nv"&gt;$word&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;trim&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$word&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$word&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
-    &lt;span class="nv"&gt;$query&lt;/span&gt; &lt;span class="o"&gt;.=&lt;/span&gt; &lt;span class="nv"&gt;$word&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;* &amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::php
+&amp;lt;?php
+// ...
+$client = new SphinxClient;
+// $q - запрос пришедший от пользователя
+$words = explode(' ', $q);
+$query = '';
+foreach ($words as $word){
+    $word = trim($word);
+if (strlen($word))
+    $query .= $word . '* ';
+}
 
-&lt;span class="nv"&gt;$result&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$client&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;Query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;tracksIndex&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+$result = $client-&amp;gt;Query($query, 'tracksIndex');
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;После внесения всех этих изменений живой поиск должен работать так, как
 ожидается. Если у вас возникнут вопросы - задавайте их в комментариях
 ниже.&lt;/p&gt;</summary><category term="live search"></category><category term="sphinx"></category></entry><entry><title>GeoIP средствами Nginx</title><link href="/linux/geoip-sredstvami-nginx/" rel="alternate"></link><updated>2011-10-21T22:03:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-10-21:linux/geoip-sredstvami-nginx/</id><summary type="html">&lt;p&gt;&lt;img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo" /&gt;&lt;/p&gt;
@@ -2556,10 +2683,9 @@ application.ini:&lt;/p&gt;
 понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
 свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
 удалить все директории .svn нужно выполнить следующие команды:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /var/www/projectfind . -name .svn -exec rm -R &lt;span class="o"&gt;{}&lt;/span&gt; &lt;span class="se"&gt;\;&lt;/span&gt; -print
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /var/www/projectfind . -name .svn -exec rm -R {} \; -print
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Я рекомендую выполнять удаление служебных файлов из копии проекта, если
 вы не уверены на 100% что не будете использовать svn в дальнейшем.&lt;/p&gt;</summary><category term="Linux"></category><category term="svn"></category></entry><entry><title>PHP-класс для работы с typograf.ru</title><link href="/drugoe/php-klass-dlia-raboty-s-typografru/" rel="alternate"></link><updated>2011-06-06T22:14:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-06-06:drugoe/php-klass-dlia-raboty-s-typografru/</id><summary type="html">&lt;p&gt;С недавнего времени начал использовать сервис для подготовки текстов к
 web-изданию - &lt;img alt="ТИПО - правильно!" src="http://www.typograf.ru/img/typograf.gif" /&gt;. Очень полезный и удобный
