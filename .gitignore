@@ -1,8 +1,11 @@
+cache/
 venv/
 srv.pid
 pelican.pid
 output/
 pelican-plugins/
+
+*.swp
 
 # Created by https://www.gitignore.io
 

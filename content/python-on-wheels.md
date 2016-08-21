@@ -2,7 +2,7 @@ Title: Python wheels для быстрой установки зависимос
 Date: 2015-01-16 23:30
 Author: Admin
 Category: Python
-Tags: benchmark, innodb, myisam, MySQL, БД
+Tags: pip, wheels, dev tools
 
 Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:
 
