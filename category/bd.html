@@ -67,10 +67,9 @@ MySQL позволяет подключать разные движки табл
 часто используемых типов - myisam и innodb.</p>
 <p>Для того что-бы посмотреть какие типы поддерживает ваша инсталляция
 MySQL необходимо выполнить следующий SQL запрос:</p>
-<div class="highlight"><pre><span class="k">SHOW</span> <span class="n">ENGINES</span><span class="p">;</span>
-</pre></div>
-
-
+<pre><code>:::sql
+SHOW ENGINES;
+</code></pre>
 <p>В результате вы получаете таблицу содержащую информацию о том какие типы
 таблиц установлены в вашей системе и краткое описание их возможностей.</p>
 <table>
@@ -322,120 +321,118 @@ MySQL необходимо выполнить следующий SQL запро�
 </tr>
 </tbody>
 </table>
-<h2>Тестирование производительность InnoDB и MyIASM</h2>
+<h2 id="innodb-myiasm">Тестирование производительность InnoDB и MyIASM</h2>
 <p>Наибольший интерес для web-разработчика составляют innodb и myisam.
 Сейчас мы проведем сравнительный тест производительности этих типов
 таблиц. Для этого сначала создадим две одинаковые по структуре таблицы,
 но с разным типом движка хранения:</p>
-<div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="o">`</span><span class="n">inno</span><span class="o">`</span> <span class="p">(</span>
-  <span class="o">`</span><span class="n">id</span><span class="o">`</span> <span class="nb">BIGINT</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
-  <span class="o">`</span><span class="k">data</span><span class="o">`</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
-  <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="o">`</span><span class="n">id</span><span class="o">`</span><span class="p">)</span>
-<span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">InnoDB</span><span class="p">;</span>
+<pre><code>:::sql
+CREATE TABLE `inno` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `data` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
 
-<span class="k">CREATE</span> <span class="k">TABLE</span> <span class="o">`</span><span class="n">myisam</span><span class="o">`</span> <span class="p">(</span>
-  <span class="o">`</span><span class="n">id</span><span class="o">`</span> <span class="nb">BIGINT</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span><span class="p">,</span>
-  <span class="o">`</span><span class="k">data</span><span class="o">`</span> <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span><span class="p">,</span>
-  <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">(</span><span class="o">`</span><span class="n">id</span><span class="o">`</span><span class="p">)</span>
-<span class="p">)</span> <span class="n">ENGINE</span><span class="o">=</span><span class="n">MyISAM</span><span class="p">;</span>
-</pre></div>
-
-
+CREATE TABLE `myisam` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `data` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+</code></pre>
 <p>Напишем небольшой скрипт который будет выполнять 3 теста: запись данных
 (insert), выборка по ключу, выборка по не ключевому полю.</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="k">class</span> <span class="nc">timer</span><span class="p">{</span>
-    <span class="k">public</span> <span class="nv">$value</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<pre><code>:::php
+&lt;?php
+// ...
+class timer{
+    public $value=0;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">start</span><span class="p">(){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">value</span> <span class="o">=</span> <span class="nb">microtime</span><span class="p">(</span><span class="k">true</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function start(){
+        $this-&gt;value = microtime(true);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">end</span><span class="p">(){</span>
-        <span class="k">return</span> <span class="nb">microtime</span><span class="p">(</span><span class="k">true</span><span class="p">)</span> <span class="o">-</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">value</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function end(){
+        return microtime(true) - $this-&gt;value;
+    }
+}
 
-<span class="nv">$timer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">timer</span><span class="p">();</span>
+$timer = new timer();
 
-<span class="nb">mysql_connect</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span><span class="s1">&#39;root&#39;</span><span class="p">);</span>
-<span class="nb">mysql_select_db</span><span class="p">(</span><span class="s1">&#39;test&#39;</span><span class="p">);</span>
+mysql_connect('localhost','root');
+mysql_select_db('test');
 
-<span class="nv">$data</span> <span class="o">=</span> <span class="k">array</span><span class="p">();</span>
-<span class="nv">$select_query</span> <span class="o">=</span> <span class="s1">&#39;SELECT data FROM myisam WHERE id = :val:&#39;</span><span class="p">;</span>
-<span class="k">for</span> <span class="p">(</span><span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nv">$i</span> <span class="o">&lt;=</span> <span class="mi">10000</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
-    <span class="nv">$result</span> <span class="o">=</span> <span class="nb">mysql_query</span><span class="p">(</span><span class="nb">str_replace</span><span class="p">(</span><span class="s1">&#39;:val:&#39;</span><span class="p">,</span> <span class="nv">$i</span><span class="p">,</span> <span class="nv">$select_query</span><span class="p">));</span>
-    <span class="nv">$tmp</span> <span class="o">=</span> <span class="nb">mysql_fetch_array</span><span class="p">(</span><span class="nv">$result</span><span class="p">);</span>
-    <span class="nv">$data</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="p">}</span>
+$data = array();
+$select_query = 'SELECT data FROM myisam WHERE id = :val:';
+for ($i = 0; $i &lt;= 10000; $i++){
+    $result = mysql_query(str_replace(':val:', $i, $select_query));
+    $tmp = mysql_fetch_array($result);
+    $data[] = $tmp[0];
+}
 
-<span class="k">echo</span> <span class="s1">&#39;&lt;br/&gt;MyISAM select&lt;br/&gt;&#39;</span><span class="p">;</span>
-<span class="nv">$select_query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM myisam WHERE data = :val:&#39;</span><span class="p">;</span>
-<span class="nv">$timer</span><span class="o">-&gt;</span><span class="na">start</span><span class="p">();</span>
-<span class="k">foreach</span> <span class="p">(</span><span class="nv">$data</span> <span class="k">as</span> <span class="nv">$one</span><span class="p">){</span>
-    <span class="nb">mysql_query</span><span class="p">(</span><span class="nb">str_replace</span><span class="p">(</span><span class="s1">&#39;:val:&#39;</span><span class="p">,</span> <span class="nv">$one</span><span class="p">,</span> <span class="nv">$select_query</span><span class="p">));</span>
-<span class="p">}</span>
-<span class="k">echo</span> <span class="nv">$timer</span><span class="o">-&gt;</span><span class="na">end</span><span class="p">()</span> <span class="o">.</span> <span class="s1">&#39; s&lt;br/&gt;&#39;</span><span class="p">;</span>
+echo '&lt;br/&gt;MyISAM select&lt;br/&gt;';
+$select_query = 'SELECT * FROM myisam WHERE data = :val:';
+$timer-&gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $select_query));
+}
+echo $timer-&gt;end() . ' s&lt;br/&gt;';
 
-<span class="k">echo</span> <span class="s1">&#39;&lt;br/&gt;InnoDB select&lt;br/&gt;&#39;</span><span class="p">;</span>
-<span class="nv">$select_query</span> <span class="o">=</span> <span class="s1">&#39;SELECT * FROM inno WHERE data = :val:&#39;</span><span class="p">;</span>
-<span class="nv">$timer</span><span class="o">-&gt;</span><span class="na">start</span><span class="p">();</span>
-<span class="k">foreach</span> <span class="p">(</span><span class="nv">$data</span> <span class="k">as</span> <span class="nv">$one</span><span class="p">){</span>
-    <span class="nb">mysql_query</span><span class="p">(</span><span class="nb">str_replace</span><span class="p">(</span><span class="s1">&#39;:val:&#39;</span><span class="p">,</span> <span class="nv">$one</span><span class="p">,</span> <span class="nv">$select_query</span><span class="p">));</span>
-<span class="p">}</span>
-<span class="k">echo</span> <span class="nv">$timer</span><span class="o">-&gt;</span><span class="na">end</span><span class="p">()</span> <span class="o">.</span> <span class="s1">&#39; s&lt;br/&gt;&#39;</span><span class="p">;</span>
+echo '&lt;br/&gt;InnoDB select&lt;br/&gt;';
+$select_query = 'SELECT * FROM inno WHERE data = :val:';
+$timer-&gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $select_query));
+}
+echo $timer-&gt;end() . ' s&lt;br/&gt;';
 
-<span class="cm">/*</span>
+/*
 
-<span class="cm">$data = array();</span>
-<span class="cm">for ($i = 0; $i &lt;= 10000; $i++){</span>
-<span class="cm">    $data[] = mt_rand(0, 100500);</span>
-<span class="cm">}</span>
+$data = array();
+for ($i = 0; $i &lt;= 10000; $i++){
+    $data[] = mt_rand(0, 100500);
+}
 
-<span class="cm">echo &#39;&lt;br/&gt;MyISAM select by key&lt;br/&gt;&#39;;</span>
-<span class="cm">$select_query = &#39;SELECT * FROM myisam WHERE id = :val:&#39;;</span>
-<span class="cm">$timer-&gt;start();</span>
-<span class="cm">for ($i = 0; $i &lt;= 10000; $i++){</span>
-<span class="cm">    mysql_query(str_replace(&#39;:val:&#39;, $i, $select_query));</span>
-<span class="cm">}</span>
-<span class="cm">echo $timer-&gt;end() . &#39; s&lt;br/&gt;&#39;;</span>
+echo '&lt;br/&gt;MyISAM select by key&lt;br/&gt;';
+$select_query = 'SELECT * FROM myisam WHERE id = :val:';
+$timer-&gt;start();
+for ($i = 0; $i &lt;= 10000; $i++){
+    mysql_query(str_replace(':val:', $i, $select_query));
+}
+echo $timer-&gt;end() . ' s&lt;br/&gt;';
 
-<span class="cm">echo &#39;&lt;br/&gt;InnoDB select by key&lt;br/&gt;&#39;;</span>
-<span class="cm">$select_query = &#39;SELECT * FROM inno WHERE id = :val:&#39;;</span>
-<span class="cm">$timer-&gt;start();</span>
-<span class="cm">for ($i = 0; $i &lt;= 10000; $i++){</span>
-<span class="cm">    mysql_query(str_replace(&#39;:val:&#39;, $i, $select_query));</span>
-<span class="cm">}</span>
-<span class="cm">echo $timer-&gt;end() . &#39; s&lt;br/&gt;&#39;;</span>
-<span class="cm">*/</span>
+echo '&lt;br/&gt;InnoDB select by key&lt;br/&gt;';
+$select_query = 'SELECT * FROM inno WHERE id = :val:';
+$timer-&gt;start();
+for ($i = 0; $i &lt;= 10000; $i++){
+    mysql_query(str_replace(':val:', $i, $select_query));
+}
+echo $timer-&gt;end() . ' s&lt;br/&gt;';
+*/
 
-<span class="cm">/*</span>
+/*
 
-<span class="cm">$data = array();</span>
-<span class="cm">for ($i = 0; $i &lt;= 10000; $i++){</span>
-<span class="cm">    $data[] = mt_rand(0, 100500);</span>
-<span class="cm">}</span>
+$data = array();
+for ($i = 0; $i &lt;= 10000; $i++){
+    $data[] = mt_rand(0, 100500);
+}
 
-<span class="cm">echo &#39;&lt;br/&gt;MyISAM insert&lt;br/&gt;&#39;;</span>
-<span class="cm">$insert_query = &#39;INSERT INTO myisam VALUES (NULL,\&#39;:val:\&#39;)&#39;;</span>
-<span class="cm">$timer-&gt;start();</span>
-<span class="cm">foreach ($data as $one){</span>
-<span class="cm">    mysql_query(str_replace(&#39;:val:&#39;, $one, $insert_query));</span>
-<span class="cm">}</span>
-<span class="cm">echo $timer-&gt;end() . &#39; s&lt;br/&gt;&#39;;</span>
+echo '&lt;br/&gt;MyISAM insert&lt;br/&gt;';
+$insert_query = 'INSERT INTO myisam VALUES (NULL,\':val:\')';
+$timer-&gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $insert_query));
+}
+echo $timer-&gt;end() . ' s&lt;br/&gt;';
 
-<span class="cm">echo &#39;InnoDB insert&lt;br/&gt;&#39;;</span>
-<span class="cm">$insert_query = &#39;INSERT INTO inno VALUES (NULL,\&#39;:val:\&#39;)&#39;;</span>
-<span class="cm">$timer-&gt;start();</span>
-<span class="cm">foreach ($data as $one){</span>
-<span class="cm">    mysql_query(str_replace(&#39;:val:&#39;, $one, $insert_query));</span>
-<span class="cm">}</span>
-<span class="cm">echo $timer-&gt;end() . &#39; s&lt;br/&gt;&#39;;</span>
-<span class="cm"> */</span>
-</pre></div>
-
-
+echo 'InnoDB insert&lt;br/&gt;';
+$insert_query = 'INSERT INTO inno VALUES (NULL,\':val:\')';
+$timer-&gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $insert_query));
+}
+echo $timer-&gt;end() . ' s&lt;br/&gt;';
+ */
+</code></pre>
 <p>Для того что-бы выполнить тест, нужно раскоментить один соответствующий
 блок кода. И собственно, то что у меня получилось в результате
 тестирования:</p>

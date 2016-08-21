@@ -90,32 +90,30 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 чт 08 марта 2012
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/selenium.html">selenium</a><a href="/tag/yii.html">yii</a><a href="/tag/magiia.html">магия</a></p>
+<p>теги: <a href="/tag/selenium/">selenium</a><a href="/tag/yii/">yii</a><a href="/tag/magiia/">магия</a></p>
 </footer><!-- /.post-info -->      <p>Для функционального тестирования в Yii используется Selenium. На debian
 и ubuntu при запуске тестов выдается ошибка:</p>
-<div class="highlight"><pre>Result is neither &quot;true&quot; nor &quot;false&quot;: &#39;OR Server Exception: sessionId led to start new browser session: Browser not supported
-</pre></div>
-
-
+<pre><code>:::text
+Result is neither "true" nor "false": 'OR Server Exception: sessionId led to start new browser session: Browser not supported
+</code></pre>
 <p>В попытках решить данную проблему были испробованы чуть меньше чем все
 версии selenium и огромное количество браузеров. Однако что бы я не
 делал результата это не давало. Как оказалось selenium не получает
 настройки от yii (protected/tests/phpunit.xml) и по-этому не знает какой
 браузер использовать. Для решения этой проблемы я установил браузер
 по-умолчанию при запуске selenium'а следующим образом:</p>
-<div class="highlight"><pre><span class="nv">DISPLAY</span><span class="o">=</span>:0 java -jar selenium-server-standalone-2.20.0.jar -forcedBrowserMode <span class="s2">&quot;*googlechrome&quot;</span>
-</pre></div>
-
-
+<pre><code>:::bash
+DISPLAY=:0 java -jar selenium-server-standalone-2.20.0.jar -forcedBrowserMode "*googlechrome"
+</code></pre>
 <p>После этого все заработало, но очевидно только в том браузере который
 указан параметром forcedBrowserMode. Мне таким образом удалось запустить
 firefox и google chrome последних версий, на selenium rc 1.0.3 и
 selenium sever 2.20</p>
 <p>Если вы знаете как решить данную проблему без указания стандартного
 браузера, поделитесь в комментариях, буду признателен :)</p>
-<h3>UPDATE #1</h3>
+<h3 id="update-351">UPDATE #1</h3>
 <p>Возможно проблемы в текущей версии PHPUnit_Selenium</p>
-<h3>UPDATE #2</h3>
+<h3 id="update-352">UPDATE #2</h3>
 <p>Проблема решается обновление PHPUnit с <a href="https://github.com/sebastianbergmann/phpunit/">GitHub'а</a>.</p>
     </div><!-- /.entry-content -->
     <div class="comments">

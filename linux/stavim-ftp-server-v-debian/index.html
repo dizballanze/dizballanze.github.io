@@ -95,36 +95,33 @@ VK.Widgets.Like("vk_like", {type: "button"});
 <p>По просьбе моего друга рассматриваю установку ftp-сервера в Linux.</p>
 <p>Начнем с того что установим демон ftpd. Т.к. я использую Debian, то
 устанавливать будем при помощи apt-get:</p>
-<div class="highlight"><pre>apt-get install ftpd
-</pre></div>
-
-
+<pre><code>:::bash
+apt-get install ftpd
+</code></pre>
 <p>Итак, поставили, теперь проверяем запущен или нет:</p>
-<div class="highlight"><pre>ps aux <span class="p">|</span> grep ftp
-</pre></div>
-
-
+<pre><code>:::bash
+ps aux | grep ftp
+</code></pre>
 <p>В моём случае не запущен, значит запускаем:</p>
-<div class="highlight"><pre>/etc/init.d/ftpd start
+<pre><code>:::bash
+/etc/init.d/ftpd start
 bash: /etc/init.d/ftpd: Нет такого файла или каталога
-</pre></div>
-
-
+</code></pre>
 <p>Хмм...</p>
-<div class="highlight"><pre>whereis ftpd
+<pre><code>:::bash
+whereis ftpd
 ftpd:
-</pre></div>
-
-
+</code></pre>
 <p>Так, что-то непонятное. При всём этом man ftpd выдаёт страницу
 руководства. Пробуем перезагрузится...После перезагрузки ps не выдаёт
 никакого результата при поиске слова ftpd также и whereis. Но проверив
 свой хост nmap'ом я увидел следующее:</p>
-<div class="highlight"><pre>nmap 127.0.0.1
+<pre><code>:::bash
+nmap 127.0.0.1
 
-Starting Nmap 4.62 <span class="o">(</span> http://nmap.org <span class="o">)</span> at 2011-01-02 23:37 EET
-Interesting ports on localhost <span class="o">(</span>127.0.0.1<span class="o">)</span>:
-Not shown: <span class="m">1708</span> closed ports
+Starting Nmap 4.62 ( http://nmap.org ) at 2011-01-02 23:37 EET
+Interesting ports on localhost (127.0.0.1):
+Not shown: 1708 closed ports
 PORT     STATE SERVICE
 21/tcp   open  ftp
 25/tcp   open  smtp
@@ -134,10 +131,8 @@ PORT     STATE SERVICE
 2049/tcp open  nfs
 3306/tcp open  mysql
 
-Nmap <span class="k">done</span>: <span class="m">1</span> IP address <span class="o">(</span><span class="m">1</span> host up<span class="o">)</span> scanned in 0.098 seconds
-</pre></div>
-
-
+Nmap done: 1 IP address (1 host up) scanned in 0.098 seconds
+</code></pre>
 <p>Как мы видим 21 порт открыт и на нём висит ftp-сервер. Бегло просмотрев
 man ftpd разобрался с файлами конфигураций. Итак, смотрим что к чему:</p>
 <ul>
@@ -152,28 +147,27 @@ man ftpd разобрался с файлами конфигураций. Ита
 <li><code>/etc/motd</code> - сообщение после авторизации</li>
 </ul>
 <p>Оказалось всё довольно просто. Пробуем залогинится:</p>
-<div class="highlight"><pre>ftp 127.0.0.1
+<pre><code>:::bash
+ftp 127.0.0.1
 Connected to 127.0.0.1.
-<span class="m">220</span> dizballanze-laptop FTP server <span class="o">(</span>Version 6.4/OpenBSD/Linux-ftpd-0.17<span class="o">)</span> ready.
-Name <span class="o">(</span>127.0.0.1:root<span class="o">)</span>: dizballanze
-<span class="m">331</span> Password required <span class="k">for</span> dizballanze.
+220 dizballanze-laptop FTP server (Version 6.4/OpenBSD/Linux-ftpd-0.17) ready.
+Name (127.0.0.1:root): dizballanze
+331 Password required for dizballanze.
 Password:
-230- Linux dizballanze-laptop 2.6.26-2-686 <span class="c">#1 SMP Sat Dec 26 09:01:51 UTC 2009 i686</span>
+230- Linux dizballanze-laptop 2.6.26-2-686 #1 SMP Sat Dec 26 09:01:51 UTC 2009 i686
 230- 
-230- The programs included with the Debian GNU/Linux system are free software<span class="p">;</span>
-230- the exact distribution terms <span class="k">for</span> each program are described in the
+230- The programs included with the Debian GNU/Linux system are free software;
+230- the exact distribution terms for each program are described in the
 230- individual files in /usr/share/doc/*/copyright.
 230- 
 230- Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
 230- permitted by applicable law.
-<span class="m">230</span> User dizballanze logged in.
-Remote system <span class="nb">type </span>is UNIX.
+230 User dizballanze logged in.
+Remote system type is UNIX.
 Using binary mode to transfer files.
-ftp&gt; <span class="nb">pwd</span>
-<span class="m">257</span> <span class="s2">&quot;/home/dizballanze&quot;</span> is current directory.
-</pre></div>
-
-
+ftp&gt; pwd
+257 "/home/dizballanze" is current directory.
+</code></pre>
 <p>Авторизация прошла успешно и я сразу получил доступ к файловой системе
 от пользователя dizballanze без каких-либо дополнительных настроек.
 Единственная проблема - это некорректное отображения русских надписей в

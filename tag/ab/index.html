@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>Tech blog by @dizballanze - ab</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
+        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
+        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
+        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        
+        <!--[if IE]>
+                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+        <!--[if lte IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
+                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
+
+        <!--[if lt IE 7]>
+                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
+
+</head>
+
+<body id="index" class="home">
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+<a href="https://github.com/dizballanze">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="/">Tech blog by @dizballanze </a></h1>
+                <nav><ul>
+                    <li><a href="/автор/">Автор</a></li>
+                    <li ><a href="/category/bd.html">БД</a></li>
+                    <li ><a href="/category/drugoe.html">Другое</a></li>
+                    <li ><a href="/category/linux.html">Linux</a></li>
+                    <li ><a href="/category/nodejs.html">Node.js</a></li>
+                    <li ><a href="/category/python.html">Python</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+        
+        
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/linux/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/">Используем ab для тестирования производительности web-приложения</a></h1> 
+<footer class="post-info">
+        <abbr class="published" title="2012-03-14T01:27:00+04:00">
+                ср 14 марта 2012
+        </abbr>
+<p>категория: <a href="/category/linux.html">Linux</a>. </p>
+<p>теги: <a href="/tag/ab/">ab</a><a href="/tag/benchmark/">benchmark</a><a href="/tag/optimizatsiia/">оптимизация</a><a href="/tag/profilirovanie/">профилирование</a></p>
+</footer><!-- /.post-info --><p>Важной частью разработки web-приложения является тестирование
+производительности. Часто при постановке задачи заказчик требует чтобы
+сервис выдерживал определенную нагрузку. В процессе профилирования и
+оптимизации полезно отслеживать, как изменилась скорость работы
+приложения при новых условиях. Для этой цели можно использовать Apache
+HTTP server benchmarking tool.</p>
+<h2 id="ab">Использование ab</h2>
+<h3 id="_1">Установка</h3>
+<p>Для того чтобы установить ab в debian необходимо установить пакет
+apache2-utils:</p>
+<pre><code>:::bash
+apt-get install apache2-utils
+</code></pre>
+<h3 id="_2">Параметры</h3>
+<p>Утилита запускается с помощью команды ab. Далее рассмотрим основные
+параметры.</p>
+<ul>
+<li><strong>-c</strong> - очень важный параметр. Определяет количество параллельных
+    запросов отправляемых одновременно</li>
+<li><strong>-n</strong> - количество отправляемых запросов</li>
+<li><strong>-t</strong> - максимальное количество секунд отведенное на тест. Подходит
+    для тестирования приложения в течении определенного временного
+    промежутка. При этому необходимо задать большое значение параметру
+    -n</li>
+<li><strong>-C</strong> cookie-name=value - добавляем cookie в каждый запрос к
+    серверу</li>
+<li><strong>-H</strong> - задаем заголовок запроса</li>
+<li><strong>-T</strong> - Content-type заголовок запроса</li>
+<li><strong>-p</strong> - файл содержащий тело POST запроса</li>
+</ul>
+<p>Выполнение теста</p>
+<p>Давайте выполним тестирование какого-либо сайта и рассмотрим содержание
+отчета, который генерирует ab.</p>
+<pre><code>:::bash
+ab -c 10 -n 100 http://google.com/
+Benchmarking google.com (be patient).....done
+
+
+Server Software:        gws
+Server Hostname:        google.com
+Server Port:            80
+
+Document Path:          /
+Document Length:        219 bytes
+
+Concurrency Level:      10
+Time taken for tests:   1.290 seconds
+Complete requests:      100
+Failed requests:        0
+Write errors:           0
+Non-2xx responses:      100
+Total transferred:      54000 bytes
+HTML transferred:       21900 bytes
+Requests per second:    77.51 [#/sec] (mean)
+Time per request:       129.018 [ms] (mean)
+Time per request:       12.902 [ms] (mean, across all concurrent requests)
+Transfer rate:          40.87 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:       54   56   2.0     55      63
+Processing:    70   72   2.4     72      82
+Waiting:       70   72   2.3     72      82
+Total:        124  128   3.4    127     140
+
+Percentage of the requests served within a certain time (ms)
+  50%    127
+  66%    128
+  75%    129
+  80%    130
+  90%    133
+  95%    134
+  98%    138
+  99%    140
+ 100%    140 (longest request)
+</code></pre>
+<p>Сначала выводится различная информация о проводимом тесте, такая как
+типа серверного ПО, хост, порт, путь и тд. Дальше идут более интересные
+характеристики. Рассмотрим наиболее важные из них:</p>
+<ul>
+<li><strong>Time taken for tests</strong> - суммарное время потраченное на весь тест</li>
+<li><strong>Complete requests</strong> - количество выполненных запросов</li>
+<li><strong>Failed requests</strong> - количество запросов завершенных отказом</li>
+<li><strong>Total transferred и HTML transferred</strong> - суммарный объем и объем
+    html переданные во время теста</li>
+<li><strong>Requests per second</strong> или <strong>rps</strong> - количество обрабатываемых
+    запросов в секунду</li>
+<li><strong>Time per request</strong> - среднее время затраченное на запрос с и без
+    учета распараллеливания</li>
+<li><strong>Transfer rate</strong> - скорость передачи данных при прохождении теста</li>
+</ul>
+<p>Далее идет таблица с временем затраченным на подключение, обработку
+запроса и ожидание. И после этого таблица которая показывает процент от
+количества запросов, которые успели выполнится за определенный
+промежуток времени.</p>
+<h2 id="_3">Практическое применение</h2>
+<p>В зависимости от поставленных перед вами задач необходимо задавать
+различные параметры при запуске теста. Рассмотрим несколько примеров.</p>
+<ul>
+<li><strong>Нагрузочное тестирование</strong>. Тестирование системы при заданной
+    нагрузке. Здесь все просто - указываем заданные значения для
+    параметров -n и -c и запускаем тест. В результате необходимо
+    выяснить загруженность аппаратной части приложения, надёжность
+    работы (количество отказов за заданное время).</li>
+<li><strong>Стресс-тестирование</strong>. Определение максимальной нагрузки при
+    которой сервер остается работоспособным, а также выявление
+    последствий нагрузки превышающей ожидаемую. В данном случае вам
+    необходимо выполнить несколько итераций запуска тестов, постепенно
+    наращивая количество параллельных запросов и количество пакетов.
+    Данный цикл необходимо продолжать пока вы не начнете получать
+    значительный для вас процент отказов (или не положите сервер ;)).
+    Наиболее важными, на мой взгляд, в данном случае являются такие
+    показатели, как количество запросов в секунду и время потраченное на
+    1 запрос, а также процент отказов.</li>
+<li><strong>Тестирование стабильности</strong>. При данном виде тестирования мы
+    производим длительный тест (время задаем при помощи параметра -t, а
+    количество запросов -n очень большое) и смотрим количество отказов
+    системы. Также полезным будет ознакомится с "разбросом" времени
+    обработки запроса, для того чтобы выяснить не ухудшается ли
+    производительность со временем. Данное значение можно получить из
+    таблицы Connection Times.</li>
+</ul>
+<h2 id="post-ab">Дополнительно. Пример выполнения POST-запроса в ab</h2>
+<p>Для выполнения POST-запроса необходимо составить тело запроса и
+сохранить его в файл. Для этого напишем небольшой скрипт:</p>
+<pre><code>:::php
+&lt;?php
+$params = array('test1' =&gt; 1, 'test2' =&gt; 'Second test');
+$body = http_build_query($params);
+file_put_contents('/tmp/body', $body);
+</code></pre>
+<p>После этого в файле /tmp/body появится следующее содержимое:</p>
+<pre><code>:::text
+test1=1&amp;test2=Second+test
+</code></pre>
+<p>Теперь можно запускать тестирование:</p>
+<pre><code>:::bash
+ab -T application/x-www-form-urlencoded -p /tmp/body -n 10 http://localhost/test/ab/post-handler.php
+</code></pre>
+<h2 id="_4">Вывод</h2>
+<p>Apache HTTP server benchmarking tool - полезный инструмент
+web-разработчика, который позволяет максимально быстро произвести
+тестирование производительности той или иной части приложения. Он
+отлично подходит для тестирования критических участков и является
+незаменимым при профилировании и оптимизации web-приложения. Однако для
+тестирования нескольких функций с учетом различных сценариев и
+моделирования действий пользователя, необходимо использовать более
+сложные системы тестирования.</p>
+<h3 id="update-351">UPDATE #1</h3>
+<p>Полезное дополнение от товарища:</p>
+<blockquote>
+<p>ApacheBenchmark выдает много Failed. Сначала было стремно, но все
+оказалось не так страшно :) [#apache][]
+<a href="http://t.co/tZSKksDl" title="http://stackoverflow.com/questions/579450/load-testing-with-ab-fake-failed-requests-length">stackoverflow.com/questions/5794…</a></p>
+<p>— Pugach Vitaliy (@lionasp) <a href="https://twitter.com/lionasp/status/180726351786020865">March 16, 2012</a></p>
+</blockquote><p><a href="/linux/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/#disqus_thread">comments</a></p>                </article>
+<p class="paginator">
+    Страница 1 / 1
+</p>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>ссылки</h2>
+                        <ul>
+                            <li><a href="http://wbtech.pro">WBTech</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>онлайн</h2>
+                        <ul>
+                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
+
+                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
+                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
+                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
+                </address><!-- /#about -->
+
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20497524-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'dizballanze';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>

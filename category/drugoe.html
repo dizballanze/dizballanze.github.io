@@ -256,15 +256,14 @@ Selenium, в том числе для тестирования Yii прилож�
                 чт 08 марта 2012
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/selenium.html">selenium</a><a href="/tag/yii.html">yii</a><a href="/tag/magiia.html">магия</a></p>
+<p>теги: <a href="/tag/selenium/">selenium</a><a href="/tag/yii/">yii</a><a href="/tag/magiia/">магия</a></p>
 </footer><!-- /.post-info -->                <p>Для функционального тестирования в Yii используется Selenium. На debian
 и ubuntu при запуске тестов выдается ошибка:</p>
-<div class="highlight"><pre>Result is neither &quot;true&quot; nor &quot;false&quot;: &#39;OR Server Exception: sessionId led to start new browser session: Browser not supported
-</pre></div>
-
-
+<pre><code>:::text
+Result is neither "true" nor "false": 'OR Server Exception: sessionId led to start new browser session: Browser not supported
+</code></pre>
 <p>В попытках решить данную проблему были испробованы чуть меньше чем все
-версии selenium и огромное ...</p>
+версии selenium и ...</p>
                 <a class="readmore" href="/drugoe/yii-selenium-na-debian-6/">читать дальше</a>
 <p><a href="/drugoe/yii-selenium-na-debian-6/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
@@ -283,21 +282,19 @@ Selenium, в том числе для тестирования Yii прилож�
                 ср 29 февраля 2012
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/acceptance.html">acceptance</a><a href="/tag/codeception.html">codeception</a><a href="/tag/testing.html">testing</a><a href="/tag/utf-8.html">utf-8</a></p>
+<p>теги: <a href="/tag/acceptance/">acceptance</a><a href="/tag/codeception/">codeception</a><a href="/tag/testing/">testing</a><a href="/tag/utf-8/">utf-8</a></p>
 </footer><!-- /.post-info -->                <p>Разбираюсь с <a href="http://codeception.com/">codeception</a>. В acceptance тестах возникла проблема с
 распознаванием русских символов в utf-8:</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-<span class="nv">$I</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebGuy</span><span class="p">(</span><span class="nv">$scenario</span><span class="p">);</span>
+<pre><code>:::php
+&lt;?php
+$I = new WebGuy($scenario);
 
-<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">wantTo</span><span class="p">(</span><span class="s1">&#39;see right title&#39;</span><span class="p">);</span>
-<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">amOnPage</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
-<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">see</span><span class="p">(</span><span class="s1">&#39;Заголовок на русском&#39;</span><span class="p">);</span>
-</pre></div>
-
-
+$I-&gt;wantTo('see right title');
+$I-&gt;amOnPage('/');
+$I-&gt;see('Заголовок на русском');
+</code></pre>
 <p>При этом тест фейлится, хотя логах можно увидеть, что заголовок
-установлен правильно. Для решения этой проблемы необходимо установить
-следующий ...</p>
+установлен правильно. Для решения этой проблемы необходимо установить ...</p>
                 <a class="readmore" href="/drugoe/codeception-problema-s-russkimi-simvolami-v-utf-8/">читать дальше</a>
 <p><a href="/drugoe/codeception-problema-s-russkimi-simvolami-v-utf-8/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
@@ -316,7 +313,7 @@ Selenium, в том числе для тестирования Yii прилож�
                 пт 24 февраля 2012
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/benchmark.html">benchmark</a><a href="/tag/graphicsmagick.html">GraphicsMagick</a><a href="/tag/resizing.html">resizing</a><a href="/tag/uploadclassphp.html">upload.class.php</a></p>
+<p>теги: <a href="/tag/benchmark/">benchmark</a><a href="/tag/graphicsmagick/">GraphicsMagick</a><a href="/tag/resizing/">resizing</a><a href="/tag/uploadclassphp/">upload.class.php</a></p>
 </footer><!-- /.post-info -->                <p>Всем привет! Сегодняшний пост посвящен производительности при обработке
 изображений. Почти в каждом проекте требуется обработка изображений,
 например, ресайзинг, поворот, обесцвечивание и т.д. Для этих целей я
@@ -341,7 +338,7 @@ Selenium, в том числе для тестирования Yii прилож�
                 ср 08 февраля 2012
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/http-headers.html">HTTP headers</a><a href="/tag/php.html">PHP</a><a href="/tag/php-fcgi.html">php fcgi</a></p>
+<p>теги: <a href="/tag/http-headers/">HTTP headers</a><a href="/tag/php/">PHP</a><a href="/tag/php-fcgi/">php fcgi</a></p>
 </footer><!-- /.post-info -->                <p>Привет всем! Краткая заметка на тему того, как получить http headers
 запроса, который инициировал выполнение скрипта. Также стоит отметить,
 что в данном случае я использую php, как fastcgi, по-этому некоторые
@@ -371,12 +368,12 @@ Selenium, в том числе для тестирования Yii прилож�
 <p>Всех с новым годом! Сегодня решил сделать краткую заметку по работе с
 multiple select в php. Думаю кому-нибудь пригодится.</p>
 <p>Для примера возьмем форму содержащую multiple select:</p>
-<div class="highlight"><pre><span class="nt">&lt;form</span> <span class="na">type=</span><span class="s">&quot;post&quot;</span> <span class="na">action=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
-<span class="nt">&lt;select</span> <span class="na">name=</span><span class="s">&quot;fruits&quot;</span> <span class="na">multiple</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>apples<span class="nt">&lt;/option&gt;</span>
-    <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>oranges<span class="nt">&lt;/option&gt;</span>
-    <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;3&quot;</span><span class="nt">&gt;</span>bananas<span class="nt">&lt;/option&gt;</span>
-<span class="nt">&lt;/select ...</span></pre></div>
+<pre><code>:::html
+&lt;form type="post" action=""&gt;
+&lt;select name="fruits" multiple&gt;
+    &lt;option value="1"&gt;apples&lt;/option&gt;
+    &lt;option value="2"&gt;oranges&lt;/option&gt;
+    &lt;option value="3"&gt;bananas&lt;/option ...</code></pre>
                 <a class="readmore" href="/drugoe/multiple-select-v-php/">читать дальше</a>
 <p><a href="/drugoe/multiple-select-v-php/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
@@ -422,7 +419,7 @@ multiple select в php. Думаю кому-нибудь пригодится.</
                 чт 13 октября 2011
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/events.html">events</a><a href="/tag/zend-framework.html">zend framework</a><a href="/tag/zend-framework-days.html">zend framework days</a></p>
+<p>теги: <a href="/tag/events/">events</a><a href="/tag/zend-framework/">zend framework</a><a href="/tag/zend-framework-days/">zend framework days</a></p>
 </footer><!-- /.post-info -->                <p><img alt="Zend Framework Day" src="http://frameworksdays.com/uploads/events/zend-framework-day.png" />12 ноября, в Киеве, пройдет конференция "Zend
 Framework Day" - посвященная популярному PHP фреймворку Zend Framework.
 Среди докладчиков непосредственные разработчики компонент Zend

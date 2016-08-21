@@ -99,35 +99,33 @@ VK.Widgets.Like("vk_like", {type: "button"});
 пользователю тот сервер, который находится ближе всего. Для реализации
 данной функции можно воспользоваться средствами <a href="http://nginx.org/ru/">Nginx</a>, прикрутив к
 нему одну из доступных в сети баз данных по GeoIP.</p>
-<h2>Конфигурация Nginx</h2>
+<h2 id="nginx">Конфигурация Nginx</h2>
 <p>В состав Nginx входит модуль Geo, который позволяет выставлять
 переменные в зависимости от попадания ip в определенный диапазон.
 Сконфигурируем данный модуль на определение города и страны пользователя
 добавив следующий код в секцию http:</p>
-<div class="highlight"><pre><span class="k">geo</span> <span class="nv">$country</span> <span class="p">{</span>
-    <span class="kn">ranges</span><span class="p">;</span> 
-    <span class="kn">default</span> <span class="s">ETC</span><span class="p">;</span> 
-    <span class="kn">include</span> <span class="s">geo-country.conf</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="k">geo</span> <span class="nv">$city</span> <span class="p">{</span>
-    <span class="kn">ranges</span><span class="p">;</span> 
-    <span class="kn">default</span> <span class="s">ETC</span><span class="p">;</span> 
-    <span class="kn">include</span> <span class="s">geo-city.conf</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<pre><code>:::nginx
+geo $country {
+    ranges; 
+    default ETC; 
+    include geo-country.conf;
+}
+geo $city {
+    ranges; 
+    default ETC; 
+    include geo-city.conf;
+}
+</code></pre>
 <p>ETC - значение, которое будет установлено по-умолчанию, если ip на
 попадет не в один диапазон адресов. Теперь у нас в распоряжении 2
 переменные, которые мы можем, например, передать GET-параметром на
 бек-енд:</p>
-<div class="highlight"><pre><span class="k">location</span> <span class="s">/</span> <span class="p">{</span>
-    <span class="kn">proxy_pass</span> <span class="s">http://127.0.0.1:8080/?city=</span><span class="nv">$city&amp;country=$country</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<h2>База Данных GeoIP</h2>
+<pre><code>:::nginx
+location / {
+    proxy_pass http://127.0.0.1:8080/?city=$city&amp;country=$country;
+}
+</code></pre>
+<h2 id="geoip">База Данных GeoIP</h2>
 <p>В конфигурации выше подключаются файлы geo-country.conf и geo-city.conf.
 Данные файлы содержат наборы диапазонов адресов и некоторые значения им
 соответствующие. Такого рода данные можно получить в одной из Баз Данных

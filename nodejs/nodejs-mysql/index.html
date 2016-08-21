@@ -96,77 +96,73 @@ VK.Widgets.Like("vk_like", {type: "button"});
 организации работы Node.JS с MySQL. Для создания данного взаимодействия
 существует несколько модулей, я решил использовать <strong>node-mysql</strong>, т.к.
 он предоставляет все необходимые мне функции.</p>
-<h2>Установка node-mysql</h2>
+<h2 id="node-mysql">Установка node-mysql</h2>
 <p>Для установки воспользуемся git:</p>
-<div class="highlight"><pre><span class="nb">cd</span> ~/.node_libraries
+<pre><code>:::bash
+cd ~/.node_libraries
 git clone git://github.com/felixge/node-mysql.git mysql
-</pre></div>
-
-
+</code></pre>
 <p>После этого вы можете без проблем использовать данный модуль в вашей
 работе.</p>
-<h2>Установка соединения</h2>
+<h2 id="_1">Установка соединения</h2>
 <p>Перед началом выполнения запросов к БД необходимо выполнить подключение
 к серверу MySQL. Рассмотрим как сделать это при помощи модуля node-mysql
 в node.js:</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">Client</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">).</span><span class="nx">Client</span><span class="p">,</span>
-<span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">();</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">user</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span><span class="p">;</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">password</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span><span class="p">;</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-</pre></div>
-
-
+<pre><code>:::javascript
+var Client = require('mysql').Client,
+client = new Client();
+client.user = 'root';
+client.password = 'password';
+client.connect();
+client.end();
+</code></pre>
 <p>Первые две строки отвечают за подключение модуля и создания
 объекта-клиента. Далее задаются параметры аутентификации и вызывается
 метод connect. После этого если вы корректно указали пару логин-пароль,
 то будет установлено соединение. Последняя строка соответственно
 завершает соединение с сервером.</p>
-<h3>Отступление</h3>
+<h3 id="_2">Отступление</h3>
 <p>Для того что-бы наш MySQL клиент мог передать данные аутентификации
 необходимо чтобы node.js был скомпилирован с поддержкой ssl, иначе при
 попытке установления соединения он будет жутко ругатся из-за то что не
 сможет зашифровать пароль. Для корректной компиляции node.js с
 поддержкой ssl в Debian вам потребуется пакет libssl-dev</p>
-<h2>Выполнение запросов</h2>
+<h2 id="_3">Выполнение запросов</h2>
 <p>Сначала создадим тестовую базу данных и таблицу в ней:</p>
-<div class="highlight"><pre><span class="k">CREATE</span> <span class="k">DATABASE</span>  <span class="o">`</span><span class="n">test_nodejs</span><span class="o">`</span> <span class="k">DEFAULT</span> <span class="nb">CHARACTER</span> <span class="k">SET</span> <span class="n">utf8</span> <span class="k">COLLATE</span> <span class="n">utf8_general_ci</span><span class="p">;</span>
-<span class="n">USE</span> <span class="n">test_nodejs</span><span class="p">;</span>
-<span class="k">CREATE</span> <span class="k">TABLE</span>  <span class="o">`</span><span class="n">test_nodejs</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">test</span><span class="o">`</span> <span class="p">(</span>
-<span class="o">`</span><span class="n">id</span><span class="o">`</span> <span class="nb">BIGINT</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="n">AUTO_INCREMENT</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="p">,</span>
-<span class="o">`</span><span class="n">some_text_data</span><span class="o">`</span> <span class="nb">VARCHAR</span><span class="p">(</span> <span class="mi">255</span> <span class="p">)</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="p">,</span>
-<span class="o">`</span><span class="n">some_date</span><span class="o">`</span> <span class="nb">DATE</span> <span class="k">NOT</span> <span class="k">NULL</span>
-<span class="p">)</span> <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">MYISAM</span> <span class="p">;</span>
-</pre></div>
-
-
+<pre><code>:::sql
+CREATE DATABASE  `test_nodejs` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE test_nodejs;
+CREATE TABLE  `test_nodejs`.`test` (
+`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`some_text_data` VARCHAR( 255 ) NOT NULL ,
+`some_date` DATE NOT NULL
+) ENGINE = MYISAM ;
+</code></pre>
 <p>Теперь приступим непосредственно к выполнению запросов.</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">Client</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">).</span><span class="nx">Client</span><span class="p">,</span>
-<span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Client</span><span class="p">();</span>
+<pre><code>:::javascript
+var Client = require('mysql').Client,
+client = new Client();
 
-<span class="nx">client</span><span class="p">.</span><span class="nx">user</span> <span class="o">=</span> <span class="s1">&#39;root&#39;</span><span class="p">;</span> <span class="c1">// Устанавливаем логин</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">password</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span><span class="p">;</span> <span class="c1">// Устанавливаем пароль</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span> <span class="c1">// Устанавливаем соединение</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;USE test_nodejs&#39;</span><span class="p">);</span> <span class="c1">// Выполняем запрос на выбор БД</span>
-<span class="c1">//  Запрос на вставку</span>
-<span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;INSERT INTO test VALUES (NULL, \&#39;Test\&#39;, \&#39;03-28-2011\&#39;)&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span> 
-    <span class="c1">// Запрос на выборку</span>
-    <span class="nx">client</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;SELECT * FROM test&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">,</span> <span class="nx">fields</span><span class="p">){</span>
-        <span class="c1">// Если возникла ошибка выбрасываем исключение</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">){</span>
-            <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="c1">// выводим результат</span>
-        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">fields</span><span class="p">);</span>
-        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
-        <span class="c1">// Завершаем соединение</span>
-        <span class="nx">client</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
-    <span class="p">});</span>
-<span class="p">});</span>
-</pre></div>
-
-
+client.user = 'root'; // Устанавливаем логин
+client.password = 'password'; // Устанавливаем пароль
+client.connect(); // Устанавливаем соединение
+client.query('USE test_nodejs'); // Выполняем запрос на выбор БД
+//  Запрос на вставку
+client.query('INSERT INTO test VALUES (NULL, \'Test\', \'03-28-2011\')',function(){ 
+    // Запрос на выборку
+    client.query('SELECT * FROM test', function(error, result, fields){
+        // Если возникла ошибка выбрасываем исключение
+        if (error){
+            throw error;
+        }
+        // выводим результат
+        console.log(fields);
+        console.log(result);
+        // Завершаем соединение
+        client.end();
+    });
+});
+</code></pre>
 <p>Для тех кто уже достаточно освоился в асинхронном программировании
 данный код не вызовет трудностей. Для выполнения запросов используется
 метод клиента query, который кроме самого запроса принимает
@@ -174,18 +170,19 @@ callback-функцию с параметрами error (ошибка, если 
 (массив объектов результата запроса), fields (описание полей из
 множества полей результата). В результате выполнения вышеприведённого
 кода получим:</p>
-<div class="highlight"><pre>node test.js 
+<pre><code>:::text
+node test.js 
 { id: 
    { length: 45,
      received: 45,
      number: 2,
      type: 4,
-     catalog: &#39;def&#39;,
-     db: &#39;test_nodejs&#39;,
-     table: &#39;test&#39;,
-     originalTable: &#39;test&#39;,
-     name: &#39;id&#39;,
-     originalName: &#39;id&#39;,
+     catalog: 'def',
+     db: 'test_nodejs',
+     table: 'test',
+     originalTable: 'test',
+     name: 'id',
+     originalName: 'id',
      charsetNumber: 63,
      fieldLength: 20,
      fieldType: 8,
@@ -196,12 +193,12 @@ callback-функцию с параметрами error (ошибка, если 
      received: 69,
      number: 3,
      type: 4,
-     catalog: &#39;def&#39;,
-     db: &#39;test_nodejs&#39;,
-     table: &#39;test&#39;,
-     originalTable: &#39;test&#39;,
-     name: &#39;some_text_data&#39;,
-     originalName: &#39;some_text_data&#39;,
+     catalog: 'def',
+     db: 'test_nodejs',
+     table: 'test',
+     originalTable: 'test',
+     name: 'some_text_data',
+     originalName: 'some_text_data',
      charsetNumber: 192,
      fieldLength: 765,
      fieldType: 253,
@@ -212,23 +209,21 @@ callback-функцию с параметрами error (ошибка, если 
      received: 59,
      number: 4,
      type: 4,
-     catalog: &#39;def&#39;,
-     db: &#39;test_nodejs&#39;,
-     table: &#39;test&#39;,
-     originalTable: &#39;test&#39;,
-     name: &#39;some_date&#39;,
-     originalName: &#39;some_date&#39;,
+     catalog: 'def',
+     db: 'test_nodejs',
+     table: 'test',
+     originalTable: 'test',
+     name: 'some_date',
+     originalName: 'some_date',
      charsetNumber: 63,
      fieldLength: 10,
      fieldType: 10,
      flags: 4225,
      decimals: 0 } }
 [ { id: 1,
-    some_text_data: &#39;Test&#39;,
+    some_text_data: 'Test',
     some_date: Invalid Date } ]
-</pre></div>
-
-
+</code></pre>
 <p>На этом всё. Если есть какие-либо вопросы по данной теме, задавайте их в
 комментариях ниже, постараюсь ответить.</p>
     </div><!-- /.entry-content -->

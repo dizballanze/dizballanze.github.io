@@ -96,7 +96,7 @@ VK.Widgets.Like("vk_like", {type: "button"});
 паттерн вы научитесь инициализировать ресурсы только, тогда когда они
 действительно нужны и тем самым увеличите скорость работы ваших
 приложений.</p>
-<h2>Описание</h2>
+<h2 id="_1">Описание</h2>
 <p>При проектировании вашего приложения вы можете столкнутся с
 необходимостью создать классы, которые будут выполнять какие-либо
 ресурсоемкие вычисления. Обычно первым приходящим на ум решением
@@ -120,34 +120,33 @@ initialization. Суть данного паттерна в том, что да�
 когда они будут необходимы. Это позволит значительным образом
 съекономить время и память, тем более что аренда серверов сейчас стоит
 совсем не дёшево ;)</p>
-<h2>Реализация</h2>
+<h2 id="_2">Реализация</h2>
 <p>Давайте рассмотрим реализацию данного шаблона на примере класса, который
 "лениво" вычисляет факториал:</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-<span class="k">class</span> <span class="nc">LazyFactorial</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$factorial</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<pre><code>:::php
+&lt;?php
+class LazyFactorial{
+    protected $factorial = array(1);
 
-    <span class="k">protected</span> <span class="k">function</span> <span class="nf">addFactorials</span><span class="p">(</span><span class="nv">$n</span><span class="p">){</span>
-        <span class="k">echo</span> <span class="s1">&#39;Add &#39;</span> <span class="o">.</span> <span class="nv">$n</span> <span class="o">.</span> <span class="s1">&#39;!&#39;</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
-        <span class="k">for</span> <span class="p">(</span><span class="nv">$i</span> <span class="o">=</span> <span class="nb">count</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">);</span> <span class="nv">$i</span> <span class="o">&lt;=</span> <span class="nv">$n</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">[</span><span class="nv">$i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nv">$i</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
+    protected function addFactorials($n){
+        echo 'Add ' . $n . '!' . "\n";
+        for ($i = count($this-&gt;factorial); $i &lt;= $n; $i++){
+            $this-&gt;factorial[$i] = $this-&gt;factorial[$i-1]*$i;
+        }
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getFactorial</span><span class="p">(</span><span class="nv">$n</span><span class="p">){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$n</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">)){</span>
-            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addFactorials</span><span class="p">(</span><span class="nv">$n</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">[</span><span class="nv">$n</span><span class="p">];</span>
-    <span class="p">}</span>
+    public function getFactorial($n){
+        if (!array_key_exists($n, $this-&gt;factorial)){
+            $this-&gt;addFactorials($n);
+        }
+        return $this-&gt;factorial[$n];
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">printFactorials</span><span class="p">(){</span>
-        <span class="nb">print_r</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    public function printFactorials(){
+        print_r($this-&gt;factorial);
+    }
+}
+</code></pre>
 <p>В данном примере у нас есть класс, который вычисляет факториал. Как вы
 видите данный класс никаким образом не инициализируется (что для этого
 примера очевидно), затем для того что-бы пользователь смог запросить
@@ -159,19 +158,19 @@ initialization. Суть данного паттерна в том, что да�
 определённого числа только тогда, когда он нам понадобится, во-вторых мы
 не будем вычислять одно и то же значение дважды. Пример использования
 класса:</p>
-<div class="highlight"><pre><span class="x">$factorial = new LazyFactorial();</span>
-<span class="x">$factorial-&gt;printFactorials();</span>
-<span class="x">echo $factorial-&gt;getFactorial(2) . &quot;\n&quot;;</span>
-<span class="x">$factorial-&gt;printFactorials();</span>
-<span class="x">echo $factorial-&gt;getFactorial(6) . &quot;\n&quot;;</span>
-<span class="x">$factorial-&gt;printFactorials();</span>
-<span class="x">echo $factorial-&gt;getFactorial(3) . &quot;\n&quot;;</span>
-<span class="x">$factorial-&gt;printFactorials();</span>
-</pre></div>
-
-
+<pre><code>:::php
+$factorial = new LazyFactorial();
+$factorial-&gt;printFactorials();
+echo $factorial-&gt;getFactorial(2) . "\n";
+$factorial-&gt;printFactorials();
+echo $factorial-&gt;getFactorial(6) . "\n";
+$factorial-&gt;printFactorials();
+echo $factorial-&gt;getFactorial(3) . "\n";
+$factorial-&gt;printFactorials();
+</code></pre>
 <p>В результате получаем следующий вывод:</p>
-<div class="highlight"><pre>Array
+<pre><code>:::test
+Array
 (
     [0] =&gt; 1
 )
@@ -206,9 +205,7 @@ Array
     [5] =&gt; 120
     [6] =&gt; 720
 )
-</pre></div>
-
-
+</code></pre>
 <p>Как вы видите наши ожидания подтвердились. Возможно данный пример не
 полностью отражает суть паттерна lazy initialization, но основная мысль
 передаётся точно. Если есть какие-либо вопросы задавайте их в

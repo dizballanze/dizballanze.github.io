@@ -90,7 +90,7 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 пн 06 июня 2011
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/php-class.html">php class</a><a href="/tag/typograf.html">typograf</a></p>
+<p>теги: <a href="/tag/php-class/">php class</a><a href="/tag/typograf/">typograf</a></p>
 </footer><!-- /.post-info -->      <p>С недавнего времени начал использовать сервис для подготовки текстов к
 web-изданию - <img alt="ТИПО - правильно!" src="http://www.typograf.ru/img/typograf.gif" />. Очень полезный и удобный
 сервис, который позволяет проводить различного рода корректировки
@@ -104,11 +104,12 @@ web-изданию - <img alt="ТИПО - правильно!" src="http://www.t
 phpdoc для более удобного использования.</p>
 <p>Исходный код доступен здесь: <a href="http://pastebin.com/biQqBrih">http://pastebin.com/biQqBrih</a></p>
 <p>Пример использования:</p>
-<div class="highlight"><pre><span class="x">$typograf = new Typograf();</span>
-<span class="x">// не использовать неразрывные конструкции вместо (неразрывного пробела)</span>
-<span class="x">$typograf-&gt;nowraped_insert = 0;</span>
-<span class="x">$description = $typograf-&gt;typograf($_POST[&#39;description&#39;]);</span>
-</pre></div>
+<pre><code>:::php
+$typograf = new Typograf();
+// не использовать неразрывные конструкции вместо (неразрывного пробела)
+$typograf-&gt;nowraped_insert = 0;
+$description = $typograf-&gt;typograf($_POST['description']);
+</code></pre>
     </div><!-- /.entry-content -->
     <div class="comments">
       <div id="disqus_thread"></div>

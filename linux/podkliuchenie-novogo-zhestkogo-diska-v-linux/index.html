@@ -90,7 +90,7 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 пт 26 ноября 2010
         </abbr>
 <p>категория: <a href="/category/linux.html">Linux</a>. </p>
-<p>теги: <a href="/tag/linux.html">Linux</a><a href="/tag/administrirovanie.html">администрирование</a></p>
+<p>теги: <a href="/tag/linux/">Linux</a><a href="/tag/administrirovanie/">администрирование</a></p>
 </footer><!-- /.post-info -->      <p>Доброго времени суток, товарищи линуксоиды!!</p>
 <p>В этой статье я хочу рассказать о процессе подключения нового жёсткого
 диска в ОС Linux.</p>
@@ -106,23 +106,22 @@ VK.Widgets.Like("vk_like", {type: "button"});
 /dev/sdb, т.к. это второй диск в системе (первый как вы наверное
 догадались /dev/sda).</p>
 <p>Итак для создания разделам будем использовать утилиту fdisk.</p>
-<div class="highlight"><pre>fdisk /dev/sdb
+<pre><code>:::bash
+fdisk /dev/sdb
 
 :::text
 Device contains neither a valid DOS partition table, nor Sun, SGI or OSF disklabel
 Building a new DOS disklabel with disk identifier 0x07611c35.
-Changes will remain in memory only, <span class="k">until</span> you decide to write them.
-After that, of course, the previous content won<span class="err">&#39;</span>t be recoverable.
-The number of cylinders <span class="k">for</span> this disk is <span class="nb">set </span>to 60801.
+Changes will remain in memory only, until you decide to write them.
+After that, of course, the previous content won't be recoverable.
+The number of cylinders for this disk is set to 60801.
 There is nothing wrong with that, but this is larger than 1024,
 and could in certain setups cause problems with:
-1<span class="o">)</span> software that runs at boot <span class="nb">time</span> <span class="o">(</span>e.g., old versions of LILO<span class="o">)</span>
-2<span class="o">)</span> booting and partitioning software from other OSs
-<span class="o">(</span>e.g., DOS FDISK, OS/2 FDISK<span class="o">)</span>
-Warning: invalid flag 0x0000 of partition table <span class="m">4</span> will be corrected by w<span class="o">(</span>rite<span class="o">)</span>
-</pre></div>
-
-
+1) software that runs at boot time (e.g., old versions of LILO)
+2) booting and partitioning software from other OSs
+(e.g., DOS FDISK, OS/2 FDISK)
+Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)
+</code></pre>
 <p>Утилита выводит информацию о жёстком диске: идентификатор диска,
 количество цилиндров. Потом она ожидает ввода команды, для вывода
 справочной информации о всех доступных командах введите m. Мы будем
@@ -137,7 +136,8 @@ Warning: invalid flag 0x0000 of partition table <span class="m">4</span> will be
 добавьте необходимое количество разделов. Размер раздела можно задавать
 в цилиндрах, как в показанном примере, или более простым способом, в
 байтах (мегабайтах или гигабайтах) .</p>
-<div class="highlight"><pre>Command (m for help): new
+<pre><code>:::text
+Command (m for help): new
 Command action
 e extended
 p primary partition (1-4)
@@ -146,11 +146,10 @@ Partition number (1-4): 1
 First cylinder (1-60801, default 1): 1
 Last cylinder or +size or +sizeM or +sizeK (1-60801, default 60801):
 Using default value 60801
-</pre></div>
-
-
+</code></pre>
 <p>Выводим информацию о разделах при помощи команды print.</p>
-<div class="highlight"><pre>Command (m for help): print
+<pre><code>:::text
+Command (m for help): print
 
 Disk /dev/sdb: 500.1 GB, 500107862016 bytes
 255 heads, 63 sectors/track, 60801 cylinders
@@ -159,71 +158,65 @@ Disk identifier: 0x07611c35
 
 Device Boot Start End Blocks Id System
 /dev/sdb1 1 60801 488384001 83 Linux
-</pre></div>
-
-
+</code></pre>
 <p>Убедившись что разделы созданы так как вы рассчитывали записываем
 таблицу разделов на диск при помощи команды <code>write</code>.</p>
-<div class="highlight"><pre>Command (m for help): write
+<pre><code>:::text
+Command (m for help): write
 The partition table has been altered!
 Calling ioctl() to re-read partition table.
 Syncing disks.
-</pre></div>
-
-
+</code></pre>
 <p>Теперь можно приступить к форматировании разделов.</p>
 <p>Для этого мы будем использовать команду <code>mke2fs -j</code>, указав в качестве
 аргумента имя раздела.</p>
-<div class="highlight"><pre>mke2fs -j /dev/sdb1
-mke2fs 1.41.3 <span class="o">(</span>12-Oct-2008<span class="o">)</span>
-Filesystem <span class="nv">label</span><span class="o">=</span>
-OS <span class="nb">type</span>: Linux
-Block <span class="nv">size</span><span class="o">=</span><span class="m">4096</span> <span class="o">(</span><span class="nv">log</span><span class="o">=</span>2<span class="o">)</span>
-Fragment <span class="nv">size</span><span class="o">=</span><span class="m">4096</span> <span class="o">(</span><span class="nv">log</span><span class="o">=</span>2<span class="o">)</span>
-<span class="m">30531584</span> inodes, <span class="m">122096000</span> blocks
-<span class="m">6104800</span> blocks <span class="o">(</span>5.00%<span class="o">)</span> reserved <span class="k">for</span> the super user
-First data <span class="nv">block</span><span class="o">=</span>0
-Maximum filesystem <span class="nv">blocks</span><span class="o">=</span>0
-<span class="m">3727</span> block groups
-<span class="m">32768</span> blocks per group, <span class="m">32768</span> fragments per group
-<span class="m">8192</span> inodes per group
+<pre><code>:::bash
+mke2fs -j /dev/sdb1
+mke2fs 1.41.3 (12-Oct-2008)
+Filesystem label=
+OS type: Linux
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+30531584 inodes, 122096000 blocks
+6104800 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=0
+3727 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
 Superblock backups stored on blocks:
 32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
 4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
 102400000
 
-Writing inode tables: <span class="k">done</span>
-Creating journal <span class="o">(</span><span class="m">32768</span> blocks<span class="o">)</span>: <span class="k">done</span>
-Writing superblocks and filesystem accounting information: <span class="k">done</span>
+Writing inode tables: done
+Creating journal (32768 blocks): done
+Writing superblocks and filesystem accounting information: done
 
-This filesystem will be automatically checked every <span class="m">34</span> mounts or
-<span class="m">180</span> days, whichever comes first. Use tune2fs -c or -i to override.
-</pre></div>
-
-
+This filesystem will be automatically checked every 34 mounts or
+180 days, whichever comes first. Use tune2fs -c or -i to override.
+</code></pre>
 <p>Теперь необходимо настроить монтирование новых разделов. Сначала
 создадим каталог, который мы будем использовать как точку монтирования.</p>
-<div class="highlight"><pre>mkdir /media/mediahdd
-</pre></div>
-
-
+<pre><code>:::bash
+mkdir /media/mediahdd
+</code></pre>
 <p>Пробуем монтировать раздел.</p>
-<div class="highlight"><pre>mount /dev/sdb1 /media/mediahdd
-</pre></div>
-
-
+<pre><code>:::bash
+mount /dev/sdb1 /media/mediahdd
+</code></pre>
 <p>Теперь необходимо добавить информацию о новом разделе в файл <code>/etc/fstab</code>
 для, того чтобы раздел автоматически монтировался при каждой загрузке
 системы. Для этого открываем этот файл в любом текстовом редакторе.</p>
-<div class="highlight"><pre>nano /etc/fstab
-</pre></div>
-
-
+<pre><code>:::bash
+nano /etc/fstab
+</code></pre>
 <p>Добавляем строку формата: <code>имя_раздела</code> <code>точка_монтирования</code>
 <code>файловая_система</code> <code>частота_создания_резервных_копий</code>
 <code>кол-во_запусков_fsck</code></p>
-<div class="highlight"><pre>/dev/sdb1 /media/mediahdd ext3 defaults 0 0
-</pre></div>
+<pre><code>:::text
+/dev/sdb1 /media/mediahdd ext3 defaults 0 0
+</code></pre>
     </div><!-- /.entry-content -->
     <div class="comments">
       <div id="disqus_thread"></div>

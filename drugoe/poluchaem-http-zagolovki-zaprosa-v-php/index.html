@@ -90,7 +90,7 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 ср 08 февраля 2012
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/http-headers.html">HTTP headers</a><a href="/tag/php.html">PHP</a><a href="/tag/php-fcgi.html">php fcgi</a></p>
+<p>теги: <a href="/tag/http-headers/">HTTP headers</a><a href="/tag/php/">PHP</a><a href="/tag/php-fcgi/">php fcgi</a></p>
 </footer><!-- /.post-info -->      <p>Привет всем! Краткая заметка на тему того, как получить http headers
 запроса, который инициировал выполнение скрипта. Также стоит отметить,
 что в данном случае я использую php, как fastcgi, по-этому некоторые
@@ -102,7 +102,8 @@ VK.Widgets.Like("vk_like", {type: "button"});
 <strong>REST Console</strong>.</p>
 <p>В скрипте просто выводим значение <code>$_SERVER</code>. После нажатия кнопки Send
 получаем следующий вывод:</p>
-<div class="highlight"><pre>(
+<pre><code>:::text
+(
     ....
     [SERVER_PROTOCOL] =&gt; HTTP/1.1
     [GATEWAY_INTERFACE] =&gt; CGI/1.1
@@ -114,9 +115,7 @@ VK.Widgets.Like("vk_like", {type: "button"});
     [PHP_SELF] =&gt; /auth.php
     [REQUEST_TIME] =&gt; 1328733817
 )
-</pre></div>
-
-
+</code></pre>
 <p>Как видите заголовки успешно сохранены в <code>$_SERVER</code> и носят название
 начинающееся с префикса "HTTP_" и продолжающееся именем заголовка в
 верхнем регистре с замененными знаками "-" на "_".</p>

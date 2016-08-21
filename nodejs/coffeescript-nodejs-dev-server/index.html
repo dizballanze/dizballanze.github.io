@@ -90,53 +90,49 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 сб 19 января 2013
         </abbr>
 <p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
-<p>теги: <a href="/tag/coffeescript.html">coffeescript</a><a href="/tag/forever.html">forever</a><a href="/tag/nodejs.html">node.js</a></p>
+<p>теги: <a href="/tag/coffeescript/">coffeescript</a><a href="/tag/forever/">forever</a><a href="/tag/nodejs/">node.js</a></p>
 </footer><!-- /.post-info -->      <p>CoffeeScript - язык программирования, компилируемый в javascript. Используя <a href="http://coffeescript.org/">CoffeeScript</a> для разработки на <a href="/tag/nodejs/">node.js</a> мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
 <img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script" />
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.</p>
-<h1>Устанавливаем пакеты</h1>
+<h1 id="_1">Устанавливаем пакеты</h1>
 <p>Для выполнения нашей цели необходимо установить несколько пакетов:</p>
-<div class="highlight"><pre>npm install coffee-script forever
-</pre></div>
-
-
+<pre><code>:::bash
+npm install coffee-script forever
+</code></pre>
 <p>Мы установили следующие пакеты</p>
 <ul>
 <li><code>coffee-script</code> - cli-утилита для компиляции CoffeeScript</li>
 <li><code>forever</code> - утилита для удобного запуска node.js процессов</li>
 </ul>
-<h1>Файловая структура</h1>
+<h1 id="_2">Файловая структура</h1>
 <p>Всё приложение (файлы с расширением *.coffee) располагаем в отдельной поддиректории. Для скомпилированных файлов создаём дополнительную поддиректорию в корне проекта. Также важно чтобы временные файлы, файлы загруженные пользователями и т.д. находились в отдельной от приложения поддиректории. Т.е. получаем примерно следующую файловую структуру:</p>
-<div class="highlight"><pre><span class="nv">$ </span>ls -1
+<pre><code>:::bash
+$ ls -1
 app
 compiled
 node_modules
 package.json
 README.md
 uploads
-</pre></div>
-
-
+</code></pre>
 <p>Где,</p>
 <ul>
 <li><code>app/</code> - приложение (файлы *.coffee)</li>
 <li><code>compiled/</code> - скопмилированные js файлы</li>
 <li><code>uploads/</code> - загрузки пользователей</li>
 </ul>
-<h1>Компилируем CoffeeScript</h1>
+<h1 id="coffeescript">Компилируем CoffeeScript</h1>
 <p>Для того чтобы компилировать CoffeeScript в javascript необходимо использовать утилиту <code>coffee</code>. Она принимает ряд параметров, можете ознакомится с ней подробнее прочитав справочную информацию <code>coffee --help</code>.</p>
 <p>Утилита <code>coffee</code> позволяет следить за файловой системой и автоматически перекомпилировать изменённые файлы CoffeeScript. Для этого необходимо вызвать её со следующими параметрами:</p>
-<div class="highlight"><pre> coffee -w -o compiled/ app/
-</pre></div>
-
-
+<pre><code>:::bash
+ coffee -w -o compiled/ app/
+</code></pre>
 <p>Где, флаг <code>-w</code> включает режим отслеживания, -o задаёт директорию, в которую сохраняются скомпилированные файлы, а последний параметр определяет целевую директорию приложения.</p>
-<h1>Настраиваем автоматический перезапуск приложения</h1>
+<h1 id="_3">Настраиваем автоматический перезапуск приложения</h1>
 <p>Для того чтобы автоматически перезапускать приложения, после перекомпиляции, воспользуемся утилитой <code>forever</code>.</p>
-<div class="highlight"><pre>forever -w --watchDirectory compiled/ --sourceDiDir compiled/ compiled/app.js
-</pre></div>
-
-
+<pre><code>:::bash
+forever -w --watchDirectory compiled/ --sourceDiDir compiled/ compiled/app.js
+</code></pre>
 <p>Рассмотрим параметры:</p>
 <ul>
 <li><code>-w</code> - включаем режим отслеживания</li>

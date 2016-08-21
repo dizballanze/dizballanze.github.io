@@ -231,7 +231,7 @@ Nginx подготовил для нас тело запроса и lua мог �
                 пт 16 января 2015
         </abbr>
 <p>категория: <a href="/category/python.html">Python</a>. </p>
-<p>теги: <a href="/tag/benchmark/">benchmark</a><a href="/tag/innodb/">innodb</a><a href="/tag/myisam/">myisam</a><a href="/tag/mysql/">MySQL</a><a href="/tag/bd/">БД</a></p>
+<p>теги: <a href="/tag/pip/">pip</a><a href="/tag/wheels/">wheels</a><a href="/tag/dev-tools/">dev tools</a></p>
 </footer><!-- /.post-info -->                <p>Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:</p>
 <ul>
 <li>производительность - каждый раз необходима скачивать и собирать пакеты что занимает большое количество времени</li>
@@ -260,7 +260,7 @@ Nginx подготовил для нас тело запроса и lua мог �
 <p>Данный пост прежде всего будет интересен разработчикам, системные администраторы врятле вынесут из него что-то полезное.</p>
 </blockquote>
 <p><img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx" /></p>
-<h2>Зачем нужен proxy для SMTP и почему именно Nginx</h2>
+<h2 id="proxy-smtp-nginx">Зачем нужен proxy для SMTP и почему именно Nginx</h2>
 <p>Если в вашем приложении нужно реализовать кастомный SMTP-сервер, (например, наш <a href="http://debugmail.io/">Debug Mail</a> или сервисы вроде Mailjet, Mailgun и тд.), то для вас SMTP proxy-сервер будет полезен ...</p>
                 <a class="readmore" href="/linux/nginx-kak-smtp-proxy-server/">читать дальше</a>
 <p><a href="/linux/nginx-kak-smtp-proxy-server/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
@@ -301,13 +301,12 @@ Nginx подготовил для нас тело запроса и lua мог �
                 пт 19 апреля 2013
         </abbr>
 <p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
-<p>теги: <a href="/tag/nodejs.html">node.js</a><a href="/tag/express.html">express</a><a href="/tag/socketio.html">socket.io</a></p>
+<p>теги: <a href="/tag/nodejs/">node.js</a><a href="/tag/express/">express</a><a href="/tag/socketio/">socket.io</a></p>
 </footer><!-- /.post-info -->                <p>При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.</p>
-<h2>Используемые пакеты</h2>
+<h2 id="_1">Используемые пакеты</h2>
 <p>Нам нужно установить несколько пакетов, которые пригодятся для решения поставленной задачи (предполагается что express и soket.io уже установлены):</p>
-<div class="highlight"><pre>npm install cookie express-session-mongo
-</pre></div>
-
+<pre><code class="bash">npm install cookie express-session-mongo
+</code></pre>
 
 <ul>
 <li><code>cookie</code> - модуль ...</li></ul>
@@ -349,11 +348,11 @@ Nginx подготовил для нас тело запроса и lua мог �
                 сб 19 января 2013
         </abbr>
 <p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
-<p>теги: <a href="/tag/coffeescript.html">coffeescript</a><a href="/tag/forever.html">forever</a><a href="/tag/nodejs.html">node.js</a></p>
+<p>теги: <a href="/tag/coffeescript/">coffeescript</a><a href="/tag/forever/">forever</a><a href="/tag/nodejs/">node.js</a></p>
 </footer><!-- /.post-info -->                <p>CoffeeScript - язык программирования, компилируемый в javascript. Используя <a href="http://coffeescript.org/">CoffeeScript</a> для разработки на <a href="/tag/nodejs/">node.js</a> мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
 <img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script" />
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.</p>
-<h1>Устанавливаем пакеты</h1>
+<h1 id="_1">Устанавливаем пакеты</h1>
 <p>Для выполнения нашей цели необходимо установить ...</p>
                 <a class="readmore" href="/nodejs/coffeescript-nodejs-dev-server/">читать дальше</a>
 <p><a href="/nodejs/coffeescript-nodejs-dev-server/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
@@ -373,17 +372,16 @@ Nginx подготовил для нас тело запроса и lua мог �
                 пт 04 января 2013
         </abbr>
 <p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
-<p>теги: <a href="/tag/npm.html">npm</a><a href="/tag/packagejson.html">package.json</a></p>
+<p>теги: <a href="/tag/npm/">npm</a><a href="/tag/packagejson/">package.json</a></p>
 </footer><!-- /.post-info -->                <p>npm - пакетный менеджер для <a href="/tag/nodejs/" title="Node.js">node.js</a>. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.</p>
 <p><img alt="npm package management" src="media/2013/01/npm.png" title="node packaged modules" /></p>
-<h1>Установка npm</h1>
+<h1 id="npm">Установка npm</h1>
 <p>Если у вас не установлен <code>npm</code>, то сделать это можно выполнив следующую команду:</p>
-<div class="highlight"><pre>curl https://npmjs.org/install.sh <span class="p">|</span> sh
-</pre></div>
-
-
-<h1>Установка пакетов</h1>
-<p>Для того чтобы установить пакет при помощи <code>npm ...</code></p>
+<pre><code>:::bash
+curl https://npmjs.org/install.sh | sh
+</code></pre>
+<h1 id="_1">Установка пакетов</h1>
+<p>Для того чтобы установить пакет при помощи ...</p>
                 <a class="readmore" href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/">читать дальше</a>
 <p><a href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
@@ -402,11 +400,11 @@ Nginx подготовил для нас тело запроса и lua мог �
                 ср 02 января 2013
         </abbr>
 <p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
-<p>теги: <a href="/tag/mongoose.html">mongoose</a><a href="/tag/mongodb.html">mongodb</a><a href="/tag/nodejs.html">node.js</a><a href="/tag/sugarjs.html">sugar.js</a></p>
+<p>теги: <a href="/tag/mongoose/">mongoose</a><a href="/tag/mongodb/">mongodb</a><a href="/tag/nodejs/">node.js</a><a href="/tag/sugarjs/">sugar.js</a></p>
 </footer><!-- /.post-info -->                <p>Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
 моделей в <a href="http://mongoosejs.com/" title="Mongoose ODM">ODM Mongoose</a>. Для тех, кто не знает mongoose - это 
 ODM (object document mapper) для node.js и <a href="http://www.mongodb.org/" title="MongoDB">MongoDB</a>. </p>
-<h2>Применение</h2>
+<h2 id="_1">Применение</h2>
 <p>Часто бывает необходимо в рамках одной коллекции объектов выделить несколько
 типов с некоторыми различиями в наборе свойств. Т ...</p>
                 <a class="readmore" href="/nodejs/nasledovanie-svoistv-modelei-v-mongoose/">читать дальше</a>

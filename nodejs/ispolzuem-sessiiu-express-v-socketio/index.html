@@ -90,111 +90,108 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 пт 19 апреля 2013
         </abbr>
 <p>категория: <a href="/category/nodejs.html">Node.js</a>. </p>
-<p>теги: <a href="/tag/nodejs.html">node.js</a><a href="/tag/express.html">express</a><a href="/tag/socketio.html">socket.io</a></p>
+<p>теги: <a href="/tag/nodejs/">node.js</a><a href="/tag/express/">express</a><a href="/tag/socketio/">socket.io</a></p>
 </footer><!-- /.post-info -->      <p>При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.</p>
-<h2>Используемые пакеты</h2>
+<h2 id="_1">Используемые пакеты</h2>
 <p>Нам нужно установить несколько пакетов, которые пригодятся для решения поставленной задачи (предполагается что express и soket.io уже установлены):</p>
-<div class="highlight"><pre>npm install cookie express-session-mongo
-</pre></div>
-
+<pre><code class="bash">npm install cookie express-session-mongo
+</code></pre>
 
 <ul>
 <li><code>cookie</code> - модуль для удобного парсинга cookie</li>
 <li><code>express-session-mongo</code> - back-end для хранения сессий express в MongoDB</li>
 </ul>
-<h2>Настраиваем express</h2>
+<h2 id="express">Настраиваем express</h2>
 <p>Настроим сессии в express:</p>
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">DB</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;ip&#39;</span><span class="o">:</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;port&#39;</span><span class="o">:</span> <span class="mi">27017</span><span class="p">,</span>
-  <span class="s1">&#39;db&#39;</span><span class="o">:</span> <span class="s1">&#39;test&#39;</span>
-<span class="p">}</span>
+<pre><code class="javascript">var DB = {
+  'ip': '127.0.0.1',
+  'port': 27017,
+  'db': 'test'
+}
 
-<span class="kd">var</span> <span class="nx">MongoSessionStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-session-mongo&#39;</span><span class="p">)</span>
-  <span class="p">,</span> <span class="nx">session_storage</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MongoSessionStore</span><span class="p">(</span><span class="nx">DB</span><span class="p">);</span>
+var MongoSessionStore = require('express-session-mongo')
+  , session_storage = new MongoSessionStore(DB);
 
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+var app = express();
 
-<span class="nx">app</span><span class="p">.</span><span class="nx">configure</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+app.configure(function(){
 
-  <span class="cm">/* .... */</span>
+  /* .... */
 
-  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">cookieParser</span><span class="p">(</span><span class="s1">&#39;secret&#39;</span><span class="p">));</span>
-  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">session</span><span class="p">({</span>
-    <span class="nx">store</span><span class="o">:</span> <span class="nx">session_storage</span><span class="p">,</span>
-    <span class="nx">secret</span><span class="o">:</span> <span class="s1">&#39;secret&#39;</span><span class="p">,</span>
-    <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;sid&#39;</span>
-  <span class="p">}));</span>
-<span class="p">});</span>
-</pre></div>
-
+  app.use(express.cookieParser('secret'));
+  app.use(express.session({
+    store: session_storage,
+    secret: 'secret',
+    key: 'sid'
+  }));
+});
+</code></pre>
 
 <p>В данном примере мы используем MongoDB для хранения сессий, но данный приём будет работать и для других хранилищ.</p>
-<h2>Получаем сессионные данные в soket.io</h2>
-<div class="highlight"><pre><span class="c1">// Запускаем web-сервер</span>
-<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(){</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Express server listening on port &quot;</span> <span class="o">+</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">));</span>
-<span class="p">});</span>
+<h2 id="soketio">Получаем сессионные данные в soket.io</h2>
+<pre><code class="javascript">// Запускаем web-сервер
+var server = http.createServer(app).listen(app.get('port'), function(){
+  console.log(&quot;Express server listening on port &quot; + app.get('port'));
+});
 
-<span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">socketio</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">server</span><span class="p">);</span>
+var io = socketio.listen(server);
 
-<span class="c1">// Настраиваем socket.io</span>
-<span class="nx">io</span><span class="p">.</span><span class="nx">configure</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+// Настраиваем socket.io
+io.configure(function() {
 
-  <span class="c1">// Аутентификация пользователей</span>
-  <span class="nx">io</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;authorization&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">accept</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Проверяем переданы ли cookie</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">data</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">cookie</span><span class="p">)</span> 
-      <span class="k">return</span> <span class="nx">accept</span><span class="p">(</span><span class="s1">&#39;No cookie transmitted.&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+  // Аутентификация пользователей
+  io.set('authorization', function (data, accept) {
+    // Проверяем переданы ли cookie
+    if (!data.headers.cookie) 
+      return accept('No cookie transmitted.', false);
 
-    <span class="c1">// Парсим cookie</span>
-    <span class="nx">data</span><span class="p">.</span><span class="nx">cookie</span> <span class="o">=</span> <span class="nx">cookie</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">cookie</span><span class="p">);</span>
+    // Парсим cookie
+    data.cookie = cookie.parse(data.headers.cookie);
 
-    <span class="c1">// Получаем идентификатор сессии</span>
-    <span class="kd">var</span> <span class="nx">sid</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">cookie</span><span class="p">[</span><span class="s1">&#39;sid&#39;</span><span class="p">];</span>
+    // Получаем идентификатор сессии
+    var sid = data.cookie['sid'];
 
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">sid</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">accept</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-    <span class="p">}</span>
+    if (!sid) {
+      accept(null, false);
+    }
 
-    <span class="nx">sid</span> <span class="o">=</span> <span class="nx">sid</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
-    <span class="nx">sid</span> <span class="o">=</span> <span class="nx">sid</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-    <span class="nx">data</span><span class="p">.</span><span class="nx">sessionID</span> <span class="o">=</span> <span class="nx">sid</span><span class="p">;</span>
+    sid = sid.substr(2).split('.');
+    sid = sid[0];
+    data.sessionID = sid;
 
-    <span class="c1">// Добавляем метод для чтения сессии</span>
-    <span class="c1">// в handshakeData</span>
-    <span class="nx">data</span><span class="p">.</span><span class="nx">getSession</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
-      <span class="c1">// Запрашиваем сессию из хранилища</span>
-      <span class="nx">session_storage</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">sid</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">session</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span> <span class="o">||</span> <span class="o">!</span><span class="nx">session</span><span class="p">)</span> <span class="p">{</span>
-          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
-          <span class="nx">accept</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
-          <span class="k">return</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">session</span><span class="p">);</span>
-      <span class="p">});</span>
-    <span class="p">}</span>
-    <span class="nx">accept</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-  <span class="p">});</span>
-<span class="p">});</span>
+    // Добавляем метод для чтения сессии
+    // в handshakeData
+    data.getSession = function(cb) {
+      // Запрашиваем сессию из хранилища
+      session_storage.get(sid, function(err, session) {
+        if (err || !session) {
+          console.log(err);
+          accept(err, false);
+          return;
+        }
+        cb(err, session);
+      });
+    }
+    accept(null, true);
+  });
+});
 
 
-<span class="c1">// Пример использования</span>
-<span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">socket</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;chat&#39;</span><span class="p">);</span>
+// Пример использования
+io.sockets.on('connection', function(socket) {
+  socket.join('chat');
 
-  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">socket</span><span class="p">.</span><span class="nx">handshake</span><span class="p">.</span><span class="nx">getSession</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">session</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">data</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">session</span><span class="p">.</span><span class="nx">name</span> <span class="o">||</span> <span class="s1">&#39;guest&#39;</span><span class="p">;</span>
-      <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;chat&#39;</span><span class="p">).</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
-    <span class="p">});</span>
-  <span class="p">});</span>
-<span class="p">});</span>
-</pre></div>
-
+  socket.on('message', function(data) {
+    socket.handshake.getSession(function(err, session) {
+      data['user'] = session.name || 'guest';
+      io.sockets.in('chat').emit('message', data);
+    });
+  });
+});
+</code></pre>
 
 <p>Для чтения сессии в обработчиках socket.io нужно использовать <code>socket.handshake.getSession</code>.</p>
-<h2>Заключение</h2>
+<h2 id="_2">Заключение</h2>
 <p>Стоит отметить, что если socket.io у вас слушает другой хост/порт, отличный от express, то необходимо предусмотреть другой способ передачи идентификатора сессии.</p>
 <p>Полный пример можно посмотреть на <a href="https://github.com/dizballanze/express-socketio-session-example/">GitHub</a>.</p>
     </div><!-- /.entry-content -->

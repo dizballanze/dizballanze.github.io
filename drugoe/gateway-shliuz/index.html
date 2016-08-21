@@ -90,11 +90,11 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 чт 24 февраля 2011
         </abbr>
 <p>категория: <a href="/category/drugoe.html">Другое</a>. </p>
-<p>теги: <a href="/tag/gateway.html">gateway</a><a href="/tag/php.html">PHP</a><a href="/tag/oop.html">ООП</a><a href="/tag/patterny-proektirovaniia.html">Паттерны проектирования</a></p>
+<p>теги: <a href="/tag/gateway/">gateway</a><a href="/tag/php/">PHP</a><a href="/tag/oop/">ООП</a><a href="/tag/patterny-proektirovaniia/">Паттерны проектирования</a></p>
 </footer><!-- /.post-info -->      <p>Сегодня мы поговорим о базовом паттерне проектирования - шлюзе. Данный
 паттерн поможет нам избежать всех издержек, которые мы получаем при
 использовании внешних, не объектных ресурсов.</p>
-<h2>Описание</h2>
+<h2 id="_1">Описание</h2>
 <p>Почти всегда при написании программ нам приходится учитывать внешние
 ресурсы без которых нам не обойтись. Примером таких ресурсов может быть
 реляционная база данных или API какого-либо интернет-сервиса. Т.к. мы
@@ -118,39 +118,38 @@ VK.Widgets.Like("vk_like", {type: "button"});
 объектный интерфейс. Адаптеры должны значительно улучшить архитектуру
 системы и сделать её более приспособленной к поддержке, расширению и
 рефакторингу.</p>
-<h2>Реализация</h2>
+<h2 id="_2">Реализация</h2>
 <p>И по традиции рассмотрим пример на php:</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-<span class="k">class</span> <span class="nc">DBSimpleGateway</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$connection</span><span class="p">;</span>
+<pre><code>:::php
+&lt;?php
+class DBSimpleGateway{
+    protected $connection;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">__construct</span><span class="p">(</span><span class="nv">$db_host</span><span class="p">,</span> <span class="nv">$db_user_name</span><span class="p">,</span> <span class="nv">$db_password</span><span class="p">,</span> <span class="nv">$db_name</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">//Устанавливаем соединение с сервером MySQL</span>
-    <span class="p">}</span>
+    public function __construct($db_host, $db_user_name, $db_password, $db_name) {
+        //Устанавливаем соединение с сервером MySQL
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">query</span><span class="p">(</span><span class="nv">$query</span><span class="p">){</span>
-        <span class="c1">//Выполняем запрос</span>
-    <span class="p">}</span>
+    public function query($query){
+        //Выполняем запрос
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">reConnect</span><span class="p">(</span><span class="nv">$db_host</span><span class="p">,</span> <span class="nv">$db_user_name</span><span class="p">,</span> <span class="nv">$db_password</span><span class="p">,</span> <span class="nv">$db_name</span><span class="p">){</span>
-        <span class="c1">//Выполняем пересоединение</span>
-    <span class="p">}</span>
+    public function reConnect($db_host, $db_user_name, $db_password, $db_name){
+        //Выполняем пересоединение
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">disconnect</span><span class="p">(){</span>
-        <span class="c1">//Разрываем соединение</span>
-    <span class="p">}</span>
+    public function disconnect(){
+        //Разрываем соединение
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getError</span><span class="p">(){</span>
-        <span class="c1">//Возвращаем ошибку</span>
-    <span class="p">}</span>
+    public function getError(){
+        //Возвращаем ошибку
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getLastInsertId</span><span class="p">(){</span>
-        <span class="c1">//ID последней вставленной записи</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    public function getLastInsertId(){
+        //ID последней вставленной записи
+    }
+}
+</code></pre>
 <p>Этот простой пример показывает, как можно создать шлюз для реляционной
 базы данных. Я не стал приводить реализацию методов, т.к. пример
 довольно тривиальный да и реализация в данном контексте нас не очень

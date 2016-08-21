@@ -63,65 +63,58 @@
 python 2.6.6. Однако, последней (на момент написания поста) стабильной
 версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
 несколько версий python и использовать их независимо.</p>
-<h2>Устанавливаем Python 2.7.3</h2>
+<h2 id="python-273">Устанавливаем Python 2.7.3</h2>
 <p>Скомпилируем python 2.7.3 из исходников. Стянуть последнюю версию можно
 <a href="http://www.python.org/download/releases/">здесь</a>.</p>
-<div class="highlight"><pre><span class="nb">cd</span> /tmp
+<pre><code>:::bash
+cd /tmp
 wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
 tar xvzf Python-2.7.3.tgz
-<span class="nb">cd </span>Python-2.7.3
-./configure --prefix<span class="o">=</span>/usr/local/python-2.7.3
-make <span class="o">&amp;&amp;</span> make install
+cd Python-2.7.3
+./configure --prefix=/usr/local/python-2.7.3
+make &amp;&amp; make install
 ln -s /usr/local/python-2.7.3/bin/python2.7 /usr/bin/python2.7.3
-</pre></div>
-
-
+</code></pre>
 <p>После этого можем проверить что все работает:</p>
-<div class="highlight"><pre>python2.7.3 
-Python 2.7.3 <span class="o">(</span>default, Jul <span class="m">22</span> 2012, 10:05:02<span class="o">)</span> 
-<span class="o">[</span>GCC 4.4.5<span class="o">]</span> on linux2
-Type <span class="s2">&quot;help&quot;</span>, <span class="s2">&quot;copyright&quot;</span>, <span class="s2">&quot;credits&quot;</span> or <span class="s2">&quot;license&quot;</span> <span class="k">for</span> more information.
+<pre><code>:::bash
+python2.7.3 
+Python 2.7.3 (default, Jul 22 2012, 10:05:02) 
+[GCC 4.4.5] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
 &gt;&gt;&gt;
-</pre></div>
-
-
-<h2>Используем virtualenv</h2>
+</code></pre>
+<h2 id="virtualenv">Используем virtualenv</h2>
 <p>Для того чтобы обеспечить удобную работу с несколькими версиями python
 воспользуемся утилитой virtualenv. Сначала скачиваем скрипт:</p>
-<div class="highlight"><pre><span class="nb">cd</span> /home/dizballanze
+<pre><code>:::bash
+cd /home/dizballanze
 mkdir apps
-<span class="nb">cd </span>apps
+cd apps
 wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
-</pre></div>
-
-
+</code></pre>
 <p>Теперь нам нужно выполнить скрипт с использованием нужной версии python:</p>
-<div class="highlight"><pre>mkdir test_app
-<span class="nb">cd </span>test_app
+<pre><code>:::bash
+mkdir test_app
+cd test_app
 python2.7.3 ../virtualenv.py venv
-</pre></div>
-
-
+</code></pre>
 <p>Таким образом мы успешно добавили виртуальное окружение. В текущей
 директории должна появится директория с названием venv (второй
 параметр). Для того чтобы активировать окружение выполните:</p>
-<div class="highlight"><pre><span class="nb">source </span>venv/bin/activate
-</pre></div>
-
-
+<pre><code>:::bash
+source venv/bin/activate
+</code></pre>
 <p>Сразу после этого должна изменится строка ввода в терминале следующим
 образом:</p>
-<div class="highlight"><pre><span class="o">(</span>venv<span class="o">)</span>dizballanze@dizballanze-desktop:~/apps/test
-</pre></div>
-
-
+<pre><code>:::bash
+(venv)dizballanze@dizballanze-desktop:~/apps/test
+</code></pre>
 <p>Что означает, что мы находимся в окружении с названием venv. Проверим
 версию python:</p>
-<div class="highlight"><pre>python --version
+<pre><code>:::bash
+python --version
 Python 2.7.3
-</pre></div>
-
-
+</code></pre>
 <p>Таким образом можно установить любое количество версий Python на одной
 машине и при этом использовать их независимо. Более того, активировав
 virtualenv все устанавливаемые через pip пакеты будут хранится в

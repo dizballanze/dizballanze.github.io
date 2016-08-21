@@ -90,22 +90,21 @@ VK.Widgets.Like("vk_like", {type: "button"});
                 ср 14 марта 2012
         </abbr>
 <p>категория: <a href="/category/linux.html">Linux</a>. </p>
-<p>теги: <a href="/tag/ab.html">ab</a><a href="/tag/benchmark.html">benchmark</a><a href="/tag/optimizatsiia.html">оптимизация</a><a href="/tag/profilirovanie.html">профилирование</a></p>
+<p>теги: <a href="/tag/ab/">ab</a><a href="/tag/benchmark/">benchmark</a><a href="/tag/optimizatsiia/">оптимизация</a><a href="/tag/profilirovanie/">профилирование</a></p>
 </footer><!-- /.post-info -->      <p>Важной частью разработки web-приложения является тестирование
 производительности. Часто при постановке задачи заказчик требует чтобы
 сервис выдерживал определенную нагрузку. В процессе профилирования и
 оптимизации полезно отслеживать, как изменилась скорость работы
 приложения при новых условиях. Для этой цели можно использовать Apache
 HTTP server benchmarking tool.</p>
-<h2>Использование ab</h2>
-<h3>Установка</h3>
+<h2 id="ab">Использование ab</h2>
+<h3 id="_1">Установка</h3>
 <p>Для того чтобы установить ab в debian необходимо установить пакет
 apache2-utils:</p>
-<div class="highlight"><pre>apt-get install apache2-utils
-</pre></div>
-
-
-<h3>Параметры</h3>
+<pre><code>:::bash
+apt-get install apache2-utils
+</code></pre>
+<h3 id="_2">Параметры</h3>
 <p>Утилита запускается с помощью команды ab. Далее рассмотрим основные
 параметры.</p>
 <ul>
@@ -125,8 +124,9 @@ apache2-utils:</p>
 <p>Выполнение теста</p>
 <p>Давайте выполним тестирование какого-либо сайта и рассмотрим содержание
 отчета, который генерирует ab.</p>
-<div class="highlight"><pre>ab -c <span class="m">10</span> -n <span class="m">100</span> http://google.com/
-Benchmarking google.com <span class="o">(</span>be patient<span class="o">)</span>.....done
+<pre><code>:::bash
+ab -c 10 -n 100 http://google.com/
+Benchmarking google.com (be patient).....done
 
 
 Server Software:        gws
@@ -134,29 +134,29 @@ Server Hostname:        google.com
 Server Port:            80
 
 Document Path:          /
-Document Length:        <span class="m">219</span> bytes
+Document Length:        219 bytes
 
 Concurrency Level:      10
-Time taken <span class="k">for</span> tests:   1.290 seconds
+Time taken for tests:   1.290 seconds
 Complete requests:      100
 Failed requests:        0
 Write errors:           0
 Non-2xx responses:      100
-Total transferred:      <span class="m">54000</span> bytes
-HTML transferred:       <span class="m">21900</span> bytes
-Requests per second:    77.51 <span class="o">[</span><span class="c">#/sec] (mean)</span>
-Time per request:       129.018 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean<span class="o">)</span>
-Time per request:       12.902 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean, across all concurrent requests<span class="o">)</span>
-Transfer rate:          40.87 <span class="o">[</span>Kbytes/sec<span class="o">]</span> received
+Total transferred:      54000 bytes
+HTML transferred:       21900 bytes
+Requests per second:    77.51 [#/sec] (mean)
+Time per request:       129.018 [ms] (mean)
+Time per request:       12.902 [ms] (mean, across all concurrent requests)
+Transfer rate:          40.87 [Kbytes/sec] received
 
-Connection Times <span class="o">(</span>ms<span class="o">)</span>
-              min  mean<span class="o">[</span>+/-sd<span class="o">]</span> median   max
-Connect:       <span class="m">54</span>   <span class="m">56</span>   2.0     <span class="m">55</span>      63
-Processing:    <span class="m">70</span>   <span class="m">72</span>   2.4     <span class="m">72</span>      82
-Waiting:       <span class="m">70</span>   <span class="m">72</span>   2.3     <span class="m">72</span>      82
-Total:        <span class="m">124</span>  <span class="m">128</span>   3.4    <span class="m">127</span>     140
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:       54   56   2.0     55      63
+Processing:    70   72   2.4     72      82
+Waiting:       70   72   2.3     72      82
+Total:        124  128   3.4    127     140
 
-Percentage of the requests served within a certain <span class="nb">time</span> <span class="o">(</span>ms<span class="o">)</span>
+Percentage of the requests served within a certain time (ms)
   50%    127
   66%    128
   75%    129
@@ -165,10 +165,8 @@ Percentage of the requests served within a certain <span class="nb">time</span> 
   95%    134
   98%    138
   99%    140
- 100%    <span class="m">140</span> <span class="o">(</span>longest request<span class="o">)</span>
-</pre></div>
-
-
+ 100%    140 (longest request)
+</code></pre>
 <p>Сначала выводится различная информация о проводимом тесте, такая как
 типа серверного ПО, хост, порт, путь и тд. Дальше идут более интересные
 характеристики. Рассмотрим наиболее важные из них:</p>
@@ -188,7 +186,7 @@ Percentage of the requests served within a certain <span class="nb">time</span> 
 запроса и ожидание. И после этого таблица которая показывает процент от
 количества запросов, которые успели выполнится за определенный
 промежуток времени.</p>
-<h2>Практическое применение</h2>
+<h2 id="_3">Практическое применение</h2>
 <p>В зависимости от поставленных перед вами задач необходимо задавать
 различные параметры при запуске теста. Рассмотрим несколько примеров.</p>
 <ul>
@@ -215,27 +213,24 @@ Percentage of the requests served within a certain <span class="nb">time</span> 
     производительность со временем. Данное значение можно получить из
     таблицы Connection Times.</li>
 </ul>
-<h2>Дополнительно. Пример выполнения POST-запроса в ab</h2>
+<h2 id="post-ab">Дополнительно. Пример выполнения POST-запроса в ab</h2>
 <p>Для выполнения POST-запроса необходимо составить тело запроса и
 сохранить его в файл. Для этого напишем небольшой скрипт:</p>
-<div class="highlight"><pre><span class="cp">&lt;?php</span>
-<span class="nv">$params</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">&#39;test1&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;test2&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;Second test&#39;</span><span class="p">);</span>
-<span class="nv">$body</span> <span class="o">=</span> <span class="nb">http_build_query</span><span class="p">(</span><span class="nv">$params</span><span class="p">);</span>
-<span class="nb">file_put_contents</span><span class="p">(</span><span class="s1">&#39;/tmp/body&#39;</span><span class="p">,</span> <span class="nv">$body</span><span class="p">);</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+$params = array('test1' =&gt; 1, 'test2' =&gt; 'Second test');
+$body = http_build_query($params);
+file_put_contents('/tmp/body', $body);
+</code></pre>
 <p>После этого в файле /tmp/body появится следующее содержимое:</p>
-<div class="highlight"><pre>test1=1&amp;test2=Second+test
-</pre></div>
-
-
+<pre><code>:::text
+test1=1&amp;test2=Second+test
+</code></pre>
 <p>Теперь можно запускать тестирование:</p>
-<div class="highlight"><pre>ab -T application/x-www-form-urlencoded -p /tmp/body -n <span class="m">10</span> http://localhost/test/ab/post-handler.php
-</pre></div>
-
-
-<h2>Вывод</h2>
+<pre><code>:::bash
+ab -T application/x-www-form-urlencoded -p /tmp/body -n 10 http://localhost/test/ab/post-handler.php
+</code></pre>
+<h2 id="_4">Вывод</h2>
 <p>Apache HTTP server benchmarking tool - полезный инструмент
 web-разработчика, который позволяет максимально быстро произвести
 тестирование производительности той или иной части приложения. Он
@@ -244,7 +239,7 @@ web-разработчика, который позволяет максимал
 тестирования нескольких функций с учетом различных сценариев и
 моделирования действий пользователя, необходимо использовать более
 сложные системы тестирования.</p>
-<h3>UPDATE #1</h3>
+<h3 id="update-351">UPDATE #1</h3>
 <p>Полезное дополнение от товарища:</p>
 <blockquote>
 <p>ApacheBenchmark выдает много Failed. Сначала было стремно, но все

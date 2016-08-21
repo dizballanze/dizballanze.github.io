@@ -62,7 +62,7 @@
 <p>Данный пост прежде всего будет интересен разработчикам, системные администраторы врятле вынесут из него что-то полезное.</p>
 </blockquote>
 <p><img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx" /></p>
-<h2>Зачем нужен proxy для SMTP и почему именно Nginx</h2>
+<h2 id="proxy-smtp-nginx">Зачем нужен proxy для SMTP и почему именно Nginx</h2>
 <p>Если в вашем приложении нужно реализовать кастомный SMTP-сервер, (например, наш <a href="http://debugmail.io/">Debug Mail</a> или сервисы вроде Mailjet, Mailgun и тд.), то для вас SMTP proxy-сервер будет полезен для следующих целей:</p>
 <ul>
 <li>отсев несанкционированных попыток отправки писем до попадания писем в кастомный бекенд,</li>
@@ -71,29 +71,28 @@
 </ul>
 <p>Nginx из коробки предоставляет полнофункциональный smtp proxy с свойственной для него отличной производительностью. В моем случае в проекте уже использовался Nginx для проксирования запросов к Node.js приложению и для отдачи статики, по-этому выбор в его пользу был очевиден.</p>
 <p>Далее мы рассмотрим процесс настройки proxy-сервера и способы его взаимодействия с приложением.</p>
-<h2>Настройка</h2>
+<h2 id="_1">Настройка</h2>
 <p>Пример конфигурации SMTP proxy-сервера (должен быть определен или подключен в корне nginx.conf):</p>
-<div class="highlight"><pre><span class="k">mail</span> <span class="p">{</span>
-    <span class="kn">auth_http</span>  <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8000</span><span class="s">/auth</span><span class="p">;</span>
+<pre><code class="nginx">mail {
+    auth_http  127.0.0.1:8000/auth;
 
-    <span class="kn">starttls</span>        <span class="no">on</span><span class="p">;</span>
-    <span class="kn">ssl_certificate</span> <span class="s">/etc/nginx/cert.pem</span><span class="p">;</span>
-    <span class="kn">ssl_certificate_key</span> <span class="s">/etc/nginx/key.pem</span><span class="p">;</span>
-    <span class="kn">auth_http_header</span> <span class="s">X-Auth-Key</span> <span class="s">wow_so_secret</span><span class="p">;</span>
+    starttls        on;
+    ssl_certificate /etc/nginx/cert.pem;
+    ssl_certificate_key /etc/nginx/key.pem;
+    auth_http_header X-Auth-Key wow_so_secret;
 
-    <span class="c1"># Generic port</span>
-    <span class="kn">server</span> <span class="p">{</span>
-        <span class="kn">server_name</span>     <span class="s">debugmail</span><span class="p">;</span>
-        <span class="kn">listen</span>          <span class="mi">25</span><span class="p">;</span>
-        <span class="kn">protocol</span>        <span class="s">smtp</span><span class="p">;</span>
-        <span class="kn">proxy</span>           <span class="no">on</span><span class="p">;</span>
-        <span class="kn">proxy_pass_error_message</span> <span class="no">on</span><span class="p">;</span>
-        <span class="kn">smtp_auth</span>       <span class="s">login</span> <span class="s">plain</span><span class="p">;</span>
-        <span class="kn">xclient</span>         <span class="no">on</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
+    # Generic port
+    server {
+        server_name     debugmail;
+        listen          25;
+        protocol        smtp;
+        proxy           on;
+        proxy_pass_error_message on;
+        smtp_auth       login plain;
+        xclient         on;
+    }
+}
+</code></pre>
 
 <p>Рассмотрим некоторые параметры:</p>
 <ul>
@@ -107,9 +106,9 @@
 <p>Вы наверное заметили, что нигде не задается адрес проксируемого сервера.
 Чтобы узнать откуда Nginx узнает его адрес см. следующий раздел.</p>
 </blockquote>
-<h3>Аутентификация</h3>
+<h3 id="_2">Аутентификация</h3>
 <p>Nginx поддерживает 3 метода аутентификации SMTP: <code>login</code>, <code>plaint</code> и <code>cram-md5</code>. Для задания активных методов необходимо использовать параметр <code>smtp_auth</code> значением которого является список методов через пробел. Также можно полностью отключить аутентификацию задав значение <code>none</code>.</p>
-<h4>HTTP Auth сервер</h4>
+<h4 id="http-auth">HTTP Auth сервер</h4>
 <p>Для проверки аутентификации необходимо реализовать сервер, который будет принимать по HTTP запросы от proxy сервера и возвращать результат проверки. Адрес такого сервера задается при помощи параметра <code>auth_http</code>.</p>
 <p>Логин и пароль для проверки отправляются на сервер аутентификации через заголовки <code>Auth-User</code> и <code>Auth-Pass</code> соответственно. В заголовке <code>Auth-Login-Attempt</code> proxy сервер передает номер попытки аутентификации. После проверки в зависимости от результата сервер должен вернуть в ответе следующие заголовки:</p>
 <ul>
@@ -127,30 +126,28 @@
 </ul>
 <p>Независимо от результата proxy сервер ждет ответ со статусом <code>HTTP/1.0 200 OK</code>.</p>
 <p>Как вы видите адрес проксируемого сервера возвращает сервер аутентификации, что дает широкие возможности в плане балансировки нагрузки/логгирования/фильтрации и тд. Например, в зависимости от ip-адреса клиента (который передается в заголовке <code>Client-IP</code>), можно направить письмо на сервер, который географически ближе к данному клиенту (GeoIP). Или можно использовать другой способ балансировки, например, в зависимости от домена пользователя, даты его регистрации или любых других данных которые предаставляет proxy сервер или которые хранятся в БД.</p>
-<h4>auth_http_header</h4>
+<h4 id="auth_http_header">auth_http_header</h4>
 <p>Я не рекомендую делать ваш сервер аутентификации доступным из вне, но если у вас есть веские причины для этого, то Nginx предоставляет возможность простой способ проверки запроса при помощи <code>shared secret</code>. Для настройки используется параметр <code>auth_http_header &lt;header-name&gt; &lt;shared-secret-key&gt;</code>. При отправки запроса на аутентификацию proxy также будет отправлять заголовок с именем <code>&lt;header-name&gt;</code> и значением <code>&lt;shared-secret-key&gt;</code>. На сервере аутентификации соответственно нужно выполнять проверку данного значения.</p>
 <p>Как альтернативный или дополнительный вариант, можно выполнять проверку по IP-адресу proxy сервера, который вероятно является фиксированным.</p>
-<h4>XCLIENT</h4>
+<h4 id="xclient">XCLIENT</h4>
 <p>Nginx поддерживает <a href="http://www.postfix.org/XCLIENT_README.html">расширение XCLIENT</a>. Для активации данной возможности используется параметр <code>xclient: on</code>. </p>
 <p>После активации xclient на бекенд (SMTP-сервер) будет приходить команда примерно следующего вида: <code>XCLIENT &lt;attr1=value1&gt; &lt;attr2=value2&gt;</code>. Среди атрибутов команды можно выделить <code>LOGIN</code>, который (как вы наверное догадались) передает логин при помощи которого пользователь аутентифицировался.</p>
 <p>В <a href="http://debugmail.io/">Debug Mail</a> у нас пароль является идентификатором проекта, к которому нужно в итоге прикрепить письмо. Соответственно одного логина нам было недостаточно, для того, чтобы понять куда сохранять email. К счастью Nginx позволяет переопределить значение атрибута <code>LOGIN</code> передаваемого на бекенд. Для этого необходимо (в случае успешной проверки) возвращать дополнительный заголовок <code>Auth-User</code> от сервера аутентификации, например так:</p>
-<div class="highlight"><pre><span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-Status&quot;</span><span class="p">,</span> <span class="s">&quot;OK&quot;</span>
-<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-Server&quot;</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">smtp_host</span>
-<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-Port&quot;</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">smtp_port</span>
-<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">&quot;Auth-User&quot;</span><span class="p">,</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">login</span><span class="si">}</span><span class="s">#</span><span class="si">#{</span><span class="nx">password</span><span class="si">}</span><span class="s">&quot;</span>
-<span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span>
-</pre></div>
+<pre><code class="coffeescript">res.set &quot;Auth-Status&quot;, &quot;OK&quot;
+res.set &quot;Auth-Server&quot;, settings.smtp_host
+res.set &quot;Auth-Port&quot;, settings.smtp_port
+res.set &quot;Auth-User&quot;, &quot;#{login}##{password}&quot;
+res.send 200
+</code></pre>
 
-
-<h3>SSL / TLS</h3>
+<h3 id="ssl-tls">SSL / TLS</h3>
 <p>Если вам нужно добавить поддержку ssl или tls, то в Nginx есть всё для этого. Для включения ssl необходимо задать параметр <code>ssl: on</code>. Если же вы предпочитаете TLS, то необходимо использовать параметр <code>starttls: on</code>, при этом использование TLS будет опциональным и будет зависеть от клиента. Чтобы сделать использование TLS обязательным нужно вместо <code>on</code> задать значение <code>only</code>.</p>
 <p>Для дальнейшей настройки нам потребуется сертификат и секретный ключ в формате PEM. Для примера сгенерируем self-signed сертификат (для реального проекта вам вероятно потребуется купить сертификат выданный сертификационным центром):</p>
-<div class="highlight"><pre>openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes
-</pre></div>
-
+<pre><code>openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes
+</code></pre>
 
 <p>Далее задаем пути к сертификату и ключу в настройках Nginx (параметры <code>ssl_certificate</code> и <code>ssl_certificate_key</code> соответственно).</p>
-<h3>P.S.</h3>
+<h3 id="ps">P.S.</h3>
 <p>Полная документация по всем параметрам смотрите на <a href="http://nginx.org/ru/docs/">официальном сайте Nginx</a>.</p><p><a href="/linux/nginx-kak-smtp-proxy-server/#disqus_thread">comments</a></p>                </article>
             </aside><!-- /#featured -->
                 <section id="content" class="body">
@@ -172,15 +169,15 @@
                 ср 14 марта 2012
         </abbr>
 <p>категория: <a href="/category/linux.html">Linux</a>. </p>
-<p>теги: <a href="/tag/ab.html">ab</a><a href="/tag/benchmark.html">benchmark</a><a href="/tag/optimizatsiia.html">оптимизация</a><a href="/tag/profilirovanie.html">профилирование</a></p>
+<p>теги: <a href="/tag/ab/">ab</a><a href="/tag/benchmark/">benchmark</a><a href="/tag/optimizatsiia/">оптимизация</a><a href="/tag/profilirovanie/">профилирование</a></p>
 </footer><!-- /.post-info -->                <p>Важной частью разработки web-приложения является тестирование
 производительности. Часто при постановке задачи заказчик требует чтобы
 сервис выдерживал определенную нагрузку. В процессе профилирования и
 оптимизации полезно отслеживать, как изменилась скорость работы
 приложения при новых условиях. Для этой цели можно использовать Apache
 HTTP server benchmarking tool.</p>
-<h2>Использование ab</h2>
-<h3>Установка</h3>
+<h2 id="ab">Использование ab</h2>
+<h3 id="_1">Установка</h3>
 <p>Для того чтобы установить ...</p>
                 <a class="readmore" href="/linux/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/">читать дальше</a>
 <p><a href="/linux/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
@@ -284,7 +281,7 @@ cd /var/www/projectfind . -name .svn -exec rm -R ...</code></pre>
 продолжим рассмотрение настройки сети и интернета в linux. В данной
 части статьи я постараюсь раскрыть темы DHCP, DNS и маршрутизация. Перед
 прочтением данной статьи прочитайте <a href="/Linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/">первую часть</a>.</p>
-<h2>Автоматическая настройка сети через DHCP</h2>
+<h2 id="dhcp">Автоматическая настройка сети через DHCP</h2>
 <p>Часто для настройки компьютеров в сети используется протокол DHCP
 (dynamic host configuration ...</p>
                 <a class="readmore" href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/">читать дальше</a>
@@ -335,17 +332,14 @@ Ubuntu, т.к. эти дистрибутивы близкие родственн
 <p>По просьбе моего друга рассматриваю установку ftp-сервера в Linux.</p>
 <p>Начнем с того что установим демон ftpd. Т.к. я использую Debian, то
 устанавливать будем при помощи apt-get:</p>
-<div class="highlight"><pre>apt-get install ftpd
-</pre></div>
-
-
+<pre><code>:::bash
+apt-get install ftpd
+</code></pre>
 <p>Итак, поставили, теперь проверяем запущен или нет:</p>
-<div class="highlight"><pre>ps aux <span class="p">|</span> grep ftp
-</pre></div>
-
-
-<p>В моём случае не запущен, значит запускаем:</p>
-<div class="highlight"><pre>/etc/init ...</pre></div>
+<pre><code>:::bash
+ps aux | grep ftp
+</code></pre>
+<p>В моём случае не запущен, значит запускаем ...</p>
                 <a class="readmore" href="/linux/stavim-ftp-server-v-debian/">читать дальше</a>
 <p><a href="/linux/stavim-ftp-server-v-debian/#disqus_thread">comments</a></p>                </div><!-- /.entry-content -->
             </article></li>
@@ -364,7 +358,7 @@ Ubuntu, т.к. эти дистрибутивы близкие родственн
                 пт 26 ноября 2010
         </abbr>
 <p>категория: <a href="/category/linux.html">Linux</a>. </p>
-<p>теги: <a href="/tag/linux.html">Linux</a><a href="/tag/administrirovanie.html">администрирование</a></p>
+<p>теги: <a href="/tag/linux/">Linux</a><a href="/tag/administrirovanie/">администрирование</a></p>
 </footer><!-- /.post-info -->                <p>Доброго времени суток, товарищи линуксоиды!!</p>
 <p>В этой статье я хочу рассказать о процессе подключения нового жёсткого
 диска в ОС Linux.</p>
@@ -390,7 +384,7 @@ Ubuntu, т.к. эти дистрибутивы близкие родственн
                 пт 26 ноября 2010
         </abbr>
 <p>категория: <a href="/category/linux.html">Linux</a>. </p>
-<p>теги: <a href="/tag/debian.html">debian</a><a href="/tag/linux.html">Linux</a><a href="/tag/wvdial.html">wvdial</a></p>
+<p>теги: <a href="/tag/debian/">debian</a><a href="/tag/linux/">Linux</a><a href="/tag/wvdial/">wvdial</a></p>
 </footer><!-- /.post-info -->                <p>В этой статье я расскажу как использовать ваш мобильный телефон в
 качестве 3G/GPRS/EDGE модема в ОС Linux.</p>
 <p>В качестве тестового примера использовались ПК с установленной Debian

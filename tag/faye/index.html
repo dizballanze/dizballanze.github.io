@@ -76,10 +76,10 @@
 </ul>
 <p>Для того, чтобы сервис было легче масштабировать, каждый из описанных выше компонентов разрабатывался с учетом того, что он может быть запущен отдельно, в том числе на другом сервере. Взаимодействие между компонентами в основном происходит через базу данных и систему обмена сообщениями Faye (для real-time обновлений).</p>
 <p><img alt="debugmail-design" src="/media/2014/3/debugmail-design.png" title="DebugMail design" /></p>
-<h2>SMTP-сервер</h2>
+<h2 id="smtp-">SMTP-сервер</h2>
 <p>Необходимо было разработать SMTP-север, который бы не осуществлял доставку письма на целевой хост, а только сохранял его в базе данных. В этом нам отлично помогли модули <a href="https://github.com/andris9/simplesmtp">simplesmtp</a> и <a href="https://github.com/andris9/mailparser">mailparser</a>, которые покрывали все базовые функции необходимые для работы smtp-сервера и парсинга писем. Оставалось только прописать нужные обработчики событий и другой специфичный для задачи код.</p>
 <p>В сервисе предполагается, что все письма относятся к определенному проекту. При создании проекта пользователь получает параметры подключения к smtp-серверу среди которых есть пара login-password. На основе этих данных smtp-сервер определяет к какому проекту относится то или иное полученное письмо.</p>
-<h2>REST API</h2>
+<h2 id="rest-api">REST API</h2>
 <p>Для взаимодействия клиентского приложения (см. скоро пост про клиентскую часть) с backend было разработано REST API на базе фреймворка <a href="http://expressjs.com/">express</a>. Выбран был именно этот фреймворк из-за его простоты, скорости работы и гибкости. При помощи поддержки middleware, которые пришли из <a href="http://www.senchalabs.org/connect/">connect</a>, можно очень просто встраиваться в процесс обработки запросов. Несколько примеров разработанных middleware:</p>
 <ul>
 <li>контроль доступа,</li>
@@ -87,11 +87,11 @@
 <li>защита от CSRF,</li>
 <li>инициализация сессии и тд.</li>
 </ul>
-<h3>Content negotiation</h3>
+<h3 id="content-negotiation">Content negotiation</h3>
 <p>Для того, чтобы максимально распараллелить работу с front-end разработчиком, было принято решение реализовывать сервис в виде SPA (single page application) и REST API. Далее возник вопрос, как различать запросы, которые отправляет клиентское приложение, от запросов, которые генерируются браузером автоматически (при загрузке страниц) при том, то URL-адреса REST API и клиентского приложения пересекаются. Самым корректным решением нам показалось использование content negotiation. При поступлении запроса срабатывает middleware, который проверяет какой формат ответа является предпочтительным для клиента, на основании значения из заголовка запроса <code>Accept</code>. Клиентское приложение отправляет значение данного заголовка как <code>application/json</code>, что сообщает серверу о том, что нужно обрабатывать запрос, как запрос к REST API и вернуть результат в виде JSON-документа. Во всех остальных случаях предполагается, что запрос приходит от браузера и происходит рендеринг основного шаблона с подключенным клиентским приложением.</p>
-<h3>Маршрутизация</h3>
+<h3 id="_1">Маршрутизация</h3>
 <p>Изначально было принято решение использовать модуль <a href="https://github.com/visionmedia/express-resource">express-resource</a>, но он оказался недостаточно гибким. Например, нельзя задавать кастомные middleware для определенных маршрутов. <a href="https://github.com/visionmedia/express-resource/pull/66">Pull Request</a> для решения описанной проблемы висит уже больше года, в итоге от <code>express-resource</code> пришлось отказаться в пользу стандартного способа задания маршрутов в express.</p>
-<h2>Real-time updates</h2>
+<h2 id="real-time-updates">Real-time updates</h2>
 <p>Одна из фич сервиса предполагает, что при получении нового письма оно должна сразу появляться в интерфейсе. Для реализации таких real-time обновлений существует несколько популярных решений:</p>
 <ul>
 <li><a href="http://socket.io">socket.io</a></li>
@@ -104,44 +104,42 @@
 <li>из коробки поддерживаются server-side clients, что важно, т.к. сообщения генерируются из SMTP-сервера,</li>
 <li>достаточно активно разрабатывается.</li>
 </ul>
-<h3>Аутентификация пользователей</h3>
+<h3 id="_2">Аутентификация пользователей</h3>
 <p>Основной сложностью было реализовать аутентификацию клиентов, т.к. сессии, которые используются в основном приложении и REST API, здесь не доступны. Для решения этой проблемы была введена аутентификация при подписке на обновления проекта. Предпологается, что при инициализации подписки на уведомления клиент передает <code>user id</code>, <code>session id</code> и <code>token</code>. <code>token</code> является результатом выполнения хэш-функции к параметрам <code>user id</code>, <code>session id</code> и некоторого закрытого ключа. Чтобы реализовать такой механизм отлично подходят, т.н. <a href="http://faye.jcoglan.com/browser/extensions.html">extensions</a>, которые позволяют перехватывать сообщения и выполнять дополнительные действия (проверки, дополнительную обработку данных и тд.). В итоге получается примерно такой код:</p>
-<div class="highlight"><pre><span class="nx">client</span><span class="p">.</span><span class="nx">addExtension</span><span class="p">({</span>
-  <span class="nx">outgoing</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">channel</span> <span class="o">!==</span> <span class="s1">&#39;/meta/subscribe&#39;</span><span class="p">)</span>
-      <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+<pre><code class="javascript">client.addExtension({
+  outgoing: function(message, callback) {
+    if (message.channel !== '/meta/subscribe')
+      return callback(message);
 
-    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span> <span class="o">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span> <span class="o">||</span> <span class="p">{};</span>
-    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">uid</span> <span class="o">=</span> <span class="nx">USER_ID</span><span class="p">;</span>
-    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">sid</span> <span class="o">=</span> <span class="nx">SESSION_ID</span><span class="p">;</span>
-    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">token</span> <span class="o">=</span> <span class="nx">PRIVATE_TOKEN</span><span class="p">;</span>
-    <span class="nx">callback</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</pre></div>
-
+    message.ext = message.ext || {};
+    message.ext.uid = USER_ID;
+    message.ext.sid = SESSION_ID;
+    message.ext.token = PRIVATE_TOKEN;
+    callback(message);
+  }
+});
+</code></pre>
 
 <p>Аналогичная система расширений на стороне сервера позволяет выполнять проверку и разрешать подписываться на обновления по проектам только тем пользователям, которые действительно имеют к ним доступ.</p>
-<h2>Автоматическое тестирование</h2>
+<h2 id="_3">Автоматическое тестирование</h2>
 <p>Зачем нужно писать тесты я думаю объяснять не нужно. В данном проекте мы хотели добиться максимального покрытия кода тестами. Для этого практически весь код тестируется сразу на 2х уровнях, на функциональном и на модульном.</p>
 <p>Писать тесты на node.js - одно удовольствие. В основном это так благодаря большому количеству удобных инструментов и модулей в <a href="https://npmjs.org/">npm</a>. Также помогают особенностям javascript и node.js, которые предоставляют все необходимые возможности для удобного создания <a href="http://en.wikipedia.org/wiki/Mock_object">моков</a>. Рассмотрим, какие модули использовались и с какой целью:</p>
 <ul>
 <li><a href="http://visionmedia.github.io/mocha/">mocha</a> - многофункциональный тестовый фреймворк, содержит все необходимые функции для структурирования, поиска, запуска, подсчета метрик, просмотра результатов выполнения тестов и тд. Поддерживает как синхронные так и асинхронные тесты и имеет широкие возможности для кастомизации процесса тестирования.</li>
 <li><a href="https://github.com/visionmedia/supertest">supertest</a> - модуль для выполнения функционального тестирования. Все что нужно для начала работы с supertest - передать ему экземпляр приложения express, после этого можно выполнять запросы к приложению и тестировать полученные ответы. Также supertest предоставляет удобный chaining api, типичный тест выглядит так:</li>
 </ul>
-<div class="highlight"><pre><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/user&#39;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;Accept&#39;</span><span class="p">,</span> <span class="s1">&#39;application/json&#39;</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
-  <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+<pre><code class="javascript">request(app)
+  .get('/user')
+  .set('Accept', 'application/json')
+  .expect(200)
+  .end(function(err, res){
+    if (err) return done(err);
 
-    <span class="c1">// ... check something here ...</span>
+    // ... check something here ...
 
-    <span class="nx">done</span><span class="p">()</span>
-  <span class="p">});</span>
-</pre></div>
-
+    done()
+  });
+</code></pre>
 
 <ul>
 <li><a href="https://github.com/visionmedia/should.js/">should.js</a> - это библиотека для удобного выполнения assertions. При инициализации библиотека перегружает встроенные объекты javascript, что позволяет использовать красивые конструкции вроде <code>user.should.have.property('company', 'wbtech')</code>. Предоставляет большое количество полезных фич, что делает написание тестов более приятным и быстрым процессом.</li>
@@ -149,7 +147,7 @@
 <li><a href="https://github.com/pgte/nock">nock</a> - позволяет перехватывать запросы, которые делает код, через http протокол. Можно переопределять все запросы или по определенным признакам (например, url запроса, заголовки или тело запроса) и задавать ответ, который будет возвращаться в вызываемый код. Есть много дополнительных плюшек, вроде задания задержек, chaining api и тд.</li>
 </ul>
 <p>Стоит отметить, что тесты выполняются очень быстро. На данный момент 320 тестов выполняются примерно за 17с (в один поток).</p>
-<h2>Некоторые используемые модули</h2>
+<h2 id="_4">Некоторые используемые модули</h2>
 <p>Список некоторых полезных модулей, о которых не упоминал выше:</p>
 <ul>
 <li><a href="https://github.com/caolan/async">async</a>, <a href="http://lodash.com/">lodash</a> - незаменимые модули, полезны практически в каждом проекте.<ul>

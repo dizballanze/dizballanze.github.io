@@ -17,10 +17,10 @@
 &lt;/ul&gt;
 &lt;p&gt;Для того, чтобы сервис было легче масштабировать, каждый из описанных выше компонентов разрабатывался с учетом того, что он может быть запущен отдельно, в том числе на другом сервере. Взаимодействие между компонентами в основном происходит через базу данных и систему обмена сообщениями Faye (для real-time обновлений).&lt;/p&gt;
 &lt;p&gt;&lt;img alt="debugmail-design" src="/media/2014/3/debugmail-design.png" title="DebugMail design" /&gt;&lt;/p&gt;
-&lt;h2&gt;SMTP-сервер&lt;/h2&gt;
+&lt;h2 id="smtp-"&gt;SMTP-сервер&lt;/h2&gt;
 &lt;p&gt;Необходимо было разработать SMTP-север, который бы не осуществлял доставку письма на целевой хост, а только сохранял его в базе данных. В этом нам отлично помогли модули &lt;a href="https://github.com/andris9/simplesmtp"&gt;simplesmtp&lt;/a&gt; и &lt;a href="https://github.com/andris9/mailparser"&gt;mailparser&lt;/a&gt;, которые покрывали все базовые функции необходимые для работы smtp-сервера и парсинга писем. Оставалось только прописать нужные обработчики событий и другой специфичный для задачи код.&lt;/p&gt;
 &lt;p&gt;В сервисе предполагается, что все письма относятся к определенному проекту. При создании проекта пользователь получает параметры подключения к smtp-серверу среди которых есть пара login-password. На основе этих данных smtp-сервер определяет к какому проекту относится то или иное полученное письмо.&lt;/p&gt;
-&lt;h2&gt;REST API&lt;/h2&gt;
+&lt;h2 id="rest-api"&gt;REST API&lt;/h2&gt;
 &lt;p&gt;Для взаимодействия клиентского приложения (см. скоро пост про клиентскую часть) с backend было разработано REST API на базе фреймворка &lt;a href="http://expressjs.com/"&gt;express&lt;/a&gt;. Выбран был именно этот фреймворк из-за его простоты, скорости работы и гибкости. При помощи поддержки middleware, которые пришли из &lt;a href="http://www.senchalabs.org/connect/"&gt;connect&lt;/a&gt;, можно очень просто встраиваться в процесс обработки запросов. Несколько примеров разработанных middleware:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;контроль доступа,&lt;/li&gt;
@@ -28,11 +28,11 @@
 &lt;li&gt;защита от CSRF,&lt;/li&gt;
 &lt;li&gt;инициализация сессии и тд.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;Content negotiation&lt;/h3&gt;
+&lt;h3 id="content-negotiation"&gt;Content negotiation&lt;/h3&gt;
 &lt;p&gt;Для того, чтобы максимально распараллелить работу с front-end разработчиком, было принято решение реализовывать сервис в виде SPA (single page application) и REST API. Далее возник вопрос, как различать запросы, которые отправляет клиентское приложение, от запросов, которые генерируются браузером автоматически (при загрузке страниц) при том, то URL-адреса REST API и клиентского приложения пересекаются. Самым корректным решением нам показалось использование content negotiation. При поступлении запроса срабатывает middleware, который проверяет какой формат ответа является предпочтительным для клиента, на основании значения из заголовка запроса &lt;code&gt;Accept&lt;/code&gt;. Клиентское приложение отправляет значение данного заголовка как &lt;code&gt;application/json&lt;/code&gt;, что сообщает серверу о том, что нужно обрабатывать запрос, как запрос к REST API и вернуть результат в виде JSON-документа. Во всех остальных случаях предполагается, что запрос приходит от браузера и происходит рендеринг основного шаблона с подключенным клиентским приложением.&lt;/p&gt;
-&lt;h3&gt;Маршрутизация&lt;/h3&gt;
+&lt;h3 id="_1"&gt;Маршрутизация&lt;/h3&gt;
 &lt;p&gt;Изначально было принято решение использовать модуль &lt;a href="https://github.com/visionmedia/express-resource"&gt;express-resource&lt;/a&gt;, но он оказался недостаточно гибким. Например, нельзя задавать кастомные middleware для определенных маршрутов. &lt;a href="https://github.com/visionmedia/express-resource/pull/66"&gt;Pull Request&lt;/a&gt; для решения описанной проблемы висит уже больше года, в итоге от &lt;code&gt;express-resource&lt;/code&gt; пришлось отказаться в пользу стандартного способа задания маршрутов в express.&lt;/p&gt;
-&lt;h2&gt;Real-time updates&lt;/h2&gt;
+&lt;h2 id="real-time-updates"&gt;Real-time updates&lt;/h2&gt;
 &lt;p&gt;Одна из фич сервиса предполагает, что при получении нового письма оно должна сразу появляться в интерфейсе. Для реализации таких real-time обновлений существует несколько популярных решений:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="http://socket.io"&gt;socket.io&lt;/a&gt;&lt;/li&gt;
@@ -45,44 +45,42 @@
 &lt;li&gt;из коробки поддерживаются server-side clients, что важно, т.к. сообщения генерируются из SMTP-сервера,&lt;/li&gt;
 &lt;li&gt;достаточно активно разрабатывается.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;Аутентификация пользователей&lt;/h3&gt;
+&lt;h3 id="_2"&gt;Аутентификация пользователей&lt;/h3&gt;
 &lt;p&gt;Основной сложностью было реализовать аутентификацию клиентов, т.к. сессии, которые используются в основном приложении и REST API, здесь не доступны. Для решения этой проблемы была введена аутентификация при подписке на обновления проекта. Предпологается, что при инициализации подписки на уведомления клиент передает &lt;code&gt;user id&lt;/code&gt;, &lt;code&gt;session id&lt;/code&gt; и &lt;code&gt;token&lt;/code&gt;. &lt;code&gt;token&lt;/code&gt; является результатом выполнения хэш-функции к параметрам &lt;code&gt;user id&lt;/code&gt;, &lt;code&gt;session id&lt;/code&gt; и некоторого закрытого ключа. Чтобы реализовать такой механизм отлично подходят, т.н. &lt;a href="http://faye.jcoglan.com/browser/extensions.html"&gt;extensions&lt;/a&gt;, которые позволяют перехватывать сообщения и выполнять дополнительные действия (проверки, дополнительную обработку данных и тд.). В итоге получается примерно такой код:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addExtension&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-  &lt;span class="nx"&gt;outgoing&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;callback&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;channel&lt;/span&gt; &lt;span class="o"&gt;!==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;/meta/subscribe&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;callback&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;pre&gt;&lt;code class="javascript"&gt;client.addExtension({
+  outgoing: function(message, callback) {
+    if (message.channel !== '/meta/subscribe')
+      return callback(message);
 
-    &lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ext&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="p"&gt;{};&lt;/span&gt;
-    &lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ext&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;uid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;USER_ID&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ext&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;sid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;SESSION_ID&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ext&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;token&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;PRIVATE_TOKEN&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;callback&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+    message.ext = message.ext || {};
+    message.ext.uid = USER_ID;
+    message.ext.sid = SESSION_ID;
+    message.ext.token = PRIVATE_TOKEN;
+    callback(message);
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Аналогичная система расширений на стороне сервера позволяет выполнять проверку и разрешать подписываться на обновления по проектам только тем пользователям, которые действительно имеют к ним доступ.&lt;/p&gt;
-&lt;h2&gt;Автоматическое тестирование&lt;/h2&gt;
+&lt;h2 id="_3"&gt;Автоматическое тестирование&lt;/h2&gt;
 &lt;p&gt;Зачем нужно писать тесты я думаю объяснять не нужно. В данном проекте мы хотели добиться максимального покрытия кода тестами. Для этого практически весь код тестируется сразу на 2х уровнях, на функциональном и на модульном.&lt;/p&gt;
 &lt;p&gt;Писать тесты на node.js - одно удовольствие. В основном это так благодаря большому количеству удобных инструментов и модулей в &lt;a href="https://npmjs.org/"&gt;npm&lt;/a&gt;. Также помогают особенностям javascript и node.js, которые предоставляют все необходимые возможности для удобного создания &lt;a href="http://en.wikipedia.org/wiki/Mock_object"&gt;моков&lt;/a&gt;. Рассмотрим, какие модули использовались и с какой целью:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="http://visionmedia.github.io/mocha/"&gt;mocha&lt;/a&gt; - многофункциональный тестовый фреймворк, содержит все необходимые функции для структурирования, поиска, запуска, подсчета метрик, просмотра результатов выполнения тестов и тд. Поддерживает как синхронные так и асинхронные тесты и имеет широкие возможности для кастомизации процесса тестирования.&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://github.com/visionmedia/supertest"&gt;supertest&lt;/a&gt; - модуль для выполнения функционального тестирования. Все что нужно для начала работы с supertest - передать ему экземпляр приложения express, после этого можно выполнять запросы к приложению и тестировать полученные ответы. Также supertest предоставляет удобный chaining api, типичный тест выглядит так:&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;request&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/user&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Accept&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;done&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;pre&gt;&lt;code class="javascript"&gt;request(app)
+  .get('/user')
+  .set('Accept', 'application/json')
+  .expect(200)
+  .end(function(err, res){
+    if (err) return done(err);
 
-    &lt;span class="c1"&gt;// ... check something here ...&lt;/span&gt;
+    // ... check something here ...
 
-    &lt;span class="nx"&gt;done&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-  &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+    done()
+  });
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://github.com/visionmedia/should.js/"&gt;should.js&lt;/a&gt; - это библиотека для удобного выполнения assertions. При инициализации библиотека перегружает встроенные объекты javascript, что позволяет использовать красивые конструкции вроде &lt;code&gt;user.should.have.property('company', 'wbtech')&lt;/code&gt;. Предоставляет большое количество полезных фич, что делает написание тестов более приятным и быстрым процессом.&lt;/li&gt;
@@ -90,7 +88,7 @@
 &lt;li&gt;&lt;a href="https://github.com/pgte/nock"&gt;nock&lt;/a&gt; - позволяет перехватывать запросы, которые делает код, через http протокол. Можно переопределять все запросы или по определенным признакам (например, url запроса, заголовки или тело запроса) и задавать ответ, который будет возвращаться в вызываемый код. Есть много дополнительных плюшек, вроде задания задержек, chaining api и тд.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Стоит отметить, что тесты выполняются очень быстро. На данный момент 320 тестов выполняются примерно за 17с (в один поток).&lt;/p&gt;
-&lt;h2&gt;Некоторые используемые модули&lt;/h2&gt;
+&lt;h2 id="_4"&gt;Некоторые используемые модули&lt;/h2&gt;
 &lt;p&gt;Список некоторых полезных модулей, о которых не упоминал выше:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://github.com/caolan/async"&gt;async&lt;/a&gt;, &lt;a href="http://lodash.com/"&gt;lodash&lt;/a&gt; - незаменимые модули, полезны практически в каждом проекте.&lt;ul&gt;
@@ -103,109 +101,106 @@
 &lt;li&gt;&lt;a href="http://passportjs.org/"&gt;passport&lt;/a&gt; - все что нужно для аутентификации через сторонние ресурсы. Поддерживает &lt;a href="https://github.com/jaredhanson/passport/wiki/Strategies#providers"&gt;множество провайдеров&lt;/a&gt; через сторонние модули.&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://github.com/mattrobenolt/raven-node"&gt;raven-node&lt;/a&gt; - node.js клент к &lt;a href="https://getsentry.com/"&gt;Sentry&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;</summary><category term="node.js"></category><category term="mongodb"></category><category term="faye"></category><category term="debugmail"></category></entry><entry><title>Используем сессию express в socket.io</title><link href="/nodejs/ispolzuem-sessiiu-express-v-socketio/" rel="alternate"></link><updated>2013-04-19T13:33:00+04:00</updated><author><name>Admin</name></author><id>tag:,2013-04-19:nodejs/ispolzuem-sessiiu-express-v-socketio/</id><summary type="html">&lt;p&gt;При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.&lt;/p&gt;
-&lt;h2&gt;Используемые пакеты&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Используемые пакеты&lt;/h2&gt;
 &lt;p&gt;Нам нужно установить несколько пакетов, которые пригодятся для решения поставленной задачи (предполагается что express и soket.io уже установлены):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;npm install cookie express-session-mongo
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;pre&gt;&lt;code class="bash"&gt;npm install cookie express-session-mongo
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;cookie&lt;/code&gt; - модуль для удобного парсинга cookie&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;express-session-mongo&lt;/code&gt; - back-end для хранения сессий express в MongoDB&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Настраиваем express&lt;/h2&gt;
+&lt;h2 id="express"&gt;Настраиваем express&lt;/h2&gt;
 &lt;p&gt;Настроим сессии в express:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;DB&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="s1"&gt;&amp;#39;ip&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="s1"&gt;&amp;#39;port&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;27017&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="s1"&gt;&amp;#39;db&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;test&amp;#39;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;pre&gt;&lt;code class="javascript"&gt;var DB = {
+  'ip': '127.0.0.1',
+  'port': 27017,
+  'db': 'test'
+}
 
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;MongoSessionStore&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;express-session-mongo&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;session_storage&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;MongoSessionStore&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;DB&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+var MongoSessionStore = require('express-session-mongo')
+  , session_storage = new MongoSessionStore(DB);
 
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;express&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+var app = express();
 
-&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;configure&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
+app.configure(function(){
 
-  &lt;span class="cm"&gt;/* .... */&lt;/span&gt;
+  /* .... */
 
-  &lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;use&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;express&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;cookieParser&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;secret&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-  &lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;use&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;express&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;session&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-    &lt;span class="nx"&gt;store&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;session_storage&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nx"&gt;secret&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;secret&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nx"&gt;key&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sid&amp;#39;&lt;/span&gt;
-  &lt;span class="p"&gt;}));&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+  app.use(express.cookieParser('secret'));
+  app.use(express.session({
+    store: session_storage,
+    secret: 'secret',
+    key: 'sid'
+  }));
+});
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;В данном примере мы используем MongoDB для хранения сессий, но данный приём будет работать и для других хранилищ.&lt;/p&gt;
-&lt;h2&gt;Получаем сессионные данные в soket.io&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// Запускаем web-сервер&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;port&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-  &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Express server listening on port &amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;port&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;h2 id="soketio"&gt;Получаем сессионные данные в soket.io&lt;/h2&gt;
+&lt;pre&gt;&lt;code class="javascript"&gt;// Запускаем web-сервер
+var server = http.createServer(app).listen(app.get('port'), function(){
+  console.log(&amp;quot;Express server listening on port &amp;quot; + app.get('port'));
+});
 
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;io&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;socketio&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+var io = socketio.listen(server);
 
-&lt;span class="c1"&gt;// Настраиваем socket.io&lt;/span&gt;
-&lt;span class="nx"&gt;io&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;configure&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+// Настраиваем socket.io
+io.configure(function() {
 
-  &lt;span class="c1"&gt;// Аутентификация пользователей&lt;/span&gt;
-  &lt;span class="nx"&gt;io&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;authorization&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="c1"&gt;// Проверяем переданы ли cookie&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;headers&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;cookie&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; 
-      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;No cookie transmitted.&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  // Аутентификация пользователей
+  io.set('authorization', function (data, accept) {
+    // Проверяем переданы ли cookie
+    if (!data.headers.cookie) 
+      return accept('No cookie transmitted.', false);
 
-    &lt;span class="c1"&gt;// Парсим cookie&lt;/span&gt;
-    &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;cookie&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;cookie&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;headers&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;cookie&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    // Парсим cookie
+    data.cookie = cookie.parse(data.headers.cookie);
 
-    &lt;span class="c1"&gt;// Получаем идентификатор сессии&lt;/span&gt;
-    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;sid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;cookie&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sid&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+    // Получаем идентификатор сессии
+    var sid = data.cookie['sid'];
 
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;sid&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nx"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
+    if (!sid) {
+      accept(null, false);
+    }
 
-    &lt;span class="nx"&gt;sid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;sid&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;substr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;.&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="nx"&gt;sid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;sid&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-    &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;sessionID&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;sid&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    sid = sid.substr(2).split('.');
+    sid = sid[0];
+    data.sessionID = sid;
 
-    &lt;span class="c1"&gt;// Добавляем метод для чтения сессии&lt;/span&gt;
-    &lt;span class="c1"&gt;// в handshakeData&lt;/span&gt;
-    &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;getSession&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;cb&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="c1"&gt;// Запрашиваем сессию из хранилища&lt;/span&gt;
-      &lt;span class="nx"&gt;session_storage&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;session&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;session&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-          &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-          &lt;span class="nx"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-          &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="nx"&gt;cb&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;session&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-      &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="nx"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
+    // Добавляем метод для чтения сессии
+    // в handshakeData
+    data.getSession = function(cb) {
+      // Запрашиваем сессию из хранилища
+      session_storage.get(sid, function(err, session) {
+        if (err || !session) {
+          console.log(err);
+          accept(err, false);
+          return;
+        }
+        cb(err, session);
+      });
+    }
+    accept(null, true);
+  });
+});
 
 
-&lt;span class="c1"&gt;// Пример использования&lt;/span&gt;
-&lt;span class="nx"&gt;io&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;sockets&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;connection&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="nx"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;chat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+// Пример использования
+io.sockets.on('connection', function(socket) {
+  socket.join('chat');
 
-  &lt;span class="nx"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;message&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;handshake&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;getSession&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;session&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;user&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;session&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;guest&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-      &lt;span class="nx"&gt;io&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;sockets&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;chat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;emit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;message&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-  &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+  socket.on('message', function(data) {
+    socket.handshake.getSession(function(err, session) {
+      data['user'] = session.name || 'guest';
+      io.sockets.in('chat').emit('message', data);
+    });
+  });
+});
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Для чтения сессии в обработчиках socket.io нужно использовать &lt;code&gt;socket.handshake.getSession&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;Заключение&lt;/h2&gt;
+&lt;h2 id="_2"&gt;Заключение&lt;/h2&gt;
 &lt;p&gt;Стоит отметить, что если socket.io у вас слушает другой хост/порт, отличный от express, то необходимо предусмотреть другой способ передачи идентификатора сессии.&lt;/p&gt;
 &lt;p&gt;Полный пример можно посмотреть на &lt;a href="https://github.com/dizballanze/express-socketio-session-example/"&gt;GitHub&lt;/a&gt;.&lt;/p&gt;</summary><category term="node.js"></category><category term="express"></category><category term="socket.io"></category></entry><entry><title>Масштабирование Node.js приложений</title><link href="/nodejs/masshtabirovanie-nodejs-prilozhenii/" rel="alternate"></link><updated>2013-02-17T01:17:00+04:00</updated><author><name>Admin</name></author><id>tag:,2013-02-17:nodejs/masshtabirovanie-nodejs-prilozhenii/</id><summary type="html">&lt;p&gt;Все мы знаем, что node.js так популярен благодаря своей производительности. Он работает быстро благодаря разным факторам, таким как использование движка Google V8 и асинхронному i/o. Именно такая высокая производительность позволяет достаточно долго не задумываться о масштабировании приложения, т.к. даже один запущенный Node.js процесс может обслуживать сотни или даже тысячи запросов в секунду.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="postlogo" src="/media/2013/02/node-cluster.png" /&gt;&lt;/p&gt;
@@ -217,45 +212,43 @@
 &lt;li&gt;существующие npm-модули для масштабирования&lt;/li&gt;
 &lt;li&gt;сторонние программные решения&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Подготовка к масштабированию&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Подготовка к масштабированию&lt;/h2&gt;
 &lt;p&gt;Перед тем как приложение будет иметь возможность работать в несколько потоков, нужно решить одну очень важную проблему. А именно, проблему хранения сессий и других, зависимых от клиента, данных в промежутках между запросами.&lt;/p&gt;
 &lt;p&gt;Когда приложение работает в одном потоке, всё предельно просто. Данные можно хранить в переменных процесса и они будут доступны при каждом запросе. Многие так и поступают в начале разработки и, например, используют массивы для хранения сессионных данных пользователей. &lt;/p&gt;
 &lt;p&gt;Однако для работы приложения в многопоточном режиме, необходимо убедится в том что каждый процесс может обслужить любой пользовательский запрос. Т.е. все процессы должны быть равноправны и иметь доступ ко всей необходимой информации о пользователях и сессиях.&lt;/p&gt;
 &lt;p&gt;Одним из простых способов решения данной проблемы является вынесение сессионных данных во внешнее хранилище (например: Memcached, Redis и тд.) и запрос необходимых данных в начале обработки каждого запроса. Эту схему можно изобразить следующим образом:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="loadbalancing" src="/media/2013/02/load-balancing.png" /&gt;&lt;/p&gt;
-&lt;h2&gt;Решения на Node.js&lt;/h2&gt;
-&lt;h3&gt;cluster&lt;/h3&gt;
+&lt;h2 id="nodejs"&gt;Решения на Node.js&lt;/h2&gt;
+&lt;h3 id="cluster"&gt;cluster&lt;/h3&gt;
 &lt;p&gt;&lt;a href="http://nodejs.org/api/cluster.html"&gt;Cluster&lt;/a&gt; - это built-in модуль, позволяющий с лёгкостью запускать несколько процессов, которые делят между собой один порт. В данном случае балансировкой нагрузки занимается операционная система. На момент написания данного поста, модуль является экспериментальным, но мы всё же протестируем его в работе.&lt;/p&gt;
 &lt;p&gt;В данном случае при запуске приложения необходимо сначала запустить master-процесс, который в свою очередь, запустит необходимое количество дочерних процессов:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;cluster&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cluster&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+var cluster = require('cluster');
 
-&lt;span class="nx"&gt;cluster&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;setupMaster&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;__dirname&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;/worker.js&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
+cluster.setupMaster({exec: __dirname + '/worker.js'});
 
-&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;cluster&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fork&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+for (var i = 0; i &amp;lt; 4; i++) {
+    cluster.fork();
+}
 
-&lt;span class="nx"&gt;cluster&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;exit&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;worker&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;code&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;worker &amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;worker&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pid&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; died&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+cluster.on('exit', function(worker, code, signal) {
+    console.log('worker ' + worker.process.pid + ' died');
+});
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Метод &lt;code&gt;setupMaster&lt;/code&gt; принимает параметры в виде объекта. Например, параметр &lt;code&gt;exec&lt;/code&gt; задаёт путь к файлу worker'а, который затем будет запускаться на выполнение.&lt;/p&gt;
 &lt;p&gt;После начальной конфигурации master-север должен запустить необходимое количество рабочих процессов. Для этого используется метод &lt;code&gt;fork&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;cluster&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cluster&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+var cluster = require('cluster');
+var http = require('http');
 
-&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;writeHead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;hello world\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;7000&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Worker listen on 127.0.0.1:7000&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+http.createServer(function(req, res) {
+    res.writeHead(200);
+    res.end("hello world\n");
+}).listen(7000);
+console.log("Worker listen on 127.0.0.1:7000");
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Создание worker'а мало чем отличается от создания обычного web-сервера. В данном случае мы просто создаём http-сервер и заставляем его слушать 7000 порт.&lt;/p&gt;
-&lt;h3&gt;cluster2&lt;/h3&gt;
+&lt;h3 id="cluster2"&gt;cluster2&lt;/h3&gt;
 &lt;p&gt;Cluster2 - модуль от сторонних разработчиков, расширяющий возможности стандартного модуля cluster. Модуль добавляет функции, которые позволяют использовать cluster в production окружении. Среди таких функций:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;перезапуск рабочих процессов&lt;/li&gt;
@@ -264,18 +257,19 @@
 &lt;li&gt;осторожное завершение процессов и др&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Подробнее ознакомится с модулем можно на &lt;a href="https://github.com/ql-io/cluster2"&gt;github&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;etc&lt;/h3&gt;
+&lt;h3 id="etc"&gt;etc&lt;/h3&gt;
 &lt;p&gt;Ещё несколько модулей:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://github.com/fent/clusterhub"&gt;clusterhub&lt;/a&gt; - an attempt at giving multi process node programs a simple and efficient way to share data&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://github.com/isaacs/cluster-master"&gt;cluster-master&lt;/a&gt; - take advantage of node built-in cluster module behavior&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://npmjs.org/package/amino"&gt;amino&lt;/a&gt; - clustering framework for Node.js&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Сторонние программные решения&lt;/h2&gt;
-&lt;h3&gt;HAProxy&lt;/h3&gt;
+&lt;h2 id="_2"&gt;Сторонние программные решения&lt;/h2&gt;
+&lt;h3 id="haproxy"&gt;HAProxy&lt;/h3&gt;
 &lt;p&gt;HAProxy - это специализированное решение для балансировки нагрузок. Содержит огромное количество функций и используется во многих highload проектах. Рассмотрим пример простейшей конфигурации системы на HAProxy.&lt;/p&gt;
 &lt;p&gt;Для начала необходимо скачать и установить HAProxy, например &lt;a href="http://haproxy.1wt.eu/"&gt;с официального сайта&lt;/a&gt;. После этого нужно создать конфигурационный файл:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;global
+&lt;pre&gt;&lt;code&gt;:::text
+global
 daemon
 maxconn 10000
 
@@ -295,94 +289,87 @@ backend servers
     server server2 127.0.0.1:8001
     server server3 127.0.0.1:8002
     server server4 127.0.0.1:8003
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Если коротко, то данный конфигурационный файл описывает, что HAProxy должен прослушивать 80 порт и перенаправлять каждый запрос на один из серверов, указанны в секции backend. При этом, какой именно сервер получит запрос определяется по алгоритму &lt;a href="http://ru.wikipedia.org/wiki/Round-robin_(%D0%B0%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC)"&gt;round-robin&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Node.js приложение необходимо запустить на каждом из указанных портов. При этом какой-то особенной конфигурации приложения не требуется.&lt;/p&gt;
 &lt;p&gt;HAProxy достаточно сложное решение и больше подходит для очень крупных проектов, где необходимо распределять нагрузку между большим количеством физических серверов или между целыми кластерами.&lt;/p&gt;
-&lt;h3&gt;Nginx&lt;/h3&gt;
+&lt;h3 id="nginx"&gt;Nginx&lt;/h3&gt;
 &lt;p&gt;Nginx позволяет описывать группы серверов в конфигурационных файлах и затем балансировать нагрузку между ними при помощи одного из нескольких алгоритмов. Есть возможность задания "веса" сервера, выделение отдельных серверов как резервных и др. &lt;/p&gt;
 &lt;p&gt;Предположим у нас запущены 8 процессов нашего приложения. Каждый процесс слушает порт, первый процесс - 8000, второй - 8001, и тд. Рассмотрим простой пример конфигурации Nginx для балансировки нагрузки:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;upstream&lt;/span&gt; &lt;span class="s"&gt;backend&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;least_conn&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8000&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8001&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8002&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8003&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8004&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8005&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8006&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8007&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::nginx
+upstream backend {
+    least_conn;
+    server 127.0.0.1:8000;
+    server 127.0.0.1:8001;
+    server 127.0.0.1:8002;
+    server 127.0.0.1:8003;
+    server 127.0.0.1:8004;
+    server 127.0.0.1:8005;
+    server 127.0.0.1:8006;
+    server 127.0.0.1:8007;
+}
 
-&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;listen&lt;/span&gt; &lt;span class="n"&gt;0.0.0.0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+server {
+    listen 0.0.0.0:80;
 
-    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;proxy_pass&lt;/span&gt; &lt;span class="s"&gt;http://backend&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+    location / {
+    proxy_pass http://backend;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь Nginx будет принимать запросы на 80 порт и балансировать их между процессами приложения. При этом он будет стараться отдавать запрос тому процессу, который в данный момент меньше всего нагружен.&lt;/p&gt;
-&lt;h3&gt;etc&lt;/h3&gt;
+&lt;h3 id="etc_1"&gt;etc&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="http://en.wikipedia.org/wiki/Round-robin_DNS"&gt;Round-robin DNS&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="http://www.apsis.ch/pound/"&gt;Pound&lt;/a&gt; - reverse proxy, load balancer and HTTPS front-end for Web server(s)&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://github.com/perlbal/Perlbal"&gt;Perlbal&lt;/a&gt; - Perl HTTP Load Balancer&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Заключение&lt;/h2&gt;
+&lt;h2 id="_3"&gt;Заключение&lt;/h2&gt;
 &lt;p&gt;Какой именно способ выбрать зависит от конкретного случая. Мне кажется, для масштабирования в рамках одного сервера, лучше использовать модуль cluster (или его производные), т.к. это упрощает контроль за запущенными рабочими процессами. В случае если приложение требует вынести на несколько серверов, нужно просто создать несколько таких кластеров и настроить балансировку между ними при помощи Nginx или HAProxy.&lt;/p&gt;
 &lt;style type="text/css"&gt;
 img[alt=loadbalancing] {margin-left: 130px;}
 &lt;/style&gt;</summary><category term="cluster"></category><category term="load balancing"></category><category term="clustering"></category><category term="scaling"></category></entry><entry><title>CoffeeScript &amp; node.js dev-сервер</title><link href="/nodejs/coffeescript-nodejs-dev-server/" rel="alternate"></link><updated>2013-01-19T22:10:00+04:00</updated><author><name>Admin</name></author><id>tag:,2013-01-19:nodejs/coffeescript-nodejs-dev-server/</id><summary type="html">&lt;p&gt;CoffeeScript - язык программирования, компилируемый в javascript. Используя &lt;a href="http://coffeescript.org/"&gt;CoffeeScript&lt;/a&gt; для разработки на &lt;a href="/tag/nodejs/"&gt;node.js&lt;/a&gt; мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
 &lt;img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script" /&gt;
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.&lt;/p&gt;
-&lt;h1&gt;Устанавливаем пакеты&lt;/h1&gt;
+&lt;h1 id="_1"&gt;Устанавливаем пакеты&lt;/h1&gt;
 &lt;p&gt;Для выполнения нашей цели необходимо установить несколько пакетов:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;npm install coffee-script forever
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+npm install coffee-script forever
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Мы установили следующие пакеты&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;coffee-script&lt;/code&gt; - cli-утилита для компиляции CoffeeScript&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;forever&lt;/code&gt; - утилита для удобного запуска node.js процессов&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1&gt;Файловая структура&lt;/h1&gt;
+&lt;h1 id="_2"&gt;Файловая структура&lt;/h1&gt;
 &lt;p&gt;Всё приложение (файлы с расширением *.coffee) располагаем в отдельной поддиректории. Для скомпилированных файлов создаём дополнительную поддиректорию в корне проекта. Также важно чтобы временные файлы, файлы загруженные пользователями и т.д. находились в отдельной от приложения поддиректории. Т.е. получаем примерно следующую файловую структуру:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;ls -1
+&lt;pre&gt;&lt;code&gt;:::bash
+$ ls -1
 app
 compiled
 node_modules
 package.json
 README.md
 uploads
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Где,&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;app/&lt;/code&gt; - приложение (файлы *.coffee)&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;compiled/&lt;/code&gt; - скопмилированные js файлы&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;uploads/&lt;/code&gt; - загрузки пользователей&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1&gt;Компилируем CoffeeScript&lt;/h1&gt;
+&lt;h1 id="coffeescript"&gt;Компилируем CoffeeScript&lt;/h1&gt;
 &lt;p&gt;Для того чтобы компилировать CoffeeScript в javascript необходимо использовать утилиту &lt;code&gt;coffee&lt;/code&gt;. Она принимает ряд параметров, можете ознакомится с ней подробнее прочитав справочную информацию &lt;code&gt;coffee --help&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Утилита &lt;code&gt;coffee&lt;/code&gt; позволяет следить за файловой системой и автоматически перекомпилировать изменённые файлы CoffeeScript. Для этого необходимо вызвать её со следующими параметрами:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt; coffee -w -o compiled/ app/
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+ coffee -w -o compiled/ app/
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Где, флаг &lt;code&gt;-w&lt;/code&gt; включает режим отслеживания, -o задаёт директорию, в которую сохраняются скомпилированные файлы, а последний параметр определяет целевую директорию приложения.&lt;/p&gt;
-&lt;h1&gt;Настраиваем автоматический перезапуск приложения&lt;/h1&gt;
+&lt;h1 id="_3"&gt;Настраиваем автоматический перезапуск приложения&lt;/h1&gt;
 &lt;p&gt;Для того чтобы автоматически перезапускать приложения, после перекомпиляции, воспользуемся утилитой &lt;code&gt;forever&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;forever -w --watchDirectory compiled/ --sourceDiDir compiled/ compiled/app.js
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+forever -w --watchDirectory compiled/ --sourceDiDir compiled/ compiled/app.js
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Рассмотрим параметры:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;-w&lt;/code&gt; - включаем режим отслеживания&lt;/li&gt;
@@ -392,13 +379,12 @@ uploads
 &lt;/ul&gt;
 &lt;p&gt;Теперь после каждого изменения в *.coffee файлах приложения будет автоматически запускаться перекомпиляция изменённых файлов. После этого изменения в скомпилированных файлах будет замечено утилитой &lt;code&gt;forever&lt;/code&gt;, что приведет к перезапуску приложения.&lt;/p&gt;</summary><category term="coffeescript"></category><category term="forever"></category><category term="node.js"></category></entry><entry><title>Используем npm для управления зависимостями</title><link href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/" rel="alternate"></link><updated>2013-01-04T20:10:00+04:00</updated><author><name>Admin</name></author><id>tag:,2013-01-04:nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/</id><summary type="html">&lt;p&gt;npm - пакетный менеджер для &lt;a href="/tag/nodejs/" title="Node.js"&gt;node.js&lt;/a&gt;. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="npm package management" src="media/2013/01/npm.png" title="node packaged modules" /&gt;&lt;/p&gt;
-&lt;h1&gt;Установка npm&lt;/h1&gt;
+&lt;h1 id="npm"&gt;Установка npm&lt;/h1&gt;
 &lt;p&gt;Если у вас не установлен &lt;code&gt;npm&lt;/code&gt;, то сделать это можно выполнив следующую команду:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;curl https://npmjs.org/install.sh &lt;span class="p"&gt;|&lt;/span&gt; sh
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h1&gt;Установка пакетов&lt;/h1&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+curl https://npmjs.org/install.sh | sh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id="_1"&gt;Установка пакетов&lt;/h1&gt;
 &lt;p&gt;Для того чтобы установить пакет при помощи &lt;code&gt;npm&lt;/code&gt; нужно использовать команду &lt;code&gt;npm install &amp;lt;package&amp;gt;&lt;/code&gt;.
 Где &lt;code&gt;package&lt;/code&gt; может быть:&lt;/p&gt;
 &lt;ul&gt;
@@ -410,7 +396,7 @@ uploads
 &lt;/ul&gt;
 &lt;p&gt;По-умолчания, установка будет произведена локально, в текущую директорию. Для того чтобы выполнить установку глобально
 необходимо вызывать &lt;code&gt;npm&lt;/code&gt; с флагом &lt;code&gt;-g&lt;/code&gt;.&lt;/p&gt;
-&lt;h1&gt;Управление зависимостями&lt;/h1&gt;
+&lt;h1 id="_2"&gt;Управление зависимостями&lt;/h1&gt;
 &lt;p&gt;При разработке приложений на &lt;a href="/tag/nodejs/" title="Node.js"&gt;node.js&lt;/a&gt; я использую множество различных модулей. Соответственно,
 при разворачивании приложения необходимо быть уверенным, что в системе установлены все требуемые пакеты. Рассмотрим, как npm
 помогает нам решить эту проблему.&lt;/p&gt;
@@ -423,7 +409,7 @@ uploads
 выполнять команду &lt;code&gt;npm install&lt;/code&gt;.&lt;/p&gt;</summary><category term="npm"></category><category term="package.json"></category></entry><entry><title>Наследование свойств моделей в Mongoose</title><link href="/nodejs/nasledovanie-svoistv-modelei-v-mongoose/" rel="alternate"></link><updated>2013-01-02T02:41:00+04:00</updated><author><name>Admin</name></author><id>tag:,2013-01-02:nodejs/nasledovanie-svoistv-modelei-v-mongoose/</id><summary type="html">&lt;p&gt;Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
 моделей в &lt;a href="http://mongoosejs.com/" title="Mongoose ODM"&gt;ODM Mongoose&lt;/a&gt;. Для тех, кто не знает mongoose - это 
 ODM (object document mapper) для node.js и &lt;a href="http://www.mongodb.org/" title="MongoDB"&gt;MongoDB&lt;/a&gt;. &lt;/p&gt;
-&lt;h2&gt;Применение&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Применение&lt;/h2&gt;
 &lt;p&gt;Часто бывает необходимо в рамках одной коллекции объектов выделить несколько
 типов с некоторыми различиями в наборе свойств. Т.к. MongoDB реализует schema-less дизайн, 
 мы не ограничены базой данных и не обязаны следовать какому-то строгому набору
@@ -435,67 +421,63 @@ ODM (object document mapper) для node.js и &lt;a href="http://www.mongodb.or
 &lt;p&gt;Рассмотрим простой пример. У нас есть два типа пользователей: юридическое лицо и физическое
 лицо. Каждый тип имеет общие и специфические поля. Чтобы выделить общие поля создадим объект
 с набором полей, которые встречаются в каждом из типов:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;BaseUser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;inn&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
-        &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;inn_validator&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;email&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;unique&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;email_validator&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;phone&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;phone_validator&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;username&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;unique&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;username_validator&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;password&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
-        &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;password_validator&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+var BaseUser = {
+    inn: {type: String, 
+        validate: inn_validator,
+        required: true},
+    email: {type: String, required: true, unique: true,
+        validate: email_validator},
+    phone: {type: String, validate: phone_validator,
+        required: true},
+    username: {type: String, unique: true,
+        required: true, validate: username_validator},
+    password: {type: String, required: true, 
+        validate: password_validator}
+};
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Далее для каждого из типов пользователей создаём объект со специфическими полями:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// Физическое лицо&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;IndividualPerson&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;first_name&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;first_name_validator&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;last_name&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="nx"&gt;valdiate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;last_name_validator&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;patronymic&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
-        &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;patronymic_validator&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;individual&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+// Физическое лицо
+var IndividualPerson = {
+    first_name: {type: String, required: true,
+        validate: first_name_validator},
+    last_name: {type: String, required: true,
+        valdiate: last_name_validator},
+    patronymic: {type: String, 
+        validate: patronymic_validator},
+    type: {type: String, default: 'individual'}
+};
 
-&lt;span class="c1"&gt;// Юридическое лицо&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;LegalPerson&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;full_name&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;full_name_validator&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
-        &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;short_name&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;required&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
-        &lt;span class="nx"&gt;validate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;short_name_validator&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;String&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;legal&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+// Юридическое лицо
+var LegalPerson = {
+    full_name: {type: String, validate: full_name_validator, 
+        required: true},
+    short_name: {type: String, required: true, 
+        validate: short_name_validator},
+    type: {type: String, default: 'legal'}
+};
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Также мы добавили поле &lt;code&gt;type&lt;/code&gt; для дифференциации записей, т.к. они будут храниться в одной коллекции.
 Далее необходимо просто при создании схемы модели выполнять слияние (merge) значений из &lt;code&gt;BaseUser&lt;/code&gt; и
 соответствующего объекта типа:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;IndividualUserSchema&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Schema&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;Object&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;extended&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;BaseUser&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;merge&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;IndividualPerson&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;span class="nx"&gt;LegalUserSchema&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Schema&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;Object&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;extended&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;BaseUser&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;merge&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;LegalPerson&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+IndividualUserSchema = new Schema(Object.extended(BaseUser).merge(IndividualPerson));
+LegalUserSchema = new Schema(Object.extended(BaseUser).merge(LegalPerson));
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Здесь я использую &lt;a href="http://sugarjs.com/" title="Sugar.js"&gt;sugar.js&lt;/a&gt;, но при необходимости это можно реализовать
 и вручную.&lt;/p&gt;
 &lt;p&gt;Затем модели необходимо создавать таким образом, чтобы они использовали одну и ту же коллекцию в базе данных:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;LegalUser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;db&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;db&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;model&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;LegalUser&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LegalUserSchema&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;users&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+exports.LegalUser = function(db) {
+    return db.model('LegalUser', LegalUserSchema, 'users');
+};
 
-&lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;IndividualUser&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;db&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;db&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;model&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;IndividualUser&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;IndividualUserSchema&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;users&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Заключение&lt;/h2&gt;
+exports.IndividualUser = function(db) {
+    return db.model('IndividualUser', IndividualUserSchema, 'users');
+};
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="_2"&gt;Заключение&lt;/h2&gt;
 &lt;p&gt;В итоге мы получили две модели со своими наборами полей/валидаторов и при этом остались
 преимущества использования одной коллекции - поиск записей по одной коллекции, уникальные
 значения &lt;code&gt;username&lt;/code&gt; и &lt;code&gt;email&lt;/code&gt; через индексы и т.д.
@@ -503,7 +485,7 @@ ODM (object document mapper) для node.js и &lt;a href="http://www.mongodb.or
 в поле &lt;code&gt;type&lt;/code&gt; создавался объект соответствующей модели.&lt;/p&gt;</summary><category term="mongoose"></category><category term="mongodb"></category><category term="node.js"></category><category term="sugar.js"></category></entry><entry><title>Очередь сообщений на node.js и memcacheq</title><link href="/nodejs/ochered-soobshchenii-na-nodejs-i-memcacheq/" rel="alternate"></link><updated>2011-10-07T23:24:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-10-07:nodejs/ochered-soobshchenii-na-nodejs-i-memcacheq/</id><summary type="html">&lt;p&gt;Привет! Столкнулся с необходимостью использования очередей сообщений в
 текущем проекте. Знаю что есть готовые решения, но я все же решил
 написать свой небольшой велосипед. Итак, поехали...&lt;/p&gt;
-&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Описание&lt;/h2&gt;
 &lt;p&gt;&lt;img alt="scheme" src="/media/2011/10/png" /&gt;&lt;/p&gt;
 &lt;p&gt;В поставленной передо мной задаче необходимо выполнять ресурсоемкие
 операции (такие как работа с сетью, декодирование mp3-файлов), а также
@@ -529,14 +511,13 @@ memcacheq есть ограничение на размер сообщения �
 легко и быстро написать демон, который будет вписываться в архитектуру
 проекта и также на меня повлиял предыдущий опыт работы с данной
 технологией, который оставил в основном положительные впечатления.&lt;/p&gt;
-&lt;h2&gt;Реализация&lt;/h2&gt;
+&lt;h2 id="_2"&gt;Реализация&lt;/h2&gt;
 &lt;p&gt;На данном этапе у вас уже должен быть настроен и запущен memcacheq,
 установлен nodejs. Также нам понадобиться модуль nodejs под названием
 memcached. Установить его можно следующей командой:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;npm install memcached
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+npm install memcached
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Основные составляющие части менеджера очереди:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Бесконечный цикл опроса очереди на наличие заданий. При этом также в
@@ -561,131 +542,130 @@ memcached. Установить его можно следующей коман�
     определена проверкой контрольной суммы передаваемых данных.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Теперь собственно исходный код:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;util&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;util&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="nx"&gt;exec&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;child_process&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+var util = require('util'),
+    exec = require('child_process').exec;
 
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;Memcached&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;./lib/memcached.js&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;memcached&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Memcached&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;127.0.0.1:22201&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;maxValue&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;65000&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;reconnect&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;2000&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;retry&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;1000&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;timeout&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
+var http = require('http');
+var Memcached = require('./lib/memcached.js');
+var memcached = new Memcached('127.0.0.1:22201', {maxValue:65000, reconnect:2000, retry:1000, timeout:10000});
 
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;creating&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;workers_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;transmit_error_retry_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{};&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;tasks&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{};&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;transmit_errors&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{};&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;command_line&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;/path/to/worker/script&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+var creating = false;
+var workers_count = 2;
+var transmit_error_retry_count = 3;
+var workers = {};
+var tasks = {};
+var transmit_errors = {};
+var command_line = '/path/to/worker/script';
 
-&lt;span class="c1"&gt;// Возможные состояния процесса&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;WORKER_SUCCESS_DONE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nx"&gt;WORKER_TRANSMIT_ERROR&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nx"&gt;WORKER_CRITICAL_ERROR&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nx"&gt;WORKER_IN_WORKING_PROCESS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+// Возможные состояния процесса
+var WORKER_SUCCESS_DONE = 1,
+    WORKER_TRANSMIT_ERROR = 2,
+    WORKER_CRITICAL_ERROR = 3,
+    WORKER_IN_WORKING_PROCESS = 4;
 
-&lt;span class="c1"&gt;// Функция выполняемая в бесконечном цикле&lt;/span&gt;
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;check_feeds&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="nx"&gt;WORKER_SUCCESS_DONE&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="kc"&gt;undefined&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-                &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-            &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-            &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="nx"&gt;WORKER_TRANSMIT_ERROR&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="kc"&gt;undefined&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-                &lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;else&lt;/span&gt;
-                &lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;transmit_error_retry_count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-                &lt;span class="nx"&gt;push_back&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-            &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-                &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-                &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-            &lt;span class="p"&gt;}&lt;/span&gt;
-            &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="nx"&gt;WORKER_IN_WORKING_PROCESS&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="kc"&gt;undefined&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-                &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;transmit_errors&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-            &lt;span class="k"&gt;delete&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
+// Функция выполняемая в бесконечном цикле
+function check_feeds(){
+    for (i in workers){
+        if (workers[i].status == WORKER_SUCCESS_DONE){
+            if (transmit_errors[i] != undefined)
+                delete transmit_errors[i];
+            delete workers[i];
+            delete tasks[i];
+        }else if(workers[i].status == WORKER_TRANSMIT_ERROR){
+            if (transmit_errors[i] == undefined)
+                transmit_errors[i] = 1;
+            else
+                transmit_errors[i]++;
+            if (transmit_errors[i] &amp;lt; transmit_error_retry_count)
+                push_back(tasks[i]);
+            else{
+                delete transmit_errors[i];
+                delete tasks[i];
+            }
+            delete workers[i];
+        }else if (workers[i].status != WORKER_IN_WORKING_PROCESS){
+            if (transmit_errors[i] != undefined)
+                delete transmit_errors[i];
+            delete workers[i];
+        }
+    }
 
-    &lt;span class="c1"&gt;// Если есть свободные места вызываем функцию&lt;/span&gt;
-    &lt;span class="c1"&gt;// создающую worker&amp;#39;ов&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;creating&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;obj_count&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;workers_count&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
-        &lt;span class="nx"&gt;create_worker&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+    // Если есть свободные места вызываем функцию
+    // создающую worker'ов
+    if (!creating &amp;amp;&amp;amp; (obj_count(workers) &amp;lt; workers_count))
+        create_worker();
+}
 
-&lt;span class="c1"&gt;// Возвращение задания в очередь&lt;/span&gt;
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;push_back&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="nx"&gt;memcached&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tracks&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+// Возвращение задания в очередь
+function push_back(task){
+    memcached.set("tracks", task, 0);
+}
 
-&lt;span class="c1"&gt;// Функция выполняющая создание новых worker&amp;#39;ов&lt;/span&gt;
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;create_worker&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="nx"&gt;creating&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;memcached&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tracks&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-            &lt;span class="nx"&gt;creating&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="nx"&gt;check_feeds&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-            &lt;span class="nx"&gt;work&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-            &lt;span class="nx"&gt;tasks&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;work&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;work&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-            &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;work&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Worker&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;work&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-            &lt;span class="c1"&gt;// Если все ещё есть свободные места&lt;/span&gt;
-            &lt;span class="c1"&gt;// то делаем рекурсивный вызов&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;obj_count&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="nx"&gt;workers_count&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-                &lt;span class="nx"&gt;create_worker&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-            &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-                &lt;span class="nx"&gt;creating&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-            &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+// Функция выполняющая создание новых worker'ов
+function create_worker(){
+    creating = true;
+    memcached.get("tracks", function(err, result){
+        if (!result)
+            creating = false;
+        else{
+            check_feeds();
+            work = JSON.parse(result);
+            tasks[work['id']] = work;
+            workers[work['id']] = new Worker(work);
+            // Если все ещё есть свободные места
+            // то делаем рекурсивный вызов
+            if (obj_count(workers) &amp;lt; workers_count){
+                create_worker();
+            }else{
+                creating = false;
+            }
+        }
+    });
+}
 
-&lt;span class="c1"&gt;// Конструктор объекта worker&amp;#39;а&lt;/span&gt;
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;Worker&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;WORKER_IN_WORKING_PROCESS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+// Конструктор объекта worker'а
+function Worker(id, data){
+    this.status = WORKER_IN_WORKING_PROCESS;
 
-    &lt;span class="c1"&gt;// Здесь можно сформировать &lt;/span&gt;
-    &lt;span class="c1"&gt;// параметры командной строки&lt;/span&gt;
-    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    // Здесь можно сформировать 
+    // параметры командной строки
+    var params;
 
-    &lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;command_line&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-            &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;WORKER_CRITICAL_ERROR&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="k"&gt;else&lt;/span&gt;
-            &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+    exec(command_line + params, function(err, data){
+        console.log(id, data);
+        if (err)
+            workers[id].status = WORKER_CRITICAL_ERROR;
+        else
+            workers[id].status = data;
+    })
+}
 
-&lt;span class="nx"&gt;setInterval&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="nx"&gt;check_feeds&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="mi"&gt;100&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+setInterval(function(){
+    check_feeds();
+}, 100);
 
-&lt;span class="c1"&gt;// Monitoring server&lt;/span&gt;
-&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;writeHead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;: &amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;workers&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;\n&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="c1"&gt;// Для того чтобы заработал след. код&lt;/span&gt;
-    &lt;span class="c1"&gt;// необходимо внести изменения&lt;/span&gt;
-    &lt;span class="c1"&gt;// в модуль memcache (см. ниже)&lt;/span&gt;
-    &lt;span class="nx"&gt;memcached&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;queue&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Queue:&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8080&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+// Monitoring server
+http.createServer(function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    for (i in workers){
+        res.write(i +': ' + workers[i].status + "\n");
+    }
+    // Для того чтобы заработал след. код
+    // необходимо внести изменения
+    // в модуль memcache (см. ниже)
+    memcached.queue(function (err, result){
+        res.end('Queue:' + result);
+    });
+}).listen(8080, "127.0.0.1");
 
-&lt;span class="c1"&gt;// Stuff&lt;/span&gt;
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;obj_count&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;obj&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;j&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="nx"&gt;obj&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+// Stuff
+function obj_count(obj){
+    var i = 0;
+    for (j in obj) i++;
+    return i;
+}
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Для того чтобы корректно обрабатывать статусы выполнения задания
 worker'ы должны возвращать определенные заранее значения. В моем случае
 worker может вернуть одно из 3х состояний обозначенных в начале
@@ -695,7 +675,7 @@ worker может вернуть одно из 3х состояний обозн
 memcached по всей видимости его не поддерживает. По-этому я внес
 небольшие дополнения чтобы реализовать данный функционал. Исходный код
 модуля доступен &lt;a href="http://pastebin.com/MgSFU6Gb"&gt;по ссылке&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;In the end..&lt;/h2&gt;
+&lt;h2 id="in-the-end"&gt;In the end..&lt;/h2&gt;
 &lt;p&gt;Стоит заметить, что при помощи подобной организации системы вы сможете
 распараллелить ресурсоемкие вычисления. Особенно это удобно, когда вам
 необходимо обращаться к бизнес-логике написанной, например, на PHP. В
@@ -705,7 +685,7 @@ memcached по всей видимости его не поддерживает.
 функционала. Спасибо за внимание, буду рад ответить на возникшие
 вопросы.&lt;/p&gt;</summary><category term="memcacheq"></category><category term="node.js"></category><category term="PHP"></category><category term="очередь сообщений"></category></entry><entry><title>Хранилища данных в Node.JS. Memcachedb</title><link href="/nodejs/khranilishcha-dannykh-v-nodejs-memcachedb/" rel="alternate"></link><updated>2011-07-02T23:04:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-07-02:nodejs/khranilishcha-dannykh-v-nodejs-memcachedb/</id><summary type="html">&lt;p&gt;&lt;img alt="MemcacheDB" src="/media/2011/07/Снимок-300x204.png" /&gt;&lt;/p&gt;
 &lt;p&gt;Сегодня я расскажу, как начать работать с MemcacheDB в Node.JS.&lt;/p&gt;
-&lt;h2&gt;Memcachedb&lt;/h2&gt;
+&lt;h2 id="memcachedb"&gt;Memcachedb&lt;/h2&gt;
 &lt;p&gt;Memcachedb - это key-value база данных, основанная на memcached. Для
 тех, кто работал с memcached, начало работы с memcachedb не будет
 требовать особых усилий, т.к. они используют общее API. Основные
@@ -732,45 +712,42 @@ memcached по всей видимости его не поддерживает.
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Установка модуля memcached&lt;/h2&gt;
+&lt;h2 id="memcached"&gt;Установка модуля memcached&lt;/h2&gt;
 &lt;p&gt;Как я уже упоминал memcacheDB имеет такое же API, как и у memcached
 (кроме небольших изменений, например записи не удаляются по истечении
 срока), поэтому мы будем использовать модуль предназначенный для работы
 с memcached. Модуль имеет название memcached и доступен для установки
 через npm:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;npm install memcached
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+npm install memcached
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Я подразумеваю, что вы уже установили и запустили memcacheDB, если нет,
 то вам &lt;a href="http://memcachedb.googlecode.com/svn/trunk/INSTALL"&gt;сюда&lt;/a&gt;. После установки модуля, мы сразу можем начать
 использовать его в наших программах на node.js. Попробуем подключится к
 БД:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;Memcached&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;memcached&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;memcached&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Memcached&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;127.0.0.1:21201&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Пишем Hello World&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+var Memcached = require('memcached');
+var memcached = new Memcached('127.0.0.1:21201');
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="hello-world"&gt;Пишем Hello World&lt;/h2&gt;
 &lt;p&gt;Напишем скрипт, который сначала запишет значение в БД и затем считает
 его и выведет в консоль:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;Memcached&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;memcached&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;memcachedb&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Memcached&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;127.0.0.1:21201&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;memcachedb&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;test&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Hello world&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="nx"&gt;memcachedb&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;test&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Hello world&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+var Memcached = require('memcached');
+var memcachedb = new Memcached('127.0.0.1:21201');
+memcachedb.set("test", "Hello world", 0, function(){
+    memcachedb.get("test", function(err, result){
+        if (err) throw err;
+        console.log(result); // Hello world
+    });
+});
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Подробную информацию по функциям api можете получить &lt;a href="https://github.com/3rd-Eden/node-memcached/blob/v0.0.1/README.md"&gt;здесь&lt;/a&gt; и в
 &lt;a href="https://github.com/3rd-Eden/node-memcached/tree/v0.0.1/examples"&gt;примерах&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;На этом все. До новых постов!&lt;/p&gt;</summary><category term="memcachedb"></category><category term="node.js"></category></entry><entry><title>Web-чат polling на Node.JS</title><link href="/nodejs/web-chat-polling-na-nodejs/" rel="alternate"></link><updated>2011-04-10T21:49:00+04:00</updated><author><name>Admin</name></author><id>tag:,2011-04-10:nodejs/web-chat-polling-na-nodejs/</id><summary type="html">&lt;p&gt;&lt;img alt="чат" src="/media/2011/04/conversacion-150x150.png" title="чат" /&gt;&lt;/p&gt;
 &lt;p&gt;Продолжим тему создания чата на Node.JS. На этот раз напишем чат,
 который будет в качестве клиентов использовать браузеры.&lt;/p&gt;
-&lt;h2&gt;Проблема&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Проблема&lt;/h2&gt;
 &lt;p&gt;Т.к. протокол HTTP не позволяет устанавливать постоянное соединение
 сервера с клиентом, то нам необходимо самостоятельно инициировать
 соединение для считывания новых сообщений. Для этого существует
@@ -781,7 +758,7 @@ polling. Данный способ представляет собой пост�
 и сетевого канала, но для обучающих целей он вполне пригоден. В реальных
 приложениях стоит использовать более продвинутые средства, которые я
 постараюсь в скором времени рассмотреть в этом блоге. Итак, поехали!&lt;/p&gt;
-&lt;h2&gt;Структура&lt;/h2&gt;
+&lt;h2 id="_2"&gt;Структура&lt;/h2&gt;
 &lt;p&gt;Сначала рассмотрим структуру нашего приложения:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
@@ -799,34 +776,33 @@ polling. Данный способ представляет собой пост�
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Реализация&lt;/h2&gt;
-&lt;h3&gt;Клиентская часть&lt;/h3&gt;
+&lt;h2 id="_3"&gt;Реализация&lt;/h2&gt;
+&lt;h3 id="_4"&gt;Клиентская часть&lt;/h3&gt;
 &lt;p&gt;Для реализации клиентской части напишем небольшую страницу, которая
 будет отвечать за визуализацию сообщений и их отправку. Весь код
 приводить не буду, только интересные части:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// ...&lt;/span&gt;
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;load&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.message-row&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;size&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.message-row:last&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+// ...
+function load(){
+    if ($(".message-row").size() == 0){
+        var id = -1;
+    }else{
+        var id = $(".message-row:last").data('id');
+    }
 
-    &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;getJSON&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http://127.0.0.1:8124/?id=&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;amp;callback=?&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parseJSON&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#mess&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]).&lt;/span&gt;&lt;span class="nx"&gt;size&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-                &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;div class=&amp;quot;message-row&amp;quot; id=&amp;quot;mess&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;quot;&amp;gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;message&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;lt;/div&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;appendTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#chat-body&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-                &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.message-row:last&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-            &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#chat-body&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;animate&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;scrollTop&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#chat-body&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;attr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;scrollHeight&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="c1"&gt;// ...&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+    $.getJSON('http://127.0.0.1:8124/?id=' + id + '&amp;amp;callback=?', function(data){
+        data = $.parseJSON(data);
+        for (i in data){
+            if ($("#mess" + data[i]['id']).size() == 0){
+                $('&amp;lt;div class="message-row" id="mess' + data[i]['id'] + '"&amp;gt;' + data[i]['message'] + '&amp;lt;/div&amp;gt;').appendTo("#chat-body");
+                $(".message-row:last").data('id', data[i]['id']);
+            }
+        }
+        $("#chat-body").animate({ scrollTop: $("#chat-body").attr("scrollHeight") }, 3000);
+    });
+}
+// ...
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Данная функция будет отвечать за получение новых сообщений от сервера и
 их визуализацию. Каждое сообщение будет идентифицироваться уникальным id
 которое равно порядковому номеру сообщения. При визуализации каждое
@@ -845,111 +821,108 @@ id последнего сообщения и помещаем его в зап�
 выполнили, особенности реализации на стороне сервера рассмотрим чуть
 позже.&lt;/p&gt;
 &lt;p&gt;Рассмотрим остальной код:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;load&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nx"&gt;setInterval&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;load&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2500&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+load();
+setInterval(load, 2500);
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Запускаем предварительную инициализацию списка сообщений и ставим
 обработчик по таймеру, который будет вызываться каждые 2,5 секунды.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// ....&lt;/span&gt;
-&lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#send-button&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;click&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.message-row&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;size&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.message-row:last&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+// ....
+$("#send-button").click(function(){
+    if ($(".message-row").size() == 0){
+        var id = -1;
+    }else{
+        var id = $(".message-row:last").data('id');
+    }
 
-    &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;getJSON&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http://127.0.0.1:8124/?message=&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;input[name=message]&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;val&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;amp;username=&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;input[name=nick]&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;val&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;amp;id=&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;amp;callback=?&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parseJSON&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-            &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;lt;div class=&amp;quot;message-row&amp;quot; id=&amp;quot;mess&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;quot;&amp;gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;message&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;lt;/div&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;appendTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#chat-body&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-            &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.message-row:last&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;][&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#chat-body&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;animate&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;scrollTop&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;#chat-body&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;attr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;scrollHeight&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="nx"&gt;$&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;input[name=message]&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;val&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="c1"&gt;// ....&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+    $.getJSON('http://127.0.0.1:8124/?message=' + $("input[name=message]").val() + '&amp;amp;username=' + $("input[name=nick]").val() + '&amp;amp;id=' + id + '&amp;amp;callback=?', function(data){
+        data = $.parseJSON(data);
+        for (i in data){
+            $('&amp;lt;div class="message-row" id="mess' + data[i]['id'] + '"&amp;gt;' + data[i]['message'] + '&amp;lt;/div&amp;gt;').appendTo("#chat-body");
+            $(".message-row:last").data('id', data[i]['id']);
+        }
+        $("#chat-body").animate({ scrollTop: $("#chat-body").attr("scrollHeight") }, 3000);
+    });
+    $("input[name=message]").val('');
+});
+// ....
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Ставим обработчик нажатия кнопки отправки сообщения. Здесь ничего
 нового, просто такой же запрос как и в функции load за исключением того
 что мы передаём дополнительные параметры - текст сообщения и псевдоним
 пользователя.&lt;/p&gt;
-&lt;h3&gt;Серверная часть&lt;/h3&gt;
+&lt;h3 id="_5"&gt;Серверная часть&lt;/h3&gt;
 &lt;p&gt;Тут начинается самое интересное :) Для реализации обмена по протоколу
 HTTP в node.js есть одноименный модуль. Также мы будем использовать
 модуль url для получения переданных нам параметров. Теперь рассмотрим
 код, постараюсь как можно подробнее прокомментировать:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;// Подключение модулей&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;url&lt;/span&gt;  &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;url&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="c1"&gt;// Массив сообщений&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;messages&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[];&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+// Подключение модулей
+var http = require('http');
+var url  = require('url');
+// Массив сообщений
+var messages = [];
 
-&lt;span class="c1"&gt;// Создаем сервер и ставим обработчик запроса&lt;/span&gt;
-&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;response&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; 
-  &lt;span class="c1"&gt;// Получаем url&lt;/span&gt;
-  &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;url_string&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;request&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;url&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="c1"&gt;// Извлекаем параметры&lt;/span&gt;
-  &lt;span class="nx"&gt;params&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;url&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;url_string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;query&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+// Создаем сервер и ставим обработчик запроса
+http.createServer(function (request, response) { 
+  // Получаем url
+  var url_string = request.url;
+  // Извлекаем параметры
+  params = url.parse(url_string, true).query;
 
-  &lt;span class="c1"&gt;// Если получено сообщение, то добавляем его в массив&lt;/span&gt;
-  &lt;span class="c1"&gt;// предварительно объединив его с псевдонимом пользователя&lt;/span&gt;
-  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;hasOwnProperty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;message&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)){&lt;/span&gt;
-      &lt;span class="nx"&gt;username&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;length&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;guest&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;username&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-      &lt;span class="nx"&gt;message&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;message&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-      &lt;span class="nx"&gt;messages&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;username&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;: &amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
+  // Если получено сообщение, то добавляем его в массив
+  // предварительно объединив его с псевдонимом пользователя
+  if (params.hasOwnProperty('message')){
+      username = (params['username'].length == 0)?'guest':params['username'];
+      message = params['message'];
+      messages.push(username + ': ' + message);
+  }
 
-  &lt;span class="c1"&gt;// Извлекаем идентификатор сообщения&lt;/span&gt;
-  &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;Number&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-  &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;to&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;count&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="c1"&gt;// Получаем количество сообщений в массиве&lt;/span&gt;
-  &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;len&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;messages&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;length&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="c1"&gt;// Если пользователь только подключился,&lt;/span&gt;
-  &lt;span class="c1"&gt;// то отдаём ему 10 последних сообщений&lt;/span&gt;
-  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-      &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;len&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-          &lt;span class="nx"&gt;count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;len&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-          &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-      &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-          &lt;span class="nx"&gt;count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-          &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;len&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-      &lt;span class="p"&gt;}&lt;/span&gt;
-  &lt;span class="c1"&gt;// Иначе отдаем те сообщения которые были получены после &lt;/span&gt;
-  &lt;span class="c1"&gt;// сообщения с переданным идентификатором&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nx"&gt;count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;len&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-      &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-  &lt;span class="nx"&gt;to&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;count&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="c1"&gt;// Формируем результирующий массив сообщений&lt;/span&gt;
-  &lt;span class="nx"&gt;ret_messages&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[];&lt;/span&gt;
-  &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;=&lt;/span&gt; &lt;span class="nx"&gt;to&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-      &lt;span class="nx"&gt;ret_messages&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="nx"&gt;message&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;messages&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;i&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
+  // Извлекаем идентификатор сообщения
+  var id = new Number(params['id']);
+  var to, count, from = 0;
+  // Получаем количество сообщений в массиве
+  var len = messages.length;
+  // Если пользователь только подключился,
+  // то отдаём ему 10 последних сообщений
+  if (id == -1){
+      if (len &amp;lt; 10){
+          count = len;
+          from = 0;
+      }else {
+          count = 10;
+          from = len - 10;
+      }
+  // Иначе отдаем те сообщения которые были получены после 
+  // сообщения с переданным идентификатором
+  }else{
+      count = len - id - 1;
+      from = id + 1;
+  }
+  to = from + count - 1;
+  // Формируем результирующий массив сообщений
+  ret_messages = [];
+  for (i = from; i &amp;lt;= to; i++){
+      ret_messages.push({message:messages[i], id:i});
+  }
 
-  &lt;span class="c1"&gt;// Кодируем массив в json&lt;/span&gt;
-  &lt;span class="nx"&gt;body&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ret_messages&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="c1"&gt;// Устанавливаем заголовки ответа&lt;/span&gt;
-  &lt;span class="c1"&gt;// Второй заголовок необходим для&lt;/span&gt;
-  &lt;span class="c1"&gt;// cross domain ajax&lt;/span&gt;
-  &lt;span class="nx"&gt;response&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;writeHead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="s1"&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s2"&gt;&amp;quot;Access-Control-Allow-Origin&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;*&amp;quot;&lt;/span&gt;
-     &lt;span class="p"&gt;});&lt;/span&gt;
-  &lt;span class="c1"&gt;// Устанавливаем тело ответа и закрываем соединение&lt;/span&gt;
-  &lt;span class="c1"&gt;// имитируем вызов метода&lt;/span&gt;
-  &lt;span class="nx"&gt;response&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;callback&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;(\&amp;#39;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;body&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;\&amp;#39;)&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; 
-&lt;span class="c1"&gt;// Вешаем сервер слушать 8124 порт на 127.0.0.1&lt;/span&gt;
-&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8124&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; 
-&lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Server running at http://127.0.0.1:8124/&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+  // Кодируем массив в json
+  body = JSON.stringify(ret_messages);
+  // Устанавливаем заголовки ответа
+  // Второй заголовок необходим для
+  // cross domain ajax
+  response.writeHead(200, {
+    'Content-Type': 'application/json',
+    "Access-Control-Allow-Origin": "*"
+     });
+  // Устанавливаем тело ответа и закрываем соединение
+  // имитируем вызов метода
+  response.end(params.callback + '(\'' + body + '\')'); 
+// Вешаем сервер слушать 8124 порт на 127.0.0.1
+}).listen(8124, "127.0.0.1"); 
+console.log('Server running at http://127.0.0.1:8124/');
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Всё достаточно прозрачно, кроме небольших заклинаний необходимых для
 корректной работы cross domain ajax. Для того чтобы использовать чат в
 сети поменяйте ip-адрес в 63 строке на свой внешний ip. Также не
@@ -961,77 +934,73 @@ HTTP в node.js есть одноименный модуль. Также мы б
 организации работы Node.JS с MySQL. Для создания данного взаимодействия
 существует несколько модулей, я решил использовать &lt;strong&gt;node-mysql&lt;/strong&gt;, т.к.
 он предоставляет все необходимые мне функции.&lt;/p&gt;
-&lt;h2&gt;Установка node-mysql&lt;/h2&gt;
+&lt;h2 id="node-mysql"&gt;Установка node-mysql&lt;/h2&gt;
 &lt;p&gt;Для установки воспользуемся git:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; ~/.node_libraries
+&lt;pre&gt;&lt;code&gt;:::bash
+cd ~/.node_libraries
 git clone git://github.com/felixge/node-mysql.git mysql
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;После этого вы можете без проблем использовать данный модуль в вашей
 работе.&lt;/p&gt;
-&lt;h2&gt;Установка соединения&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Установка соединения&lt;/h2&gt;
 &lt;p&gt;Перед началом выполнения запросов к БД необходимо выполнить подключение
 к серверу MySQL. Рассмотрим как сделать это при помощи модуля node-mysql
 в node.js:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;Client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;user&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;root&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+var Client = require('mysql').Client,
+client = new Client();
+client.user = 'root';
+client.password = 'password';
+client.connect();
+client.end();
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Первые две строки отвечают за подключение модуля и создания
 объекта-клиента. Далее задаются параметры аутентификации и вызывается
 метод connect. После этого если вы корректно указали пару логин-пароль,
 то будет установлено соединение. Последняя строка соответственно
 завершает соединение с сервером.&lt;/p&gt;
-&lt;h3&gt;Отступление&lt;/h3&gt;
+&lt;h3 id="_2"&gt;Отступление&lt;/h3&gt;
 &lt;p&gt;Для того что-бы наш MySQL клиент мог передать данные аутентификации
 необходимо чтобы node.js был скомпилирован с поддержкой ssl, иначе при
 попытке установления соединения он будет жутко ругатся из-за то что не
 сможет зашифровать пароль. Для корректной компиляции node.js с
 поддержкой ssl в Debian вам потребуется пакет libssl-dev&lt;/p&gt;
-&lt;h2&gt;Выполнение запросов&lt;/h2&gt;
+&lt;h2 id="_3"&gt;Выполнение запросов&lt;/h2&gt;
 &lt;p&gt;Сначала создадим тестовую базу данных и таблицу в ней:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;CREATE&lt;/span&gt; &lt;span class="k"&gt;DATABASE&lt;/span&gt;  &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;test_nodejs&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="k"&gt;DEFAULT&lt;/span&gt; &lt;span class="nb"&gt;CHARACTER&lt;/span&gt; &lt;span class="k"&gt;SET&lt;/span&gt; &lt;span class="n"&gt;utf8&lt;/span&gt; &lt;span class="k"&gt;COLLATE&lt;/span&gt; &lt;span class="n"&gt;utf8_general_ci&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="n"&gt;USE&lt;/span&gt; &lt;span class="n"&gt;test_nodejs&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;CREATE&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt;  &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;test_nodejs&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;test&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
-&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;BIGINT&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt; &lt;span class="n"&gt;AUTO_INCREMENT&lt;/span&gt; &lt;span class="k"&gt;PRIMARY&lt;/span&gt; &lt;span class="k"&gt;KEY&lt;/span&gt; &lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;some_text_data&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;VARCHAR&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt; &lt;span class="mi"&gt;255&lt;/span&gt; &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt; &lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;some_date&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;DATE&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;
-&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;ENGINE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;MYISAM&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::sql
+CREATE DATABASE  `test_nodejs` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE test_nodejs;
+CREATE TABLE  `test_nodejs`.`test` (
+`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`some_text_data` VARCHAR( 255 ) NOT NULL ,
+`some_date` DATE NOT NULL
+) ENGINE = MYISAM ;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь приступим непосредственно к выполнению запросов.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;Client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+var Client = require('mysql').Client,
+client = new Client();
 
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;user&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;root&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// Устанавливаем логин&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// Устанавливаем пароль&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// Устанавливаем соединение&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;USE test_nodejs&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Выполняем запрос на выбор БД&lt;/span&gt;
-&lt;span class="c1"&gt;//  Запрос на вставку&lt;/span&gt;
-&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;INSERT INTO test VALUES (NULL, \&amp;#39;Test\&amp;#39;, \&amp;#39;03-28-2011\&amp;#39;)&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt; 
-    &lt;span class="c1"&gt;// Запрос на выборку&lt;/span&gt;
-    &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;SELECT * FROM test&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;fields&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="c1"&gt;// Если возникла ошибка выбрасываем исключение&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-            &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="c1"&gt;// выводим результат&lt;/span&gt;
-        &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;fields&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;result&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="c1"&gt;// Завершаем соединение&lt;/span&gt;
-        &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+client.user = 'root'; // Устанавливаем логин
+client.password = 'password'; // Устанавливаем пароль
+client.connect(); // Устанавливаем соединение
+client.query('USE test_nodejs'); // Выполняем запрос на выбор БД
+//  Запрос на вставку
+client.query('INSERT INTO test VALUES (NULL, \'Test\', \'03-28-2011\')',function(){ 
+    // Запрос на выборку
+    client.query('SELECT * FROM test', function(error, result, fields){
+        // Если возникла ошибка выбрасываем исключение
+        if (error){
+            throw error;
+        }
+        // выводим результат
+        console.log(fields);
+        console.log(result);
+        // Завершаем соединение
+        client.end();
+    });
+});
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Для тех кто уже достаточно освоился в асинхронном программировании
 данный код не вызовет трудностей. Для выполнения запросов используется
 метод клиента query, который кроме самого запроса принимает
@@ -1039,18 +1008,19 @@ callback-функцию с параметрами error (ошибка, если 
 (массив объектов результата запроса), fields (описание полей из
 множества полей результата). В результате выполнения вышеприведённого
 кода получим:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;node test.js 
+&lt;pre&gt;&lt;code&gt;:::text
+node test.js 
 { id: 
    { length: 45,
      received: 45,
      number: 2,
      type: 4,
-     catalog: &amp;#39;def&amp;#39;,
-     db: &amp;#39;test_nodejs&amp;#39;,
-     table: &amp;#39;test&amp;#39;,
-     originalTable: &amp;#39;test&amp;#39;,
-     name: &amp;#39;id&amp;#39;,
-     originalName: &amp;#39;id&amp;#39;,
+     catalog: 'def',
+     db: 'test_nodejs',
+     table: 'test',
+     originalTable: 'test',
+     name: 'id',
+     originalName: 'id',
      charsetNumber: 63,
      fieldLength: 20,
      fieldType: 8,
@@ -1061,12 +1031,12 @@ callback-функцию с параметрами error (ошибка, если 
      received: 69,
      number: 3,
      type: 4,
-     catalog: &amp;#39;def&amp;#39;,
-     db: &amp;#39;test_nodejs&amp;#39;,
-     table: &amp;#39;test&amp;#39;,
-     originalTable: &amp;#39;test&amp;#39;,
-     name: &amp;#39;some_text_data&amp;#39;,
-     originalName: &amp;#39;some_text_data&amp;#39;,
+     catalog: 'def',
+     db: 'test_nodejs',
+     table: 'test',
+     originalTable: 'test',
+     name: 'some_text_data',
+     originalName: 'some_text_data',
      charsetNumber: 192,
      fieldLength: 765,
      fieldType: 253,
@@ -1077,23 +1047,21 @@ callback-функцию с параметрами error (ошибка, если 
      received: 59,
      number: 4,
      type: 4,
-     catalog: &amp;#39;def&amp;#39;,
-     db: &amp;#39;test_nodejs&amp;#39;,
-     table: &amp;#39;test&amp;#39;,
-     originalTable: &amp;#39;test&amp;#39;,
-     name: &amp;#39;some_date&amp;#39;,
-     originalName: &amp;#39;some_date&amp;#39;,
+     catalog: 'def',
+     db: 'test_nodejs',
+     table: 'test',
+     originalTable: 'test',
+     name: 'some_date',
+     originalName: 'some_date',
      charsetNumber: 63,
      fieldLength: 10,
      fieldType: 10,
      flags: 4225,
      decimals: 0 } }
 [ { id: 1,
-    some_text_data: &amp;#39;Test&amp;#39;,
+    some_text_data: 'Test',
     some_date: Invalid Date } ]
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;На этом всё. Если есть какие-либо вопросы по данной теме, задавайте их в
 комментариях ниже, постараюсь ответить.&lt;/p&gt;</summary><category term="MySQL"></category><category term="node-mysql"></category><category term="node.js"></category></entry><entry><title>Простой сервер чата на Node.JS</title><link href="/nodejs/prostoi-server-chata-na-nodejs/" rel="alternate"></link><updated>2010-12-30T18:20:00+03:00</updated><author><name>Admin</name></author><id>tag:,2010-12-30:nodejs/prostoi-server-chata-na-nodejs/</id><summary type="html">&lt;p&gt;Здравствуйте! В продолжении темы Node.JS хочу рассмотреть пример
 создания простого сервера чата на базе данной библиотеки.&lt;/p&gt;
@@ -1112,22 +1080,20 @@ createServer который создает tcp сервер. В качестве
 созданного соединения. Данный поток является потоком ввода/вывода и
 будет использоваться для непосредственного обмена данными с клиентом.
 Итак, создаем сервер:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;net&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="c1"&gt;//Обрабатываем новое соединение&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+var server = net.createServer(function (c) {
+    //Обрабатываем новое соединение
+});
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Сервер мы создали, но соединения он принимать не будет, т.к. мы не
 назначили его на определённый ip:port или сокет. Для этого необходимо
 воспользоваться методом &lt;code&gt;server.listen(port, [host], [callback])&lt;/code&gt;, если
 хотим назначить сервер "слушать" порт или
 &lt;code&gt;server.listen(path, [callback])&lt;/code&gt; для сокета. Назначим сервер "слушать"
 10.32.3.23:8124:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8124&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;10.32.3.23&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+server.listen(8124, '10.32.3.23');
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Дальше для корректной работы нашего сервера необходимо описать
 обработчики некоторых событий. Т.к. &lt;code&gt;net.Server&lt;/code&gt; и &lt;code&gt;net.Stream&lt;/code&gt; являются
 EventEmitter, то они могут вызывать события. Рассмотрим нужные нам
@@ -1135,30 +1101,28 @@ EventEmitter, то они могут вызывать события. Рассм
 &lt;p&gt;&lt;em&gt;'connection'&lt;/em&gt; - &lt;code&gt;function (stream) {}&lt;/code&gt; - вызывается при подключении
 нового клиента. Мы в данном примере будем использовать следующий
 обработчик:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;setEncoding&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;//Устанавливаем кодировку&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;      &lt;span class="c1"&gt;//Добавляем поток в массив&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt; &lt;span class="c1"&gt;//Обходим все сохраненные потоки&lt;/span&gt;
-        &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;remoteAddress&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; - is connected\n&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;//Выводим сообщение о новом клиенте&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;data&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;onStreamData&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;//Добавляем обработчик события &amp;#39;data&amp;#39; нового потока&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+function (c) {
+    c.setEncoding('utf8'); //Устанавливаем кодировку
+    streams.push(c);      //Добавляем поток в массив
+    streams.forEach(function(stream){ //Обходим все сохраненные потоки
+        stream.write(c.remoteAddress + ' - is connected\n', 'utf8'); //Выводим сообщение о новом клиенте
+    });
+    c.on('data', onStreamData); //Добавляем обработчик события 'data' нового потока
+}
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;net.Stream.remote Address - ip адрес клиента подключенного к данному
 потоку.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;'close'&lt;/em&gt; - &lt;code&gt;function () {}&lt;/code&gt; - вызывается при закрытии сервера. Наш
 обработчик:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt; &lt;span class="c1"&gt;//Обходим все сохраненные потоки&lt;/span&gt;
-        &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Server is going down! Bye-bye!&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;//Выводим сообщение&lt;/span&gt;
-        &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;destroy&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;//Уничтожаем поток&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+function(){
+    streams.forEach(function(stream){ //Обходим все сохраненные потоки
+        stream.write('Server is going down! Bye-bye!','utf8'); //Выводим сообщение
+        stream.destroy(); //Уничтожаем поток
+    });
+}
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Хочу обратить внимание, что в данном участке кода нет непосредственного
 завершения процесса, но он приводит к этому. Связанно это с тем что
 программы на node работают пока есть активные обработчики, а после
@@ -1168,70 +1132,66 @@ EventEmitter, то они могут вызывать события. Рассм
 &lt;p&gt;&lt;em&gt;'data'&lt;/em&gt; - &lt;code&gt;function (data) {}&lt;/code&gt; - вызывается при получении данных от
 клиента. data - буфер, но если до этого вызван метод setEncoding, то
 data - строка в заданной кодировке. Рассмотрим наш обработчик:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;onStreamData&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="c1"&gt;// Обработка команды завершения работы сервера&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;indexOf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;.down&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)){&lt;/span&gt;
-        &lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;close&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// Приводит к тому, что сервер больше не принимает соединения, а также вызывает событие &amp;#39;close&amp;#39;&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="c1"&gt;// Заносим в переменную текущий поток&lt;/span&gt;
-    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;current_stream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="nx"&gt;current_stream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;//Если поток не является текущим потоком, то выводим полученные данные&lt;/span&gt;
-            &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;current_stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;remoteAddress&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;:&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+function onStreamData(data){
+    // Обработка команды завершения работы сервера
+    if (0 === data.indexOf('.down')){
+        server.close(); // Приводит к тому, что сервер больше не принимает соединения, а также вызывает событие 'close'
+        return ;
+    }
+    // Заносим в переменную текущий поток
+    var current_stream = this;
+    streams.forEach(function(stream){
+        if (stream != current_stream) //Если поток не является текущим потоком, то выводим полученные данные
+            stream.write(current_stream.remoteAddress + ':' + data, 'utf8');
+    });
+}
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь полный код программы:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;net&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;net&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;streams&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;Array&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::javascript
+var net = require('net');
+var streams = Array();
 
-&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;onStreamData&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;indexOf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;.down&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)){&lt;/span&gt;
-        &lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;close&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;current_stream&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="nx"&gt;current_stream&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-            &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;current_stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;remoteAddress&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;:&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+function onStreamData(data){
+    if (0 === data.indexOf('.down')){
+        server.close();
+        return ;
+    }
+    var current_stream = this;
+    streams.forEach(function(stream){
+        if (stream != current_stream)
+            stream.write(current_stream.remoteAddress + ':' + data, 'utf8');
+    });
+}
 
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;net&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;setEncoding&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;remoteAddress&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; - is connected\n&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;data&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;onStreamData&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
+var server = net.createServer(function (c) {
+    c.setEncoding('utf8');
+    streams.push(c);
+    streams.forEach(function(stream){
+        stream.write(c.remoteAddress + ' - is connected\n', 'utf8');
+    });
+    c.on('data', onStreamData);
+});
 
-&lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;close&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-    &lt;span class="nx"&gt;streams&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Server is going down! Bye-bye!&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;utf8&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="nx"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;destroy&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
+server.on('close', function(){
+    streams.forEach(function(stream){
+        stream.write('Server is going down! Bye-bye!','utf8');
+        stream.destroy();
+    });
+});
 
-&lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;maxConnections&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// Максимальное кол-во подключений&lt;/span&gt;
-&lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8124&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;10.32.3.23&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Задайте свой внешний ip или localhost&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+server.maxConnections = 2; // Максимальное кол-во подключений
+server.listen(8124, '10.32.3.23'); // Задайте свой внешний ip или localhost
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Сохраните код в файле, например server.js. Теперь можно запустить сервер
 и проверить его в действии. Для запуска выполните:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;node server.js
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+node server.js
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Для того что-бы подключится воспользуемся telnet:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;telnet 10.32.3.23 8124
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+telnet 10.32.3.23 8124
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Не забудьте поменять ip и порт на тот, который вы использовали при
 вызове метода listen.&lt;/p&gt;
 &lt;p&gt;При желании можете расширить пример, дописать назначение псевдонимов
@@ -1249,42 +1209,39 @@ server-side приложений на Java Script - Node.JS.&lt;/p&gt;
 вы разрабатываете очередной facebook, то задумайтесь об использовании
 server-side JS в своем приложении. Основная фишка библиотеки в работе с
 HTTP протоколом, т.е. для нас web-разработчиков, то что доктор прописал.&lt;/p&gt;
-&lt;h2&gt;Установка&lt;/h2&gt;
+&lt;h2 id="_1"&gt;Установка&lt;/h2&gt;
 &lt;p&gt;Я рассмотрю процесс установки в ОС Linux (Debian 5.0). Сначала скачиваем
 архив с исходниками &lt;a href="http://nodejs.org/#download"&gt;здесь&lt;/a&gt;. Т.к. всё необходимое для работы
 библиотеки включено в дистрибутив, то установка очень простая и знакома
 всем линуксоидам, которые когда-либо собирали что-нибудь из исходников.
 Итак, распаковываем архив, затем переходим в директорию с исходниками и
 выполняем:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;./configure#make#make install
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+./configure#make#make install
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;После этого можно проверить корректность установки, для этого
 выполните:&lt;code&gt;make test&lt;/code&gt;&lt;/p&gt;
-&lt;h2&gt;Hello world&lt;/h2&gt;
+&lt;h2 id="hello-world"&gt;Hello world&lt;/h2&gt;
 &lt;p&gt;Теперь напишем простой пример web-сервера, который отвечает "Hello
 World" на каждый запрос:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;//Подключаем модуль http&lt;/span&gt;
-&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;//Создаем сервер и устанавливаем обработчик на подключение&lt;/span&gt;
-  &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;writeHead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt; &lt;span class="c1"&gt;//Устанавливаем заголовок&lt;/span&gt;
-  &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Hello World\n&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Вывод сообщения и завершение вывода&lt;/span&gt;
-&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8124&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// Заставляем сервер &amp;quot;слушать&amp;quot; 127.0.0.1:8124&lt;/span&gt;
-&lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Server running at http://127.0.0.1:8124/&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;//Выводим сообщение в консоль&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+var http = require('http'); //Подключаем модуль http
+http.createServer(function (req, res) { //Создаем сервер и устанавливаем обработчик на подключение
+  res.writeHead(200, {'Content-Type': 'text/plain'}); //Устанавливаем заголовок
+  res.end('Hello World\n'); // Вывод сообщения и завершение вывода
+}).listen(8124, "127.0.0.1"); // Заставляем сервер "слушать" 127.0.0.1:8124
+console.log('Server running at http://127.0.0.1:8124/'); //Выводим сообщение в консоль
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Для запуска нашего сервера выполняем:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;node example.jsServer running at http://127.0.0.1:8124/
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+node example.jsServer running at http://127.0.0.1:8124/
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Что-бы проверить, что всё работает открываем в браузере
 http://127.0.0.1:8124 и получаем "Hello World" в ответ.&lt;/p&gt;
 &lt;p&gt;Таким способом мы получаем работающий web-сервер в несколько строк кода.
 В скором времени будут ещё топики на тему Node.JS, в которых мы
 подробнее рассмотрим процесс написания server-side JS приложений.&lt;/p&gt;
-&lt;h2&gt;Ссылки&lt;/h2&gt;
+&lt;h2 id="_2"&gt;Ссылки&lt;/h2&gt;
 &lt;p&gt;&lt;a href="http://nodejs.org/"&gt;nodejs.org&lt;/a&gt; - оф.сайт. Документация, новости проекта, примеры
 приложений.&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://nodejs.ru"&gt;nodejs.ru&lt;/a&gt; - русскоязычный блог о Node.js&lt;/p&gt;</summary><category term="java script"></category><category term="node.js"></category></entry></feed>
