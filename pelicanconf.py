@@ -11,7 +11,7 @@ PATH = 'content'
 
 TIMEZONE = 'Europe/Moscow'
 
-DEFAULT_LANG = 'ru'
+DEFAULT_LANG = 'en'
 
 # Blogroll
 LINKS =  (('WBTech', 'http://wbtech.pro'),)
@@ -52,3 +52,20 @@ EXTRA_PATH_METADATA = {
 
 CSS_FILE = "app.css"
 THEME = './theme'
+
+
+PLUGIN_PATHS = 'plugins'
+PLUGINS = ['i18n_subsites']
+
+
+I18N_UNTRANSLATED_ARTICLES = 'hide'
+
+
+I18N_SUBSITES = {
+    'en': {
+        'SITENAME': SITENAME,
+    },
+    'ru': {
+        'SITENAME': SITENAME,
+    }
+}
