@@ -30,7 +30,7 @@ Lang: ru
  -  [DebugMail](https://debugmail.io) - сервис для разработчиков, помогает упростить работу с почтой на этапе разработки сайта/приложения
 
 
-On-line:
+Online:
 --------
 
 - [github](https://github.com/dizballanze)

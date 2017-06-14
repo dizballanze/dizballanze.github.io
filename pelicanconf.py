@@ -24,8 +24,8 @@ SOCIAL = (('Twitter', 'https://twitter.com/dizballanze'),
 
 DEFAULT_PAGINATION = False
 
-ARTICLE_URL = u'{category}/{slug}/'
-ARTICLE_SAVE_AS = u'{category}/{slug}/index.html'
+ARTICLE_URL = u'{slug}/'
+ARTICLE_SAVE_AS = u'{slug}/index.html'
 PAGE_URL = u'{slug}/'
 PAGE_SAVE_AS = u'{slug}/index.html'
 AUTHOR_URL = u'author/{slug}/'
