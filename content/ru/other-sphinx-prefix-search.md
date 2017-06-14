@@ -3,6 +3,7 @@ Slug: sphinx-поиск-по-префиксам
 Date: 2011-11-09 11:37
 Author: Admin
 Category: Другое
+Lang: ru
 Tags: live search, sphinx
 
 ![sphinx logo][]

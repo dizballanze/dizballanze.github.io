@@ -3,6 +3,7 @@ Date: 2011-06-10 17:09
 Author: Admin
 Category: Другое
 Tags: acl, auth, i18n, layout, registry, route, zend framework
+Lang: ru
 
 ![Zend Framework][]
 

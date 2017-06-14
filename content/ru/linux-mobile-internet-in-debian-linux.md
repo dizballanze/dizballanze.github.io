@@ -3,6 +3,7 @@ Date: 2010-11-26 20:02
 Author: Admin
 Category: Linux
 Tags: debian, Linux, wvdial
+Lang: ru
 
 В этой статье я расскажу как использовать ваш мобильный телефон в
 качестве 3G/GPRS/EDGE модема в ОС Linux.

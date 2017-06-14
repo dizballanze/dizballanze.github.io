@@ -3,6 +3,7 @@ Date: 2011-01-03 00:42
 Author: Admin
 Category: Linux
 Tags: debian, ftp, ftpd, администрирование
+Lang: ru
 
 ![image][]
 

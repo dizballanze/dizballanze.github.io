@@ -3,6 +3,7 @@ Date: 2014-03-15 23:46
 Author: Admin
 Category: Node.js
 Tags: node.js, mongodb, faye, debugmail
+Lang: ru
 
 ![debugmail-logo][]
 

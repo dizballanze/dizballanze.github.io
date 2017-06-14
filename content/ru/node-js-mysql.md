@@ -3,6 +3,7 @@ Date: 2011-03-28 18:47
 Author: Admin
 Category: Node.js
 Tags: MySQL, node-mysql, node.js
+Lang: ru
 
 ![Mysql + Node.js][]
 

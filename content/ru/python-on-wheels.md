@@ -3,6 +3,7 @@ Date: 2015-01-16 23:30
 Author: Admin
 Category: Python
 Tags: pip, wheels, dev tools
+Lang: ru
 
 Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:
 

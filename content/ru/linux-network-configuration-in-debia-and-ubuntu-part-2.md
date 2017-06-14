@@ -3,6 +3,7 @@ Date: 2011-02-23 17:50
 Author: Admin
 Category: Linux
 Tags: debian, dhcp, dns, network, route, ubuntu, администрирование
+Lang: ru
 
 ![tux internet][]Приветствую вас, товарищи линуксоиды! Сегодня мы
 продолжим рассмотрение настройки сети и интернета в linux. В данной

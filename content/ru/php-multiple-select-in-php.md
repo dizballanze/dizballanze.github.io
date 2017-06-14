@@ -3,6 +3,7 @@ Date: 2012-01-01 21:39
 Author: Admin
 Category: Другое
 Tags: multiple select, PHP
+Lang: ru
 
 ![php logo][]
 

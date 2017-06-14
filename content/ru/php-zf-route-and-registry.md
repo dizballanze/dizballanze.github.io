@@ -3,6 +3,7 @@ Date: 2011-06-12 20:17
 Author: Admin
 Category: Другое
 Tags: registry, route
+Lang: ru
 
 ![ZendFramework logo][]
 

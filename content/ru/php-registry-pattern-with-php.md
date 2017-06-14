@@ -3,6 +3,7 @@ Date: 2011-02-28 21:38
 Author: Admin
 Category: Другое
 Tags: global variables, interfaces, json, magic methods, PHP, registry, serialize, singleton, ООП, Паттерны проектирования
+Lang: ru
 
 ![registry][]
 

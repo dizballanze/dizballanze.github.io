@@ -3,6 +3,7 @@ Date: 2010-11-26 21:14
 Author: Admin
 Category: Linux
 Tags: Linux, администрирование
+Lang: ru
 
 Доброго времени суток, товарищи линуксоиды!!
 

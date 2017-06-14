@@ -3,6 +3,7 @@ Date: 2011-05-31 17:51
 Author: Admin
 Category: Linux
 Tags: apache, debian, hosts, Linux, администрирование
+Lang: ru
 
 ![apache][]
 

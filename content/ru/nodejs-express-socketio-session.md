@@ -3,6 +3,7 @@ Date: 2013-04-19 13:33
 Author: Admin
 Category: Node.js
 Tags: node.js, express, socket.io
+Lang: ru
 
 
 При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.

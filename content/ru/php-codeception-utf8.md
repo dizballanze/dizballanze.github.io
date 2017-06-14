@@ -3,6 +3,7 @@ Date: 2012-02-29 13:57
 Author: Admin
 Category: Другое
 Tags: acceptance, codeception, testing, utf-8
+Lang: ru
 
 Разбираюсь с [codeception][]. В acceptance тестах возникла проблема с
 распознаванием русских символов в utf-8:

@@ -3,6 +3,7 @@ Date: 2013-01-02 02:41
 Author: Admin
 Category: Node.js
 Tags: mongoose, mongodb, node.js, sugar.js
+Lang: ru
 
 Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
 моделей в [ODM Mongoose](http://mongoosejs.com/ "Mongoose ODM"). Для тех, кто не знает mongoose - это 

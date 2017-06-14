@@ -3,6 +3,7 @@ Date: 2012-12-22 22:55
 Author: Admin
 Category: Python
 Tags: bitbucket, django, git, github, nginx, nodejs, pip, python, south
+Lang: ru
 
 При разработке не хочется тратить время, которого и так не хватает, на
 рутинные действия. После каждой отправки изменений в репозиторий,

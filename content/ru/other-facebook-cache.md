@@ -3,6 +3,7 @@ Date: 2011-06-03 10:55
 Author: Admin
 Category: Другое
 Tags: cache, facebook, url
+Lang: ru
 
 ![facebook][]
 

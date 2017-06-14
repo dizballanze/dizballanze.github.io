@@ -3,6 +3,7 @@ Slug: frontend-and-backend-collaboration
 Date: 2015-03-23 16:51
 Author: Admin
 Category: Другое
+Lang: ru
 Tags: collaboration, vagrant, git, REST
 
 ![teamwork][]

@@ -3,6 +3,7 @@ Date: 2011-02-20 18:27
 Author: Admin
 Category: Другое
 Tags: builder, PHP, ООП, Паттерны проектирования
+Lang: ru
 
 ![builder pattern][]
 

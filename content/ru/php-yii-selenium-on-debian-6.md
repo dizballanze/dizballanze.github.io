@@ -3,6 +3,7 @@ Date: 2012-03-08 23:07
 Author: Admin
 Category: Другое
 Tags: selenium, yii, магия
+Lang: ru
 
 Для функционального тестирования в Yii используется Selenium. На debian
 и ubuntu при запуске тестов выдается ошибка:

@@ -3,6 +3,7 @@ Date: 2010-12-30 18:20
 Author: Admin
 Category: Node.js
 Tags: java script, node.js
+Lang: ru
 
 Здравствуйте! В продолжении темы Node.JS хочу рассмотреть пример
 создания простого сервера чата на базе данной библиотеки.

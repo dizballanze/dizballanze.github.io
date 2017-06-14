@@ -3,6 +3,7 @@ Date: 2011-01-29 18:42
 Author: Admin
 Category: БД
 Tags: benchmark, innodb, myisam, MySQL, БД
+Lang: ru
 
 ![mysql][]
 

@@ -3,6 +3,7 @@ Slug: primenenie-nginx-lua-dlia-obrabotki-prostykh-form
 Date: 2015-06-08 18:25
 Author: Admin
 Category: Другое
+Lang: ru
 Tags: http, nginx, lua
 
 ![lua][]

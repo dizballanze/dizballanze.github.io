@@ -3,6 +3,7 @@ Date: 2011-05-22 17:23
 Author: Admin
 Category: Другое
 Tags: code rules, fail, zend framework
+Lang: ru
 
 ![image][]  
 Здравствуйте! На днях подвернулась работа - дописать сайт на zend

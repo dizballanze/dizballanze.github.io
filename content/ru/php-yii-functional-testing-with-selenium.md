@@ -3,6 +3,7 @@ Date: 2012-04-04 02:31
 Author: Admin
 Category: Другое
 Tags: functional testing, selenium, testing, yii
+Lang: ru
 
 ![selenium][]
 

@@ -3,6 +3,7 @@ Date: 2012-02-24 00:07
 Author: Admin
 Category: Другое
 Tags: benchmark, GraphicsMagick, resizing, upload.class.php
+Lang: ru
 
 Всем привет! Сегодняшний пост посвящен производительности при обработке
 изображений. Почти в каждом проекте требуется обработка изображений,

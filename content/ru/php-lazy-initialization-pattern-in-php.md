@@ -3,6 +3,7 @@ Date: 2011-02-21 21:22
 Author: Admin
 Category: Другое
 Tags: ООП, Паттерны проектирования
+Lang: ru
 
 ![lazy initialization][]Здравствуйте, сегодня речь пойдёт об очередном
 паттерне - lazy initialization (отложенная инициализация). Освоив этот

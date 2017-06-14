@@ -3,6 +3,7 @@ Slug: эффективная-совместная-работа-backend-и-fronte
 Date: 2015-03-20 16:51
 Author: Admin
 Category: Другое
+Lang: ru
 Tags: collaboration, vagrant, git, REST
 Status: draft
 

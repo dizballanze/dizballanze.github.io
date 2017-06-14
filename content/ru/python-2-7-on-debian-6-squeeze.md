@@ -3,6 +3,7 @@ Date: 2012-07-22 09:26
 Author: Admin
 Category: Python
 Tags: python, virtualenv
+Lang: ru
 
 ![python logo][]
 

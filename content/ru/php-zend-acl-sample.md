@@ -3,6 +3,7 @@ Date: 2011-06-22 11:04
 Author: Admin
 Category: Другое
 Tags: acl, zend_acl
+Lang: ru
 
 ![ZendFramework][]
 

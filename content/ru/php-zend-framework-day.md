@@ -3,6 +3,7 @@ Date: 2011-10-13 17:07
 Author: Admin
 Category: Другое
 Tags: events, zend framework, zend framework days
+Lang: ru
 
 ![Zend Framework Day][]12 ноября, в Киеве, пройдет конференция "Zend
 Framework Day" - посвященная популярному PHP фреймворку Zend Framework.

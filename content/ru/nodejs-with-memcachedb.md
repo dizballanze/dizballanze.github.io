@@ -3,6 +3,7 @@ Date: 2011-07-02 23:04
 Author: Admin
 Category: Node.js
 Tags: memcachedb, node.js
+Lang: ru
 
 ![MemcacheDB][]
 

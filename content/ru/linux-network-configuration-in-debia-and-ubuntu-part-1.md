@@ -3,6 +3,7 @@ Date: 2011-02-22 13:17
 Author: Admin
 Category: Linux
 Tags: debian, ifconfig, ifdown, ifup, interfaces, network, ubuntu, администрирование
+Lang: ru
 
 Здравствуйте, товарищи линуксоиды ;[
 

@@ -3,6 +3,7 @@ Date: 2011-10-21 22:03
 Author: Admin
 Category: Linux
 Tags: geoip, nginx
+Lang: ru
 
 ![nginx logo][]
 

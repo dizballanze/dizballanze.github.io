@@ -3,6 +3,7 @@ Date: 2011-04-10 21:49
 Author: Admin
 Category: Node.js
 Tags: cross domain ajax, java script, jquery, node.js, polling
+Lang: ru
 
 ![чат][]
 
