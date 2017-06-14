@@ -6,44 +6,36 @@ Lang: ru
 
 Здравствуйте! Меня зовут Шиканов Юрий и я web-разработчик.
 
-С мая 2011 года работаю в [WB-Tech][]. На данный момент занимаю должность Team Lead.
+С мая 2011 года работаю в [WB-Tech](https://wbtech.pro/). На данный момент занимаю должность Team Lead.
 
 Некоторые из используемых технологий/ЯП:
 ----------------------------------------
 
--   Python / Django / Flask
+-   Python / Django / Flask / Celery
 -   Node.JS / CoffeeScript / Express
--   Socket.io / Faye
--   SQL / MySQL / Postgresql
+-   Socket.io / Faye / Crossbar.io
+-   SQL / Postgresql / MySQL 
 -   Sphinx / ElasticSearch
--   TDD / BDD / Mocha / should.js / nose / Selenium / Ghost.py
--   Memcache* / Redis / MongoDB
--   Linux / Debian / Ubuntu / Nginx / Git
+-   TDD / BDD / Mocha / Selenium
+-   Memcached / Redis / MongoDB
+-   Linux / Debian / Ubuntu / Nginx / Git / Vagrant
 
 
 Собственные проекты:
 --------------------
 
-Некоторые собственные проекты из разработанных в [WB-Tech][]:
+Некоторые собственные проекты из разработанных в WB-Tech:
 
  -  [Coment.me](http://coment.me/) - сервис для удобного создания скриншотов сайтов, их комментирования и шаринга
- -  [DebugMail](http://debugmail.io) - сервис для разработчиков, помогает упростить работу с почтой на этапе разработки сайта/приложения
+ -  [DebugMail](https://debugmail.io) - сервис для разработчиков, помогает упростить работу с почтой на этапе разработки сайта/приложения
 
 
 On-line:
 --------
 
-
-<a class="about-icon" href="http://vk.com/dizballanze"><img src="/icons/icon-vk.png"></a>
-<a class="about-icon" href="http://facebook.com/dizballanze"><img src="/icons/icon-fb.png"></a>
-<a class="about-icon" href="http://habrahabr.ru/users/dizballanze/"><img src="/icons/icon-hb.png"></a>
-<a class="about-icon" href="http://github.com/dizballanze"><img src="/icons/icon-gh.png"></a>
-<a class="about-icon" href="http://twitter.com/dizballanze"><img src="/icons/icon-tw.png"></a>
-<a class="about-icon" href="http://lastfm.com/user/dizballanze"><img src="/icons/icon-lf.png"></a>
-<a class="about-icon" href="mailto:dizballanze@gmail.com"><img src="/icons/icon-em.png"></a>
-<a class="about-icon" href="skype:dizballanze?chat"><img src="/icons/icon-sk.png"></a>
-<a class="about-icon" href="http://dizballanze.com/feeds/all.rss.xml"><img src="/icons/icon-rs.png"></a>
-
-
-  [UKRAINIAN WEB CHALLENGE]: http://uwc.org.ua
-  [WB-Tech]: http://wbtech.pro/
+- [github](https://github.com/dizballanze)
+- [email](mailto:dizballanze@gmail.com)
+- [twitter](https://twitter.com/dizballanze)
+- [last.fm](http://lastfm.com/user/dizballanze)
+- [facebook](https://facebook.com/dizballanze)
+- [habrahabr](https://habrahabr.ru/users/dizballanze/)
