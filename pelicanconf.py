@@ -14,13 +14,15 @@ TIMEZONE = 'Europe/Moscow'
 DEFAULT_LANG = 'en'
 
 # Blogroll
-LINKS =  (('WBTech', 'http://wbtech.pro'),)
+MENUITEMS  =  (
+    ('WB–Tech', 'https://wbtech.pro/'),
+    ('DebugMail', 'https://debugmail.io/'),)
 
 # Social widget
 SOCIAL = (('Twitter', 'https://twitter.com/dizballanze'),
           ('GitHub', 'https://github.com/dizballanze'),)
 
-DEFAULT_PAGINATION = 10
+DEFAULT_PAGINATION = False
 
 ARTICLE_URL = u'{category}/{slug}/'
 ARTICLE_SAVE_AS = u'{category}/{slug}/index.html'
@@ -50,8 +52,8 @@ EXTRA_PATH_METADATA = {
     'stuff/CNAME': {'path': 'CNAME'}
 }
 
-CSS_FILE = "app.css"
-THEME = './theme'
+# CSS_FILE = "app.css"
+THEME = './basic-theme'
 
 
 PLUGIN_PATHS = 'plugins'
@@ -68,4 +70,9 @@ I18N_SUBSITES = {
     'ru': {
         'SITENAME': SITENAME,
     }
+}
+
+DATE_FORMATS = {
+    'en': ('en_US','%d %b %Y'),
+    'ru': ('ru_RU','%d %b %Y'),
 }

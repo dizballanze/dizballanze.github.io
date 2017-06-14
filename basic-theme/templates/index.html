@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<section id="content">
+{% block content_title %}
+{% endblock %}
+
+{% for article in articles_page.object_list %}
+        <p><article class="hentry">
+            <header>
+                <h2 class="entry-title"><a href="{{ SITEURL }}/{{ article.url }}" rel="bookmark" title="Permalink to {{ article.title|striptags }}">{{ article.title }}</a></h2>
+                <time class="published" datetime="{{ article.date.isoformat() }}">{{ article.locale_date }}</time>
+            </header>
+                
+        </article></p>
+{% endfor %}
+{% if articles_page.has_other_pages() %}
+    {% include 'pagination.html' %}
+{% endif %}
+</section><!-- /#content -->
+{% endblock content %}

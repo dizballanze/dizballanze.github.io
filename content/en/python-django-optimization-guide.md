@@ -130,7 +130,7 @@ by changing [`CONN_MAX_AGE`](https://docs.djangoproject.com/en/1.11/ref/settings
 -  `None` - unlimited TTL.
 
 
-```
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -151,7 +151,7 @@ from file system and compliles templates every time they're rendered. You could 
 to enable templates caching in memory. Add to `settings.py`:
 
 
-```
+```python
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -181,9 +181,9 @@ Install django-redis with pip:
 pip install django-redis
 ```
 
-Устанавливаем django-redis при помощи pip:
+Install django-redis with pip:
 
-```
+```python
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -202,7 +202,7 @@ Read full documentation [here](http://niwinz.github.io/django-redis/latest/).
 
 By default Django stores sessions in database. To speed up this we can store sessions in cache. Add to `settings.py`:
 
-```
+```python
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 ```
