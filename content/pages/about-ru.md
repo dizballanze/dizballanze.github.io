@@ -1,5 +1,5 @@
 Title: Автор
-Slug: автор
+Slug: about-me
 Date: 2010-11-25 16:32
 Author: Admin
 Lang: ru
@@ -11,7 +11,8 @@ Lang: ru
 Некоторые из используемых технологий/ЯП:
 ----------------------------------------
 
--   Python / Django / Flask / Celery
+-   Python / C / Erlang 
+-   Django / Flask / Celery
 -   Node.JS / CoffeeScript / Express
 -   Socket.io / Faye / Crossbar.io
 -   SQL / Postgresql / MySQL 
@@ -21,13 +22,24 @@ Lang: ru
 -   Linux / Debian / Ubuntu / Nginx / Git / Vagrant
 
 
+Open Source проекты:
+-------------
+
+-  [ngx_http_avatars_gen_module](https://github.com/dizballanze/ngx_http_avatars_gen_module) - generating avatars on-the-fly with Nginx.
+-  [hastable](https://github.com/dizballanze/hashtable) - async hash table server in C.
+-  [django-migrations-graph](https://github.com/dizballanze/django-migrations-graph) - django-admin command to display migrations with dependencies.
+-  [do-latency](https://github.com/dizballanze/do-latency) - Digital Ocean regions latency checker.
+-  [planner](https://github.com/dizballanze/planner) - python package for drawing 2d plans of a buildings.
+-  [more](https://github.com/dizballanze?tab=repositories&q=&type=source)
+
+
 Собственные проекты:
 --------------------
 
 Некоторые собственные проекты из разработанных в WB-Tech:
 
- -  [Coment.me](http://coment.me/) - сервис для удобного создания скриншотов сайтов, их комментирования и шаринга
  -  [DebugMail](https://debugmail.io) - сервис для разработчиков, помогает упростить работу с почтой на этапе разработки сайта/приложения
+ -  [Coment.me](http://coment.me/) - сервис для удобного создания скриншотов сайтов, их комментирования и шаринга
 
 
 Online:

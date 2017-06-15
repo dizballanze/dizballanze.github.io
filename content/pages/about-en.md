@@ -11,7 +11,8 @@ I'm working at [WB-Tech](https://wbtech.pro/) from May 2011. My current position
 Few technologies I worked with:
 ----------------------------------------
 
--   Python / Django / Flask / Celery
+-   Python / C / Erlang 
+-   Django / Flask / Celery
 -   Node.JS / CoffeeScript / Express
 -   Socket.io / Faye / Crossbar.io
 -   SQL / Postgresql / MySQL 
@@ -21,13 +22,24 @@ Few technologies I worked with:
 -   Linux / Debian / Ubuntu / Nginx / Git / Vagrant
 
 
+Open Source projects:
+-------------
+
+-  [ngx_http_avatars_gen_module](https://github.com/dizballanze/ngx_http_avatars_gen_module) - generating avatars on-the-fly with Nginx.
+-  [hastable](https://github.com/dizballanze/hashtable) - async hash table server in C.
+-  [django-migrations-graph](https://github.com/dizballanze/django-migrations-graph) - django-admin command to display migrations with dependencies.
+-  [do-latency](https://github.com/dizballanze/do-latency) - Digital Ocean regions latency checker.
+-  [planner](https://github.com/dizballanze/planner) - python package for drawing 2d plans of a buildings.
+-  [more](https://github.com/dizballanze?tab=repositories&q=&type=source)
+
+
 Some projects:
 --------------------
 
 Some own projects made in WB-Tech:
 
- -  [Coment.me](http://coment.me/) - comment, sign or draw anything right over the page, share the result with your colleagues.
- -  [DebugMail](https://debugmail.io) - easy to use testing mail (SMTP) server for developers.
+-  [DebugMail](https://debugmail.io) - easy to use testing mail (SMTP) server for developers.
+-  [Coment.me](http://coment.me/) - comment, sign or draw anything right over the page, share the result with your colleagues.
 
 
 Online:
