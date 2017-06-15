@@ -6,7 +6,7 @@ Tags: coffeescript, forever, node.js
 Lang: ru
 
 CoffeeScript - язык программирования, компилируемый в javascript. Используя [CoffeeScript](http://coffeescript.org/) для разработки на [node.js](/tag/nodejs/) мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
-![node.js and coffee-script](media/2013/01/nodejs-and-coffeescript.png "node.js and coffee-script")
+![node.js and coffee-script](/media/2013/01/nodejs-and-coffeescript.png "node.js and coffee-script")
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.
 
 # Устанавливаем пакеты
