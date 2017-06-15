@@ -1,3 +1,7 @@
+body, html {
+    -webkit-overflow-scrolling: touch;
+}
+
 body {
   font-family: 'PT Mono', monospace;
   font-size: 15px;
@@ -18,14 +22,10 @@ body, html {
 
 @media only screen and (max-device-width: 414px) {
   body, p, ul {
-    font-size: 28px;
+    font-size: 16px;
+    line-height: 24px;
   }
 
-  pre, code {
-      white-space: normal;
-      white-space: normal !important;
-      word-break: break-all;
-  }
 }
 
 a:link    { color: blue; text-decoration: none;      }
@@ -47,10 +47,17 @@ pre {
     /*margin: 2em 1em 2em 4em;*/
     margin: 2em 1em 2em 0em;
     padding: 1em 1em 1em 1em;
-    white-space: pre-wrap;
+    white-space: pre;
 }
 
-#content p, #content h2, #content h3, #content h4, #content h5, #content div, 
+.highlight {
+    width: 100%;
+    max-width: 950px;
+    overflow-x: auto;
+    margin: auto;
+}
+
+#content p, #content h2, #content h3, #content h4, #content h5,
 #content ul, #content h1, footer, header, nav {
     max-width: 950px;
     margin-left: auto;
@@ -100,6 +107,7 @@ code {
     padding-bottom: 0.1em;
     border-radius: 3px;
     font-size: 80%;
+    word-break: break-word;
 }
 
 code::before, code::after {
