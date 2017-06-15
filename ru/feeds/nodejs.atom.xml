@@ -344,11 +344,11 @@ backend servers
 &lt;/ul&gt;
 &lt;h2&gt;Заключение&lt;/h2&gt;
 &lt;p&gt;Какой именно способ выбрать зависит от конкретного случая. Мне кажется, для масштабирования в рамках одного сервера, лучше использовать модуль cluster (или его производные), т.к. это упрощает контроль за запущенными рабочими процессами. В случае если приложение требует вынести на несколько серверов, нужно просто создать несколько таких кластеров и настроить балансировку между ними при помощи Nginx или HAProxy.&lt;/p&gt;</content><category term="cluster"></category><category term="load balancing"></category><category term="clustering"></category><category term="scaling"></category></entry><entry><title>CoffeeScript &amp; node.js dev-сервер</title><link href="/ru/coffeescript-nodejs-dev-server/" rel="alternate"></link><published>2013-01-19T22:10:00+04:00</published><updated>2013-01-19T22:10:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2013-01-19:/ru/coffeescript-nodejs-dev-server/</id><summary type="html">&lt;p&gt;CoffeeScript - язык программирования, компилируемый в javascript. Используя &lt;a href="http://coffeescript.org/"&gt;CoffeeScript&lt;/a&gt; для разработки на &lt;a href="/tag/nodejs/"&gt;node.js&lt;/a&gt; мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
-&lt;img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script"&gt;
+&lt;img alt="node.js and coffee-script" src="/media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script"&gt;
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.&lt;/p&gt;
 &lt;h1&gt;Устанавливаем пакеты&lt;/h1&gt;
 &lt;p&gt;Для выполнения нашей цели необходимо установить …&lt;/p&gt;</summary><content type="html">&lt;p&gt;CoffeeScript - язык программирования, компилируемый в javascript. Используя &lt;a href="http://coffeescript.org/"&gt;CoffeeScript&lt;/a&gt; для разработки на &lt;a href="/tag/nodejs/"&gt;node.js&lt;/a&gt; мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
-&lt;img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script"&gt;
+&lt;img alt="node.js and coffee-script" src="/media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script"&gt;
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.&lt;/p&gt;
 &lt;h1&gt;Устанавливаем пакеты&lt;/h1&gt;
 &lt;p&gt;Для выполнения нашей цели необходимо установить несколько пакетов:&lt;/p&gt;
