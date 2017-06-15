@@ -7,9 +7,9 @@ Tags: python, django, performance, load testing
 Lang: en
 
 
-Django is a powerful framework used in many of great projects. It provides many batteries, that speed up development and
-therefore reduces the price of it. When a project becomes large and uses by many users you inevitably will run into performance
-problems. In this guide, I will try to explain what problems may occur and how to fix them.
+Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
+into performance problems. In this guide, I will try define potential problems and how to fix them.
 
 This is the first part of a series about Django performance optimization. It will cover profiling and Django settings.
 
@@ -17,17 +17,18 @@ This is the first part of a series about Django performance optimization. It wil
 ## Profiling
 
 Before starting to make any optimizations you should measure current performance to be able to compare results of 
-optimizations. And you should be able to measure performance regularly after each change, so this process should be automized.
+optimizations. And you should be able to measure performance regularly after each change, so this process should be
+automatized.
 
 Profiling is a process of measurement metrics of your project. Such as server response time, CPU usage, memory usage, etc.
-Python has its own [profiler](https://docs.python.org/3/library/profile.html) in the standard library. It's pretty good
-in profiling code chunks, but for profiling a whole Django project exists more convenient solutions.
+Python has its own [profiler](https://docs.python.org/3/library/profile.html) in the standard library. It works pretty
+good in profiling code chunks, but for profiling a whole Django project more convenient solutions exist.
 
 
 ### Django logging
 
-One of the most common optimization issues are needles and/or not effective SQL queries. You could set up Django
-logging to display all SQL queries to a console. Add to `settings.py` file:
+One of the most common optimization issues are needles and/or inefficient SQL queries. You could set up Django
+logging to display all SQL queries into the console. Add to `settings.py` file:
 
 ```python
 LOGGING = {
@@ -64,7 +65,7 @@ in the console for every request you make:
 ### Django Debug Toolbar
 
 [This](http://django-debug-toolbar.readthedocs.io/en/stable/) Django application provides a set of toolbars, some of
-which is great for profiling. Actually, it has built-in SQL panel, that has an even more informative log of SQL queries
+them are great for profiling. Actually, it has built-in SQL panel, that has even more informative log of SQL queries
 with additional features, like time chart, traceback, a result of `EXPLAIN` command, etc.
 
 
@@ -78,19 +79,19 @@ To enable it, you should add `debug_toolbar.panels.profiling.ProfilingPanel` to 
 
 ### Profiling data
 
-Very important to use production-like data for profiling. Ideally, you should grab a dump from the production database and use it
-on your local machine. If you try to measure performance on an empty/small database you can receive wrong results, that doesn't
+It's very important to use production-like data for profiling. Ideally, you should grab a dump from the production database and use it
+on your local machine. If you try to measure performance on an empty/small database you can receive wrong results, that don't
 help you to optimize project correctly.
 
 
 ## Load testing
 
-After optimizations, you should make load testing to make sure that performance is on sufficient level to work on production
+After optimizations, you should perform load testing to make sure that performance is on sufficient level to work on production
 load. For this type of testing, you need to setup copy of your production environment. Fortunately, cloud services and
-deploy automation allow us to make such setup in minutes.
+deploy automation allow us to make such setup in a minute.
 
-I recommend using [Locust](http://locust.io/) for load testing. Its main feature is that you describe all your tests in
-plain Python code. You could set up sophisticated load scenarios that would be close to real users behavior.
+I recommend using [Locust](http://locust.io/) for load testing. Its main feature is that you can describe all your
+tests in plain Python code. You can set up sophisticated load scenarios that would be close to real users behavior.
 The example of `locustfile.py`:
 
 ```python
@@ -130,12 +131,12 @@ add it to your CI/CD pipeline!
 
 ## Django settings
 
-In this section I will describe Django settings, that may affect performance.
+In this section I will describe Django settings, that may affect the performance.
 
 
 ### Database connection lifetime
 
-By default, Django closes database connection at the end of each request. You could setup TTL of a database
+By default, Django closes the database connection at the end of each request. You could setup TTL of a database
 connection by changing [`CONN_MAX_AGE`](https://docs.djangoproject.com/en/1.11/ref/settings/#conn-max-age) value:
 
 -  `0` - close connection at the end of each request,
@@ -184,8 +185,8 @@ TEMPLATES = [
 
 ### Redis cache backend
 
-Django provides several built-in cache backends, such as database backend, file based backend, etc. I recommend storing
-your cache in Redis a popular in-memory data structure store, probably you already use it in your project.
+Django provides several built-in cache backends, such as database backend, file based backend, etc. I recommend to store
+your cache in Redis. Redis is a popular in-memory data structure store, probably you already use it in your project.
 To set up Redis as cache backend you need to use third-party package, e.g. `django-redis`.
 
 Install django-redis with pip:
@@ -223,7 +224,7 @@ SESSION_CACHE_ALIAS = "default"
 ### Remove unneeded middlewares
 
 Check the list of middlewares (`MIDDLEWARE` in `settings.py`). Make sure you need all of them and remove unneeded.
-Django calls each middleware for each processed request, so overhead can be significant.
+Django calls each middleware for each processed request, so there can be significant overhead.
 
-If you have custom middleware, that used only in the segment of requests, you could try to move this functionality
-to view mixin or decorator. So over endpoint will not have an overhead of this middleware.
+If you have custom middleware, that is used only in the segment of requests, you could try to move this functionality
+to view mixin or decorator. So other endpoints will not have an overhead of this middleware.
