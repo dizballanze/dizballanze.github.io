@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/singleton-odinochka/" rel="bookmark"
+         title="Permalink to Singleton (одиночка)">Singleton (одиночка)</a></h2>
+    <time class="published" datetime="2011-01-16T13:20:00+03:00">16 янв 2011</time>
+  </header>
+  <div class="entry-content">
+    <p>Приветствую Вас, читатель моего блога! Первая статья из цикла паттерны
+проектирования посвящена очень полезному шаблону - singleton. Почему я
+решил начать именно с него? Всё очень просто, этот шаблон является
+первым шаблоном который я начал использовать в практической разработке и
+сразу же ощутил всю его мощь. Относится данный шаблон к шаблонам
+порождающим объекты или к шаблонам генерации объектов. Итак, перейдём к
+делу...</p>
+<h2>Описание</h2>
+<p>Шаблон singleton позволяет создавать лишь один экземпляр класса в
+течении работы приложения. Это даёт ряд преимуществ:</p>
+<ul>
+<li>Глобальный доступ к объекту</li>
+<li>Уверенность в том что есть только один экземпляр класса</li>
+<li>Контроль доступа к данным</li>
+</ul>
+<p>Я думаю каждый понимает, что использование глобальных переменных вредит
+качеству кода. Глобальные переменные создают ряд проблем:</p>
+<ul>
+<li>Засоряют область видимости</li>
+<li>Их можно случайно затереть</li>
+<li>Не инкапсулируют доступ к данным</li>
+<li>Тяжело отслеживать их доступность на разных уровнях приложения</li>
+</ul>
+<p>При использовании рассматриваемого шаблона вместо глобальных переменных
+мы избавляемся от всех вышеописанных проблем. Таким образом одиночка
+является улучшенной версией глобальных переменных. Но здесь тоже не всё
+так просто, злоупотреблять использованием данного шаблона нельзя, т.к.
+это приводит к сильной зависимости других классов и может привести к
+появлению непонятных, скрытых каналов данных.</p>
+<h2>Реализация</h2>
+<p>Реализация данного шаблона очень простая и сводится к созданию закрытого
+конструктора, хранения экземпляра класса в статической переменной класса
+и организации доступа к объекту через статический метод класса. Пример
+шаблона одиночка:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">class</span> <span class="nc">Singleton</span><span class="p">{</span>
+    <span class="c1">//Экземпляр объекта Singleton</span>
+    <span class="k">static</span> <span class="k">protected</span> <span class="nv">$instance</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    <span class="c1">//Метод предоставляет доступ к объекту</span>
+    <span class="k">static</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">getInstance</span><span class="p">(){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">is_null</span><span class="p">(</span><span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">))</span>
+            <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Singleton</span><span class="p">();</span>
+        <span class="k">return</span> <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//Закрытый конструктор</span>
+    <span class="k">private</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(){</span>
+    <span class="k">echo</span> <span class="s1">&#39;New instance!&#39;</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">function</span> <span class="fm">__clone</span><span class="p">(){}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">someAction</span><span class="p">(){</span>
+    <span class="k">echo</span> <span class="s1">&#39;Some action!&#39;</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Как Вы видите здесь всё очень просто, конструктор объявлен как private
+метод, для того чтобы создавать экземпляр можно было только из методов
+класса. Экземпляр класса хранится в приватной статической переменной
+$instance и доступ к нему осуществляется через открытый статический
+метод getInstance. Теперь рассмотрим, как применять данный класс:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nx">Singleton</span><span class="o">::</span><span class="na">getInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">someAction</span><span class="p">();</span>
+<span class="nx">Singleton</span><span class="o">::</span><span class="na">getInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">someAction</span><span class="p">();</span>
+</pre></div>
+
+
+<p>В результате получаем следующий вывод:</p>
+<div class="highlight"><pre><span></span>New instance!
+Some action!
+Some action!
+</pre></div>
+
+
+<p>Как Вы видите конструктор вызывается только 1 раз для 2х вызовов метода
+getInstance.</p>
+<h2>Применение</h2>
+<p>Применять данный шаблон можно для многих задач. Наиболее часто он
+применяется для следующих целей:</p>
+<ul>
+<li>Осуществление доступа к данным или функционалу на различных уровнях
+    приложения. Например абстракция над http запросом и осуществление
+    доступа к нему из контроллеров и видов приложения (для MVC
+    архитектуры)</li>
+<li>Абстракция над доступом к ресурсам. Например, контроль за тем чтобы
+    в приложении создавался всего одно соединение с базой данных, ресурс
+    которого сохраняется в объекте-одиночке.</li>
+</ul>
+<p>Это только некоторые способы применения данного шаблона. На этом всё.
+Буду рад ответить на ваши вопросы по данной теме.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

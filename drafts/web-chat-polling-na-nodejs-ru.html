@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/web-chat-polling-na-nodejs-ru.html" rel="bookmark"
+         title="Permalink to Web-чат polling на Node.JS">Web-чат polling на Node.JS</a></h2>
+    <time class="published" datetime="2011-04-10T21:49:00+04:00">10 апр 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="чат" src="/media/2011/04/conversacion-150x150.png" title="чат"></p>
+<p>Продолжим тему создания чата на Node.JS. На этот раз напишем чат,
+который будет в качестве клиентов использовать браузеры.</p>
+<h2>Проблема</h2>
+<p>Т.к. протокол HTTP не позволяет устанавливать постоянное соединение
+сервера с клиентом, то нам необходимо самостоятельно инициировать
+соединение для считывания новых сообщений. Для этого существует
+множество способов, но мы для начала воспользуемся самым примитивным -
+polling. Данный способ представляет собой постоянное опрашивание сервера
+через определённые интервалы времени. Сразу хочу уточнить, что данный
+способ ОЧЕНЬ не оптимален с точки зрения использования ресурсов сервера
+и сетевого канала, но для обучающих целей он вполне пригоден. В реальных
+приложениях стоит использовать более продвинутые средства, которые я
+постараюсь в скором времени рассмотреть в этом блоге. Итак, поехали!</p>
+<h2>Структура</h2>
+<p>Сначала рассмотрим структуру нашего приложения:</p>
+<ul>
+<li>
+<p><strong>Клиент</strong> - скрипт на jquery, который выполняет следующие функции:</p>
+<ul>
+<li>Отправка сообщения серверу</li>
+<li>Запрос у сервера данных о новых сообщениях и их отображение</li>
+</ul>
+</li>
+<li>
+<p><strong>Сервер</strong> - скрипт на Node.js. Выполняет следующие функции:</p>
+<ul>
+<li>Добавляет присланные клиентами сообщения в массив сообщений</li>
+<li>Отдает клиентам новые сообщения</li>
+</ul>
+</li>
+</ul>
+<h2>Реализация</h2>
+<h3>Клиентская часть</h3>
+<p>Для реализации клиентской части напишем небольшую страницу, которая
+будет отвечать за визуализацию сообщений и их отправку. Весь код
+приводить не буду, только интересные части:</p>
+<div class="highlight"><pre><span></span><span class="c1">// ...</span>
+<span class="kd">function</span> <span class="nx">load</span><span class="p">(){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.message-row&quot;</span><span class="p">).</span><span class="nx">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.message-row:last&quot;</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">$</span><span class="p">.</span><span class="nx">getJSON</span><span class="p">(</span><span class="s1">&#39;http://127.0.0.1:8124/?id=&#39;</span> <span class="o">+</span> <span class="nx">id</span> <span class="o">+</span> <span class="s1">&#39;&amp;callback=?&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+        <span class="nx">data</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">parseJSON</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="k">in</span> <span class="nx">data</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#mess&quot;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]).</span><span class="nx">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;message-row&quot; id=&quot;mess&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;&gt;&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">).</span><span class="nx">appendTo</span><span class="p">(</span><span class="s2">&quot;#chat-body&quot;</span><span class="p">);</span>
+                <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.message-row:last&quot;</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#chat-body&quot;</span><span class="p">).</span><span class="nx">animate</span><span class="p">({</span> <span class="nx">scrollTop</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#chat-body&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s2">&quot;scrollHeight&quot;</span><span class="p">)</span> <span class="p">},</span> <span class="mi">3000</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+<span class="c1">// ...</span>
+</pre></div>
+
+
+<p>Данная функция будет отвечать за получение новых сообщений от сервера и
+их визуализацию. Каждое сообщение будет идентифицироваться уникальным id
+которое равно порядковому номеру сообщения. При визуализации каждое
+сообщение помещается в div и к нему прикрепляется id при помощи
+<a href="http://jqapi.com/#p=data">.data()</a>. Затем перед тем как запросить новые сообщения мы получаем
+id последнего сообщения и помещаем его в запрос. В случае если сообщений
+до запроса не было - передаем магическое число -1.</p>
+<p>Т.к. наш сервер весит на специфическом порту, то для взаимодействия с
+ним необходимо использовать cross domain ajax. Данный метод
+подразумевает передачу последним параметром названия некой callback
+функции. Генерацию этой функции берёт на себя jquery. Всё что нужно от
+нас - это передать последним параметром в запросе ключ callback со
+значением "?". Далее jquery заменит знак вопроса на название нашей
+функции, которое он генерирует случайным образом. Всё что от нас
+требовалось для реализации меж доменного ajax на стороне клиента мы
+выполнили, особенности реализации на стороне сервера рассмотрим чуть
+позже.</p>
+<p>Рассмотрим остальной код:</p>
+<div class="highlight"><pre><span></span><span class="nx">load</span><span class="p">();</span>
+<span class="nx">setInterval</span><span class="p">(</span><span class="nx">load</span><span class="p">,</span> <span class="mi">2500</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Запускаем предварительную инициализацию списка сообщений и ставим
+обработчик по таймеру, который будет вызываться каждые 2,5 секунды.</p>
+<div class="highlight"><pre><span></span><span class="c1">// ....</span>
+<span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#send-button&quot;</span><span class="p">).</span><span class="nx">click</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.message-row&quot;</span><span class="p">).</span><span class="nx">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+        <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.message-row:last&quot;</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">$</span><span class="p">.</span><span class="nx">getJSON</span><span class="p">(</span><span class="s1">&#39;http://127.0.0.1:8124/?message=&#39;</span> <span class="o">+</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;input[name=message]&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&amp;username=&#39;</span> <span class="o">+</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;input[name=nick]&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&amp;id=&#39;</span> <span class="o">+</span> <span class="nx">id</span> <span class="o">+</span> <span class="s1">&#39;&amp;callback=?&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+        <span class="nx">data</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">parseJSON</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="k">in</span> <span class="nx">data</span><span class="p">){</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;&lt;div class=&quot;message-row&quot; id=&quot;mess&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;&gt;&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&lt;/div&gt;&#39;</span><span class="p">).</span><span class="nx">appendTo</span><span class="p">(</span><span class="s2">&quot;#chat-body&quot;</span><span class="p">);</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;.message-row:last&quot;</span><span class="p">).</span><span class="nx">data</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s1">&#39;id&#39;</span><span class="p">]);</span>
+        <span class="p">}</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#chat-body&quot;</span><span class="p">).</span><span class="nx">animate</span><span class="p">({</span> <span class="nx">scrollTop</span><span class="o">:</span> <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#chat-body&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s2">&quot;scrollHeight&quot;</span><span class="p">)</span> <span class="p">},</span> <span class="mi">3000</span><span class="p">);</span>
+    <span class="p">});</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;input[name=message]&quot;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="c1">// ....</span>
+</pre></div>
+
+
+<p>Ставим обработчик нажатия кнопки отправки сообщения. Здесь ничего
+нового, просто такой же запрос как и в функции load за исключением того
+что мы передаём дополнительные параметры - текст сообщения и псевдоним
+пользователя.</p>
+<h3>Серверная часть</h3>
+<p>Тут начинается самое интересное :) Для реализации обмена по протоколу
+HTTP в node.js есть одноименный модуль. Также мы будем использовать
+модуль url для получения переданных нам параметров. Теперь рассмотрим
+код, постараюсь как можно подробнее прокомментировать:</p>
+<div class="highlight"><pre><span></span><span class="c1">// Подключение модулей</span>
+<span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">url</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">);</span>
+<span class="c1">// Массив сообщений</span>
+<span class="kd">var</span> <span class="nx">messages</span> <span class="o">=</span> <span class="p">[];</span>
+
+<span class="c1">// Создаем сервер и ставим обработчик запроса</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span> 
+  <span class="c1">// Получаем url</span>
+  <span class="kd">var</span> <span class="nx">url_string</span> <span class="o">=</span> <span class="nx">request</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+  <span class="c1">// Извлекаем параметры</span>
+  <span class="nx">params</span> <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">url_string</span><span class="p">,</span> <span class="kc">true</span><span class="p">).</span><span class="nx">query</span><span class="p">;</span>
+
+  <span class="c1">// Если получено сообщение, то добавляем его в массив</span>
+  <span class="c1">// предварительно объединив его с псевдонимом пользователя</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">)){</span>
+      <span class="nx">username</span> <span class="o">=</span> <span class="p">(</span><span class="nx">params</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;guest&#39;</span><span class="o">:</span><span class="nx">params</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">];</span>
+      <span class="nx">message</span> <span class="o">=</span> <span class="nx">params</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">];</span>
+      <span class="nx">messages</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">username</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">message</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Извлекаем идентификатор сообщения</span>
+  <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Number</span><span class="p">(</span><span class="nx">params</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]);</span>
+  <span class="kd">var</span> <span class="nx">to</span><span class="p">,</span> <span class="nx">count</span><span class="p">,</span> <span class="nx">from</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="c1">// Получаем количество сообщений в массиве</span>
+  <span class="kd">var</span> <span class="nx">len</span> <span class="o">=</span> <span class="nx">messages</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+  <span class="c1">// Если пользователь только подключился,</span>
+  <span class="c1">// то отдаём ему 10 последних сообщений</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">id</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">len</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">){</span>
+          <span class="nx">count</span> <span class="o">=</span> <span class="nx">len</span><span class="p">;</span>
+          <span class="nx">from</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+          <span class="nx">count</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+          <span class="nx">from</span> <span class="o">=</span> <span class="nx">len</span> <span class="o">-</span> <span class="mi">10</span><span class="p">;</span>
+      <span class="p">}</span>
+  <span class="c1">// Иначе отдаем те сообщения которые были получены после </span>
+  <span class="c1">// сообщения с переданным идентификатором</span>
+  <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+      <span class="nx">count</span> <span class="o">=</span> <span class="nx">len</span> <span class="o">-</span> <span class="nx">id</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+      <span class="nx">from</span> <span class="o">=</span> <span class="nx">id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="nx">to</span> <span class="o">=</span> <span class="nx">from</span> <span class="o">+</span> <span class="nx">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="c1">// Формируем результирующий массив сообщений</span>
+  <span class="nx">ret_messages</span> <span class="o">=</span> <span class="p">[];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="nx">from</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">to</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+      <span class="nx">ret_messages</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">message</span><span class="o">:</span><span class="nx">messages</span><span class="p">[</span><span class="nx">i</span><span class="p">],</span> <span class="nx">id</span><span class="o">:</span><span class="nx">i</span><span class="p">});</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Кодируем массив в json</span>
+  <span class="nx">body</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">ret_messages</span><span class="p">);</span>
+  <span class="c1">// Устанавливаем заголовки ответа</span>
+  <span class="c1">// Второй заголовок необходим для</span>
+  <span class="c1">// cross domain ajax</span>
+  <span class="nx">response</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;Access-Control-Allow-Origin&quot;</span><span class="o">:</span> <span class="s2">&quot;*&quot;</span>
+     <span class="p">});</span>
+  <span class="c1">// Устанавливаем тело ответа и закрываем соединение</span>
+  <span class="c1">// имитируем вызов метода</span>
+  <span class="nx">response</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">params</span><span class="p">.</span><span class="nx">callback</span> <span class="o">+</span> <span class="s1">&#39;(\&#39;&#39;</span> <span class="o">+</span> <span class="nx">body</span> <span class="o">+</span> <span class="s1">&#39;\&#39;)&#39;</span><span class="p">);</span> 
+<span class="c1">// Вешаем сервер слушать 8124 порт на 127.0.0.1</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8124</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">);</span> 
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Server running at http://127.0.0.1:8124/&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Всё достаточно прозрачно, кроме небольших заклинаний необходимых для
+корректной работы cross domain ajax. Для того чтобы использовать чат в
+сети поменяйте ip-адрес в 63 строке на свой внешний ip. Также не
+забудьте поменять ip-адрес в клиенте.</p>
+<p>Здесь можете найти архив с полным кодом приложения - <a href="stuff/web-chat-polling.zip">код</a></p>
+<p>Спасибо за внимание, подписывайтесь на RSS, все вопросы в комментарии
+ниже!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

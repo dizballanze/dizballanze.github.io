@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/php-klass-dlia-raboty-s-typografru-ru.html" rel="bookmark"
+         title="Permalink to PHP-класс для работы с typograf.ru">PHP-класс для работы с typograf.ru</a></h2>
+    <time class="published" datetime="2011-06-06T22:14:00+04:00">06 июн 2011</time>
+  </header>
+  <div class="entry-content">
+    <p>С недавнего времени начал использовать сервис для подготовки текстов к
+web-изданию - <img alt="ТИПО - правильно!" src="http://www.typograf.ru/img/typograf.gif">. Очень полезный и удобный
+сервис, который позволяет проводить различного рода корректировки
+символов и даже выполняет исправление орфографических ошибок.</p>
+<p>Также у данного сервиса есть свое api, которое позволяет внешним сайтам
+выполнять запросы на обработку текстов. Для задания дополнительных
+параметров обработки текстов используется передача xml-документа с
+необходимыми параметрами. Я написал небольшой класс который берет на
+себя рутинные операции по сборке xml-документа и отправке запроса
+серверу typograf. Также свойства класса задокументированы комментариями
+phpdoc для более удобного использования.</p>
+<p>Исходный код доступен здесь: <a href="http://pastebin.com/biQqBrih">http://pastebin.com/biQqBrih</a></p>
+<p>Пример использования:</p>
+<div class="highlight"><pre><span></span><span class="x">$typograf = new Typograf();</span>
+<span class="x">// не использовать неразрывные конструкции вместо (неразрывного пробела)</span>
+<span class="x">$typograf-&gt;nowraped_insert = 0;</span>
+<span class="x">$description = $typograf-&gt;typograf($_POST[&#39;description&#39;]);</span>
+</pre></div>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/khranilishcha-dannykh-v-nodejs-memcachedb-ru.html" rel="bookmark"
+         title="Permalink to Хранилища данных в Node.JS. Memcachedb">Хранилища данных в Node.JS. Memcachedb</a></h2>
+    <time class="published" datetime="2011-07-02T23:04:00+04:00">02 июл 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="MemcacheDB" src="/media/2011/07/Снимок-300x204.png"></p>
+<p>Сегодня я расскажу, как начать работать с MemcacheDB в Node.JS.</p>
+<h2>Memcachedb</h2>
+<p>Memcachedb - это key-value база данных, основанная на memcached. Для
+тех, кто работал с memcached, начало работы с memcachedb не будет
+требовать особых усилий, т.к. они используют общее API. Основные
+возможности Memcachedb:</p>
+<ul>
+<li>Распределенное хранилище пар ключ-значение</li>
+<li>В отличие от memcached не является решением для кеширования, т.к.
+    хранит данные на диске</li>
+<li>В качестве движка хранилища используется Berkeley DB</li>
+<li>Поддержка транзакций</li>
+<li>Поддержка репликации</li>
+<li>
+<p>Api memcachedb включает следующие команды:</p>
+<ul>
+<li>get - получения значения по ключу или нескольким ключам</li>
+<li>set, add, replace - установка значения, сохранения значения
+    только в случае если оно не было установлено ранее и установка
+    значения только если оно было установлено ранее</li>
+<li>append / prepend - добавление данных в после существующего
+    значения или перед ним</li>
+<li>incr / decr - инкремент, декремент значения</li>
+<li>delete - удаление значения</li>
+<li>stats - получение статистической информации</li>
+</ul>
+</li>
+</ul>
+<h2>Установка модуля memcached</h2>
+<p>Как я уже упоминал memcacheDB имеет такое же API, как и у memcached
+(кроме небольших изменений, например записи не удаляются по истечении
+срока), поэтому мы будем использовать модуль предназначенный для работы
+с memcached. Модуль имеет название memcached и доступен для установки
+через npm:</p>
+<div class="highlight"><pre><span></span>npm install memcached
+</pre></div>
+
+
+<p>Я подразумеваю, что вы уже установили и запустили memcacheDB, если нет,
+то вам <a href="http://memcachedb.googlecode.com/svn/trunk/INSTALL">сюда</a>. После установки модуля, мы сразу можем начать
+использовать его в наших программах на node.js. Попробуем подключится к
+БД:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Memcached</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;memcached&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">memcached</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcached</span><span class="p">(</span><span class="s1">&#39;127.0.0.1:21201&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<h2>Пишем Hello World</h2>
+<p>Напишем скрипт, который сначала запишет значение в БД и затем считает
+его и выведет в консоль:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Memcached</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;memcached&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">memcachedb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcached</span><span class="p">(</span><span class="s1">&#39;127.0.0.1:21201&#39;</span><span class="p">);</span>
+<span class="nx">memcachedb</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;Hello world&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">memcachedb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span> <span class="c1">// Hello world</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+
+
+<p>Подробную информацию по функциям api можете получить <a href="https://github.com/3rd-Eden/node-memcached/blob/v0.0.1/README.md">здесь</a> и в
+<a href="https://github.com/3rd-Eden/node-memcached/tree/v0.0.1/examples">примерах</a>.</p>
+<p>На этом все. До новых постов!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

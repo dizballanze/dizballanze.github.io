@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/ochered-soobshchenii-na-nodejs-i-memcacheq-ru.html" rel="bookmark"
+         title="Permalink to Очередь сообщений на node.js и memcacheq">Очередь сообщений на node.js и memcacheq</a></h2>
+    <time class="published" datetime="2011-10-07T23:24:00+04:00">07 окт 2011</time>
+  </header>
+  <div class="entry-content">
+    <p>Привет! Столкнулся с необходимостью использования очередей сообщений в
+текущем проекте. Знаю что есть готовые решения, но я все же решил
+написать свой небольшой велосипед. Итак, поехали...</p>
+<h2>Описание</h2>
+<p><img alt="scheme" src="/media/2011/10/png"></p>
+<p>В поставленной передо мной задаче необходимо выполнять ресурсоемкие
+операции (такие как работа с сетью, декодирование mp3-файлов), а также
+обращаться к бизнес-логике приложения для потока входных данных.
+Приложение написано на php, поэтому очевидно что удобнее всего писать
+worker'ы на этом языке в виде cli скриптов. В моем случае это сделать
+очень просто, т.к. в проекте используется yii, а в нем есть
+замечательная поддержка написания консольных команд при этом можно
+использовать весь код бизнес-логики используемый в основном приложении.</p>
+<p>Для реализации хранения заданий отличным решением стало memcacheq.
+Memcacheq - это сервис поддержки очередей с использованием api
+memcached. Подробнее узнать о том что это за зверь можете на <a href="http://memcachedb.org/memcacheq/">офф.
+сайте</a>. Стоит отметить что в связи с использованием BerkleyDB в
+memcacheq есть ограничение на размер сообщения в очереди, которое
+составляет около 64Кб, если для вас этого мало, то стоит подумать о
+другом решении.</p>
+<p>Также потребуется менеджер очереди, который будет контролировать работу
+воркеров (порождать, отслеживать статус выполнения, получать
+результаты). Очевидно что менеджер должен работать постоянно и
+периодически проверять нет ли новых заданий. Для реализации менеджера я
+выбрал Node.js, как мне кажется это очень подходящая технология для этих
+целей. В основном выбор пал на node из-за его асинхронности, возможности
+легко и быстро написать демон, который будет вписываться в архитектуру
+проекта и также на меня повлиял предыдущий опыт работы с данной
+технологией, который оставил в основном положительные впечатления.</p>
+<h2>Реализация</h2>
+<p>На данном этапе у вас уже должен быть настроен и запущен memcacheq,
+установлен nodejs. Также нам понадобиться модуль nodejs под названием
+memcached. Установить его можно следующей командой:</p>
+<div class="highlight"><pre><span></span>npm install memcached
+</pre></div>
+
+
+<p>Основные составляющие части менеджера очереди:</p>
+<ul>
+<li>Бесконечный цикл опроса очереди на наличие заданий. При этом также в
+    цикле должна проводиться проверка на состояние запущенных worker'ов.
+    Т.к. мы не можем себе позволить создание worker'ов в таком
+    количестве в котором доступны задания, то нам необходимо ввести
+    ограничение на количество одновременно обрабатываемых заданий. В
+    данном цикле перед созданием новых потоков проверяется наличие
+    свободного места, т.е. worker создается только в случае если
+    количество текущих worker'ов меньше установленного ограничения.</li>
+<li>Объект worker'а - представляет из себя оболочку над процессом
+    worker'а и хранит его состояние.</li>
+<li>Создание worker'а - процесс инициализации объекта worker'а на основе
+    данных полученных от memcacheq</li>
+<li>Мониторинг. Для отслеживания состояния выполнения заданий создадим
+    web-сервер который будет отвечать информацией о текущем статусе
+    выполнения каждого выполняемого worker'а.</li>
+<li>Т.к. в моя задача связанна с передачей большого объема данных, то
+    появилось необходимость ввести поправку на возможную ошибку передачи
+    данных. Это подразумевает повторное занесение задания в очередь в
+    случае если worker вернет ошибку передачи, которая может быть
+    определена проверкой контрольной суммы передаваемых данных.</li>
+</ul>
+<p>Теперь собственно исходный код:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;util&#39;</span><span class="p">),</span>
+    <span class="nx">exec</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">exec</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Memcached</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./lib/memcached.js&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">memcached</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcached</span><span class="p">(</span><span class="s1">&#39;127.0.0.1:22201&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">maxValue</span><span class="o">:</span><span class="mi">65000</span><span class="p">,</span> <span class="nx">reconnect</span><span class="o">:</span><span class="mi">2000</span><span class="p">,</span> <span class="nx">retry</span><span class="o">:</span><span class="mi">1000</span><span class="p">,</span> <span class="nx">timeout</span><span class="o">:</span><span class="mi">10000</span><span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">creating</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">workers_count</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">transmit_error_retry_count</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">workers</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">var</span> <span class="nx">tasks</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">var</span> <span class="nx">transmit_errors</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="kd">var</span> <span class="nx">command_line</span> <span class="o">=</span> <span class="s1">&#39;/path/to/worker/script&#39;</span><span class="p">;</span>
+
+<span class="c1">// Возможные состояния процесса</span>
+<span class="kd">var</span> <span class="nx">WORKER_SUCCESS_DONE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">WORKER_TRANSMIT_ERROR</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nx">WORKER_CRITICAL_ERROR</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nx">WORKER_IN_WORKING_PROCESS</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+<span class="c1">// Функция выполняемая в бесконечном цикле</span>
+<span class="kd">function</span> <span class="nx">check_feeds</span><span class="p">(){</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="k">in</span> <span class="nx">workers</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">==</span> <span class="nx">WORKER_SUCCESS_DONE</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">undefined</span><span class="p">)</span>
+                <span class="k">delete</span> <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">delete</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">delete</span> <span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">==</span> <span class="nx">WORKER_TRANSMIT_ERROR</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">==</span> <span class="kc">undefined</span><span class="p">)</span>
+                <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="k">else</span>
+                <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nx">transmit_error_retry_count</span><span class="p">)</span>
+                <span class="nx">push_back</span><span class="p">(</span><span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+            <span class="k">else</span><span class="p">{</span>
+                <span class="k">delete</span> <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+                <span class="k">delete</span> <span class="nx">tasks</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="p">}</span>
+            <span class="k">delete</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">!=</span> <span class="nx">WORKER_IN_WORKING_PROCESS</span><span class="p">){</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">undefined</span><span class="p">)</span>
+                <span class="k">delete</span> <span class="nx">transmit_errors</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+            <span class="k">delete</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Если есть свободные места вызываем функцию</span>
+    <span class="c1">// создающую worker&#39;ов</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">creating</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">obj_count</span><span class="p">(</span><span class="nx">workers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nx">workers_count</span><span class="p">))</span>
+        <span class="nx">create_worker</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">// Возвращение задания в очередь</span>
+<span class="kd">function</span> <span class="nx">push_back</span><span class="p">(</span><span class="nx">task</span><span class="p">){</span>
+    <span class="nx">memcached</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="nx">task</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Функция выполняющая создание новых worker&#39;ов</span>
+<span class="kd">function</span> <span class="nx">create_worker</span><span class="p">(){</span>
+    <span class="nx">creating</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="nx">memcached</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;tracks&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">)</span>
+            <span class="nx">creating</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">else</span><span class="p">{</span>
+            <span class="nx">check_feeds</span><span class="p">();</span>
+            <span class="nx">work</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+            <span class="nx">tasks</span><span class="p">[</span><span class="nx">work</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nx">work</span><span class="p">;</span>
+            <span class="nx">workers</span><span class="p">[</span><span class="nx">work</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Worker</span><span class="p">(</span><span class="nx">work</span><span class="p">);</span>
+            <span class="c1">// Если все ещё есть свободные места</span>
+            <span class="c1">// то делаем рекурсивный вызов</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">obj_count</span><span class="p">(</span><span class="nx">workers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nx">workers_count</span><span class="p">){</span>
+                <span class="nx">create_worker</span><span class="p">();</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="nx">creating</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="c1">// Конструктор объекта worker&#39;а</span>
+<span class="kd">function</span> <span class="nx">Worker</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">WORKER_IN_WORKING_PROCESS</span><span class="p">;</span>
+
+    <span class="c1">// Здесь можно сформировать </span>
+    <span class="c1">// параметры командной строки</span>
+    <span class="kd">var</span> <span class="nx">params</span><span class="p">;</span>
+
+    <span class="nx">exec</span><span class="p">(</span><span class="nx">command_line</span> <span class="o">+</span> <span class="nx">params</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">data</span><span class="p">){</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+            <span class="nx">workers</span><span class="p">[</span><span class="nx">id</span><span class="p">].</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">WORKER_CRITICAL_ERROR</span><span class="p">;</span>
+        <span class="k">else</span>
+            <span class="nx">workers</span><span class="p">[</span><span class="nx">id</span><span class="p">].</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">check_feeds</span><span class="p">();</span>
+<span class="p">},</span> <span class="mi">100</span><span class="p">);</span>
+
+<span class="c1">// Monitoring server</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">});</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="k">in</span> <span class="nx">workers</span><span class="p">){</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">i</span> <span class="o">+</span><span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="nx">workers</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">status</span> <span class="o">+</span> <span class="s2">&quot;\n&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="c1">// Для того чтобы заработал след. код</span>
+    <span class="c1">// необходимо внести изменения</span>
+    <span class="c1">// в модуль memcache (см. ниже)</span>
+    <span class="nx">memcached</span><span class="p">.</span><span class="nx">queue</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s1">&#39;Queue:&#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8080</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">);</span>
+
+<span class="c1">// Stuff</span>
+<span class="kd">function</span> <span class="nx">obj_count</span><span class="p">(</span><span class="nx">obj</span><span class="p">){</span>
+    <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="nx">j</span> <span class="k">in</span> <span class="nx">obj</span><span class="p">)</span> <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">i</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Для того чтобы корректно обрабатывать статусы выполнения задания
+worker'ы должны возвращать определенные заранее значения. В моем случае
+worker может вернуть одно из 3х состояний обозначенных в начале
+исходного кода.</p>
+<p>Также стоит отметить, что для реализации отображения количества задач в
+очереди memcacheq необходимо выполнить запрос stats queue, но модуль
+memcached по всей видимости его не поддерживает. По-этому я внес
+небольшие дополнения чтобы реализовать данный функционал. Исходный код
+модуля доступен <a href="http://pastebin.com/MgSFU6Gb">по ссылке</a>.</p>
+<h2>In the end..</h2>
+<p>Стоит заметить, что при помощи подобной организации системы вы сможете
+распараллелить ресурсоемкие вычисления. Особенно это удобно, когда вам
+необходимо обращаться к бизнес-логике написанной, например, на PHP. В
+завершении хочу добавить что полученная система очереди сообщений сильно
+направленная на реализацию поставленной передо мной задачи. Но я считаю,
+что вы без проблем сможете доработать код для реализации нужного вам
+функционала. Спасибо за внимание, буду рад ответить на возникшие
+вопросы.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

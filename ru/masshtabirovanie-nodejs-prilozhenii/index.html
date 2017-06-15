@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/masshtabirovanie-nodejs-prilozhenii/" rel="bookmark"
+         title="Permalink to Масштабирование Node.js приложений">Масштабирование Node.js приложений</a></h2>
+    <time class="published" datetime="2013-02-17T01:17:00+04:00">17 фев 2013</time>
+  </header>
+  <div class="entry-content">
+    <p>Все мы знаем, что node.js так популярен благодаря своей производительности. Он работает быстро благодаря разным факторам, таким как использование движка Google V8 и асинхронному i/o. Именно такая высокая производительность позволяет достаточно долго не задумываться о масштабировании приложения, т.к. даже один запущенный Node.js процесс может обслуживать сотни или даже тысячи запросов в секунду.</p>
+<p><img alt="postlogo" src="/media/2013/02/node-cluster.png"></p>
+<p>Изначально Node.js приложение работает в одном потоке и, соответственно, для обработки запросов используется только одно ядро процессора. Чтобы использовать весь потенциал многоядерных процессоров, необходимо запускать сразу несколько экземпляров приложения, а операционная система позаботится о том, чтобы каждый из них получил вычислительные ресурсы.</p>
+<p>Количество потоков лучше всего подбирать опытным путём. Изменяя количество потоков и проводя тестирование производительности. Чаще всего берут количество потоков равное количеству ядер процессора (или количество_ядер + 1).</p>
+<p>Сегодня мы рассмотрим: </p>
+<ul>
+<li>каким требованиям должно соответствовать приложение, чтобы успешно масштабироваться</li>
+<li>существующие npm-модули для масштабирования</li>
+<li>сторонние программные решения</li>
+</ul>
+<h2>Подготовка к масштабированию</h2>
+<p>Перед тем как приложение будет иметь возможность работать в несколько потоков, нужно решить одну очень важную проблему. А именно, проблему хранения сессий и других, зависимых от клиента, данных в промежутках между запросами.</p>
+<p>Когда приложение работает в одном потоке, всё предельно просто. Данные можно хранить в переменных процесса и они будут доступны при каждом запросе. Многие так и поступают в начале разработки и, например, используют массивы для хранения сессионных данных пользователей. </p>
+<p>Однако для работы приложения в многопоточном режиме, необходимо убедится в том что каждый процесс может обслужить любой пользовательский запрос. Т.е. все процессы должны быть равноправны и иметь доступ ко всей необходимой информации о пользователях и сессиях.</p>
+<p>Одним из простых способов решения данной проблемы является вынесение сессионных данных во внешнее хранилище (например: Memcached, Redis и тд.) и запрос необходимых данных в начале обработки каждого запроса. Эту схему можно изобразить следующим образом:</p>
+<p><img alt="loadbalancing" src="/media/2013/02/load-balancing.png"></p>
+<h2>Решения на Node.js</h2>
+<h3>cluster</h3>
+<p><a href="http://nodejs.org/api/cluster.html">Cluster</a> - это built-in модуль, позволяющий с лёгкостью запускать несколько процессов, которые делят между собой один порт. В данном случае балансировкой нагрузки занимается операционная система. На момент написания данного поста, модуль является экспериментальным, но мы всё же протестируем его в работе.</p>
+<p>В данном случае при запуске приложения необходимо сначала запустить master-процесс, который в свою очередь, запустит необходимое количество дочерних процессов:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cluster</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cluster&#39;</span><span class="p">);</span>
+
+<span class="nx">cluster</span><span class="p">.</span><span class="nx">setupMaster</span><span class="p">({</span><span class="nx">exec</span><span class="o">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/worker.js&#39;</span><span class="p">});</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">cluster</span><span class="p">.</span><span class="nx">fork</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="nx">cluster</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;exit&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">worker</span><span class="p">,</span> <span class="nx">code</span><span class="p">,</span> <span class="nx">signal</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;worker &#39;</span> <span class="o">+</span> <span class="nx">worker</span><span class="p">.</span><span class="nx">process</span><span class="p">.</span><span class="nx">pid</span> <span class="o">+</span> <span class="s1">&#39; died&#39;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+
+<p>Метод <code>setupMaster</code> принимает параметры в виде объекта. Например, параметр <code>exec</code> задаёт путь к файлу worker'а, который затем будет запускаться на выполнение.</p>
+<p>После начальной конфигурации master-север должен запустить необходимое количество рабочих процессов. Для этого используется метод <code>fork</code>.</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">cluster</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cluster&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">);</span>
+
+<span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s2">&quot;hello world\n&quot;</span><span class="p">);</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">7000</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Worker listen on 127.0.0.1:7000&quot;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Создание worker'а мало чем отличается от создания обычного web-сервера. В данном случае мы просто создаём http-сервер и заставляем его слушать 7000 порт.</p>
+<h3>cluster2</h3>
+<p>Cluster2 - модуль от сторонних разработчиков, расширяющий возможности стандартного модуля cluster. Модуль добавляет функции, которые позволяют использовать cluster в production окружении. Среди таких функций:</p>
+<ul>
+<li>перезапуск рабочих процессов</li>
+<li>таймаут простоя</li>
+<li>события для логирования</li>
+<li>осторожное завершение процессов и др</li>
+</ul>
+<p>Подробнее ознакомится с модулем можно на <a href="https://github.com/ql-io/cluster2">github</a>.</p>
+<h3>etc</h3>
+<p>Ещё несколько модулей:</p>
+<ul>
+<li><a href="https://github.com/fent/clusterhub">clusterhub</a> - an attempt at giving multi process node programs a simple and efficient way to share data</li>
+<li><a href="https://github.com/isaacs/cluster-master">cluster-master</a> - take advantage of node built-in cluster module behavior</li>
+<li><a href="https://npmjs.org/package/amino">amino</a> - clustering framework for Node.js</li>
+</ul>
+<h2>Сторонние программные решения</h2>
+<h3>HAProxy</h3>
+<p>HAProxy - это специализированное решение для балансировки нагрузок. Содержит огромное количество функций и используется во многих highload проектах. Рассмотрим пример простейшей конфигурации системы на HAProxy.</p>
+<p>Для начала необходимо скачать и установить HAProxy, например <a href="http://haproxy.1wt.eu/">с официального сайта</a>. После этого нужно создать конфигурационный файл:</p>
+<div class="highlight"><pre><span></span>global
+daemon
+maxconn 10000
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+frontend http-in
+    bind *:80
+    default_backend servers
+
+backend servers
+    balance roundrobin
+    server server1 127.0.0.1:8000
+    server server2 127.0.0.1:8001
+    server server3 127.0.0.1:8002
+    server server4 127.0.0.1:8003
+</pre></div>
+
+
+<p>Если коротко, то данный конфигурационный файл описывает, что HAProxy должен прослушивать 80 порт и перенаправлять каждый запрос на один из серверов, указанны в секции backend. При этом, какой именно сервер получит запрос определяется по алгоритму <a href="http://ru.wikipedia.org/wiki/Round-robin_(%D0%B0%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC)">round-robin</a>.</p>
+<p>Node.js приложение необходимо запустить на каждом из указанных портов. При этом какой-то особенной конфигурации приложения не требуется.</p>
+<p>HAProxy достаточно сложное решение и больше подходит для очень крупных проектов, где необходимо распределять нагрузку между большим количеством физических серверов или между целыми кластерами.</p>
+<h3>Nginx</h3>
+<p>Nginx позволяет описывать группы серверов в конфигурационных файлах и затем балансировать нагрузку между ними при помощи одного из нескольких алгоритмов. Есть возможность задания "веса" сервера, выделение отдельных серверов как резервных и др. </p>
+<p>Предположим у нас запущены 8 процессов нашего приложения. Каждый процесс слушает порт, первый процесс - 8000, второй - 8001, и тд. Рассмотрим простой пример конфигурации Nginx для балансировки нагрузки:</p>
+<div class="highlight"><pre><span></span><span class="k">upstream</span> <span class="s">backend</span> <span class="p">{</span>
+    <span class="kn">least_conn</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8000</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8001</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8002</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8003</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8004</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8005</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8006</span><span class="p">;</span>
+    <span class="kn">server</span> <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8007</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">server</span> <span class="p">{</span>
+    <span class="kn">listen</span> <span class="n">0.0.0.0</span><span class="p">:</span><span class="mi">80</span><span class="p">;</span>
+
+    <span class="kn">location</span> <span class="s">/</span> <span class="p">{</span>
+    <span class="kn">proxy_pass</span> <span class="s">http://backend</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Теперь Nginx будет принимать запросы на 80 порт и балансировать их между процессами приложения. При этом он будет стараться отдавать запрос тому процессу, который в данный момент меньше всего нагружен.</p>
+<h3>etc</h3>
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Round-robin_DNS">Round-robin DNS</a></li>
+<li><a href="http://www.apsis.ch/pound/">Pound</a> - reverse proxy, load balancer and HTTPS front-end for Web server(s)</li>
+<li><a href="https://github.com/perlbal/Perlbal">Perlbal</a> - Perl HTTP Load Balancer</li>
+</ul>
+<h2>Заключение</h2>
+<p>Какой именно способ выбрать зависит от конкретного случая. Мне кажется, для масштабирования в рамках одного сервера, лучше использовать модуль cluster (или его производные), т.к. это упрощает контроль за запущенными рабочими процессами. В случае если приложение требует вынести на несколько серверов, нужно просто создать несколько таких кластеров и настроить балансировку между ними при помощи Nginx или HAProxy.</p>
+<style type="text/css">
+img[alt=loadbalancing] {margin-left: 130px;}
+</style>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

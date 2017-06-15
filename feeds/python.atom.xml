@@ -1,351 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/python.atom.xml" rel="self"></link><id>/</id><updated>2015-01-16T23:30:00+03:00</updated><entry><title>Python wheels для быстрой установки зависимостей</title><link href="/python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/" rel="alternate"></link><updated>2015-01-16T23:30:00+03:00</updated><author><name>Admin</name></author><id>tag:,2015-01-16:python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/</id><summary type="html">&lt;p&gt;Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Python</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/python.atom.xml" rel="self"></link><id>/</id><updated>2017-06-14T16:47:00+03:00</updated><entry><title>Django project optimization guide (part 1)</title><link href="/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
+into performance problems. In this guide, I will try define …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
+into performance problems. In this guide, I will try define potential problems and how to fix them.&lt;/p&gt;
+&lt;p&gt;This is the first part of a series about Django performance optimization. It will cover profiling and Django settings.&lt;/p&gt;
+&lt;h2&gt;Profiling&lt;/h2&gt;
+&lt;p&gt;Before starting to make any optimizations you should measure current performance to be able to compare results of 
+optimizations. And you should be able to measure performance regularly after each change, so this process should be
+automatized.&lt;/p&gt;
+&lt;p&gt;Profiling is a process of measurement metrics of your project. Such as server response time, CPU usage, memory usage, etc.
+Python has its own &lt;a href="https://docs.python.org/3/library/profile.html"&gt;profiler&lt;/a&gt; in the standard library. It works pretty
+good in profiling code chunks, but for profiling a whole Django project more convenient solutions exist.&lt;/p&gt;
+&lt;h3&gt;Django logging&lt;/h3&gt;
+&lt;p&gt;One of the most common optimization issues are needles and/or inefficient SQL queries. You could set up Django
+logging to display all SQL queries into the console. Add to &lt;code&gt;settings.py&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;LOGGING&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;version&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;disable_existing_loggers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;handlers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;console&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;class&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;logging.StreamHandler&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;loggers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;django.db.backends&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;level&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;DEBUG&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;handlers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;console&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;also, make sure that &lt;code&gt;DEBUG = True&lt;/code&gt;. After reloading server, you should see SQL queries and corresponding time
+in the console for every request you make:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;002&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_type_id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;LEFT&lt;/span&gt; &lt;span class="k"&gt;OUTER&lt;/span&gt; &lt;span class="k"&gt;JOIN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ON&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;color_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;color_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;row&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_type_id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;LEFT&lt;/span&gt; &lt;span class="k"&gt;OUTER&lt;/span&gt; &lt;span class="k"&gt;JOIN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ON&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;000&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;season&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;season&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;000&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;state&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;state&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;002&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;MAX&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;__col1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="k"&gt;MIN&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;__col2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;Col1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;x_order&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;price_sell&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;__col1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;price_sell&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;__col2&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;GROUP&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;subquery&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;COUNT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;Col1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;x_order&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;GROUP&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;subquery&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;Jun&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;2017&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;03&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;49&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;GET /goods HTTP/1.0&amp;quot;&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt; &lt;span class="mi"&gt;32583&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;Django Debug Toolbar&lt;/h3&gt;
+&lt;p&gt;&lt;a href="http://django-debug-toolbar.readthedocs.io/en/stable/"&gt;This&lt;/a&gt; Django application provides a set of toolbars, some of
+them are great for profiling. Actually, it has built-in SQL panel, that has even more informative log of SQL queries
+with additional features, like time chart, traceback, a result of &lt;code&gt;EXPLAIN&lt;/code&gt; command, etc.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT" src="/media/2017/6/ddt.png"&gt;&lt;/p&gt;
+&lt;p&gt;Also, DDT has non-default built-in profiling panel. It provides a web interface to profiling results of the current request.
+To enable it, you should add &lt;code&gt;debug_toolbar.panels.profiling.ProfilingPanel&lt;/code&gt; to &lt;code&gt;DEBUG_TOOLBAR_PANELS&lt;/code&gt; list in `settings.py.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"&gt;&lt;/p&gt;
+&lt;h3&gt;Profiling data&lt;/h3&gt;
+&lt;p&gt;It's very important to use production-like data for profiling. Ideally, you should grab a dump from the production database and use it
+on your local machine. If you try to measure performance on an empty/small database you can receive wrong results, that don't
+help you to optimize project correctly.&lt;/p&gt;
+&lt;h2&gt;Load testing&lt;/h2&gt;
+&lt;p&gt;After optimizations, you should perform load testing to make sure that performance is on sufficient level to work on production
+load. For this type of testing, you need to setup copy of your production environment. Fortunately, cloud services and
+deploy automation allow us to make such setup in a minute.&lt;/p&gt;
+&lt;p&gt;I recommend using &lt;a href="http://locust.io/"&gt;Locust&lt;/a&gt; for load testing. Its main feature is that you can describe all your
+tests in plain Python code. You can set up sophisticated load scenarios that would be close to real users behavior.
+The example of &lt;code&gt;locustfile.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;locust&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;HttpLocust&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TaskSet&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt;
+
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UserBehavior&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;TaskSet&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;on_start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot; on_start is called when a Locust start before any task is scheduled &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/login&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;username&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;ellen_key&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;password&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;education&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/profile&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;WebsiteUser&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HttpLocust&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;task_set&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;UserBehavior&lt;/span&gt;
+    &lt;span class="n"&gt;min_wait&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;5000&lt;/span&gt;
+    &lt;span class="n"&gt;max_wait&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;9000&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Also, Locust provide web-interface to run tests and see results:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Locust web interface" src="/media/2017/6/locust-screenshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;Best thing, that you can setup Locust once and use it to verify project performance after every change. Maybe you could even
+add it to your CI/CD pipeline!&lt;/p&gt;
+&lt;h2&gt;Django settings&lt;/h2&gt;
+&lt;p&gt;In this section I will describe Django settings, that may affect the performance.&lt;/p&gt;
+&lt;h3&gt;Database connection lifetime&lt;/h3&gt;
+&lt;p&gt;By default, Django closes the database connection at the end of each request. You could setup TTL of a database
+connection by changing &lt;a href="https://docs.djangoproject.com/en/1.11/ref/settings/#conn-max-age"&gt;&lt;code&gt;CONN_MAX_AGE&lt;/code&gt;&lt;/a&gt; value:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;производительность - каждый раз необходима скачивать и собирать пакеты что занимает большое количество времени&lt;/li&gt;
-&lt;li&gt;работа в оффлайн режиме - без подключения к интернету не получится установить зависимости&lt;/li&gt;
-&lt;li&gt;стабильность - установка зависимостей невозможна в случае:&lt;ul&gt;
-&lt;li&gt;неполадок на стороне PyPI&lt;/li&gt;
-&lt;li&gt;неполадок на стороне VCS (GitHub, Bitbucket, etc)&lt;/li&gt;
-&lt;li&gt;нарушения зависимостей (удаление репозитория с Github, удаление пакета из PyPI и тд)&lt;/li&gt;
-&lt;li&gt;неполадок у хостинг провайдера, которые могут привести к недоступности необходимых сетевых ресурсов (PyPI, VSC, etc)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0&lt;/code&gt; - close connection at the end of each request,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;gt; 0&lt;/code&gt; - TTL in seconds,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;None&lt;/code&gt; - unlimited TTL.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Для решения этой проблемы предлагается использование заранее подготовленных пакетов wheel для всех зависимостей и хранение их в репозитории системы.&lt;/p&gt;
-&lt;h2 id="wheel"&gt;Создаем архив wheel пакетов&lt;/h2&gt;
-&lt;p&gt;Wheel - это современный формат распространения пакетов в Python среде, который пришел на замену eggs. Рассмотрим процесс создания архива wheel для всех зависимостей системы. &lt;/p&gt;
-&lt;p&gt;Представим типичный Python проект с файлом requirements.txt содержащим зависимости. Пример файла &lt;code&gt;requirements.txt&lt;/code&gt;:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;svgwrite==1.1.6
-ipython==2.3.0
-flask==0.10.1
-flask-mongoengine==0.7.1
-flask-uploads==0.1.3
--e git://github.com/Samael500/flask-principal.git@dab7f391f0eeb76a25fa1b3dae7308a0924c8a12#egg=flask-principal
--e git://github.com/Samael500/flask-security.git@f1042b5db67147b8ddaa8b767b2dfe063bb56ffa#egg=flask-security
-Flask-Admin==1.0.8
-Flask-Session==0.1.1
-Flask-Script==2.0.5
-gunicorn==19.1.1
-Flask-Testing==0.4.2
-tornado==4.0.2
-nose==1.3.4
-pep8==1.5.7
-Pillow==2.6.1
-pyflakes==0.8.1
-pylama==6.1.1
-spec==0.11.1
-py-bcrypt==0.4
-WTForms==1.0.4
-blessings==1.6
-beautifulsoup4==4.3.2
-lxml==3.4.1
--e git://github.com/Samael500/jinja-assets-compressor.git@8e1639cec6f8b347794fe1334519daacc6b763b0#egg=jac
-PyYAML==3.10
-&lt;/code&gt;&lt;/pre&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;DATABASES&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s1"&gt;&amp;#39;default&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;ENGINE&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;django.db.backends.postgresql&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;NAME&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;mydatabase&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;USER&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;mydatabaseuser&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;PASSWORD&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;mypassword&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;HOST&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;PORT&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;5432&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;CONN_MAX_AGE&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;  &lt;span class="c1"&gt;# 10 minutes&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;В нашем файле &lt;code&gt;requirements.txt&lt;/code&gt; есть зависимости из внешних ресурсов (не PyPI), которые предполагают загрузку пакетов из VCS (в данном случае из git репозиториев на Github). Скопируем старый &lt;code&gt;requirements.txt&lt;/code&gt; в &lt;code&gt;requirements-remote.txt&lt;/code&gt;, а в &lt;code&gt;requirements.txt&lt;/code&gt; заменим внешние ресурсы на обычные пакеты из PyPI и получим:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;svgwrite==1.1.6
-ipython==2.3.0
-flask==0.10.1
-flask-mongoengine==0.7.1
-flask-uploads==0.1.3
-flask-principal
-flask-security
-Flask-Admin==1.0.8
-Flask-Session==0.1.1
-Flask-Script==2.0.5
-gunicorn==19.1.1
-Flask-Testing==0.4.2
-tornado==4.0.2
-nose==1.3.4
-pep8==1.5.7
-Pillow==2.6.1
-pyflakes==0.8.1
-pylama==6.1.1
-spec==0.11.1
-py-bcrypt==0.4
-WTForms==1.0.4
-blessings==1.6
-beautifulsoup4==4.3.2
-lxml==3.4.1
-jac
-PyYAML==3.10
-&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Это делается для того, чтобы при установке из архива wheel пакетов не происходили запросы к внешним VCS, а брались локальные wheel, которые мы сейчас будем генерировать.&lt;/p&gt;
-&lt;p&gt;Cоздаем и активируем &lt;code&gt;venv&lt;/code&gt;:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;pyvenv venv
-. venv/bin/activate
-&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Templates caching&lt;/h3&gt;
+&lt;p&gt;If you use Django version less than 1.11, you should consider enabling templates caching. By default Django (&amp;lt;1.11) reads
+from the file system and compiles templates every time they're rendered. You could use &lt;code&gt;django.template.loaders.cached.Loader&lt;/code&gt;
+to enable templates caching in memory. Add to &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;TEMPLATES&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;BACKEND&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;django.template.backends.django.DjangoTemplates&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;DIRS&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;BASE_DIR&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;OPTIONS&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="c1"&gt;# ...&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;loaders&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;django.template.loaders.cached.Loader&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;django.template.loaders.filesystem.Loader&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                    &lt;span class="s1"&gt;&amp;#39;django.template.loaders.app_directories.Loader&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="p"&gt;]),&lt;/span&gt;
+            &lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Устанавливаем все пакеты как обычно, но из &lt;code&gt;requirements-remote.txt&lt;/code&gt;:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;pip install -r requirements-remote.txt
-&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Сгенерируем архив всех пакетов PyPI, всех их зависимостей и всех зависимостей внешних пакетов (VCS). Для этого нам потребуется свежая версия &lt;code&gt;pip&lt;/code&gt; и пакет &lt;code&gt;wheel&lt;/code&gt;:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;pip install -U pip
-pip install wheel
-mkdir wheels
-pip wheel -w wheels/ -r requirements-remote.txt --pre --allow-all-external
-&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;Redis cache backend&lt;/h3&gt;
+&lt;p&gt;Django provides several built-in cache backends, such as database backend, file based backend, etc. I recommend to store
+your cache in Redis. Redis is a popular in-memory data structure store, probably you already use it in your project.
+To set up Redis as cache backend you need to use third-party package, e.g. &lt;code&gt;django-redis&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Install django-redis with pip:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip install django-redis
+&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;После этого получаем архив wheel пакетов для всех зависимостей кроме внешних (VCS). Для внешних пакетов устанавливаемых из исходников необходимо сгенерировать пакеты вручную при помощи &lt;code&gt;setup.py bdist_wheel&lt;/code&gt;:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;cd venv/src/flask-principal
-python setup.py bdist_wheel --dist-dir ../../../wheels/
-cd ../flask-security
-python setup.py bdist_wheel --dist-dir ../../../wheels/
-cd ../jac
-python setup.py bdist_wheel --dist-dir ../../../wheels/
-&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Теперь в директории &lt;code&gt;wheels&lt;/code&gt; есть все необходимые пакеты для установки всех зависимостей системы. Процесс уставновки зависимостей из локального архива пакетов выполняется так:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;pip install --no-index -f wheels/ -r requirements.txt
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Add cache settings to &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHES&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s2"&gt;&amp;quot;default&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s2"&gt;&amp;quot;BACKEND&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;django_redis.cache.RedisCache&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s2"&gt;&amp;quot;LOCATION&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;redis://127.0.0.1:6379/1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s2"&gt;&amp;quot;OPTIONS&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="s2"&gt;&amp;quot;CLIENT_CLASS&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;django_redis.client.DefaultClient&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;обратите внимание, что используется файл &lt;code&gt;requirements.txt&lt;/code&gt;, а не &lt;code&gt;requirements-remote.txt&lt;/code&gt;.&lt;/p&gt;
-&lt;h2 id="_1"&gt;Тестирование скорости установки&lt;/h2&gt;
-&lt;p&gt;Обычная установка со скачиванием пакетов из PyPI и VCS:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;time pip install -r requirements-remote.txt
-real    4m20.655s
-user    1m31.242s
-sys 0m55.539s
-&lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Установка из локального архива wheels:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;time pip install --no-index -f wheels/ -r requirements.txt
-real    1m3.412s
-user    0m4.808s
-sys 0m31.210s
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Read full documentation &lt;a href="http://niwinz.github.io/django-redis/latest/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Sessions backend&lt;/h3&gt;
+&lt;p&gt;By default Django stores sessions in a database. To speed up this we can store sessions in a cache. Add to &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;SESSION_ENGINE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;django.contrib.sessions.backends.cache&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;SESSION_CACHE_ALIAS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;default&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Из результатов можно сделать вывод, что время установки пакетов из локального архива в нашем случае меньше в 4 раза.
-Что логично, т.к. пакеты заново не скачиваются из интернета и не компилируются.&lt;/p&gt;
-&lt;h2 id="_2"&gt;Бонус&lt;/h2&gt;
-&lt;p&gt;Для удобства написал &lt;a href="https://gist.github.com/dizballanze/070434f4eb3b5febae39"&gt;небольшой скрипт&lt;/a&gt;, автоматизирующий сборку пакетов установленных из исходников.&lt;/p&gt;
-&lt;script src="https://gist.github.com/dizballanze/070434f4eb3b5febae39.js"&gt;&lt;/script&gt;
 
-&lt;p&gt;Пример использования скрипта:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;python build_wheels --sources-dir venv/src/ --wheels-dir wheels/
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Скрипт пройдется по всем поддиректориям &lt;code&gt;venv/src/&lt;/code&gt; и в каждой из них попробует собрать пакет в директорию &lt;code&gt;wheels/&lt;/code&gt;.&lt;/p&gt;</summary><category term="pip"></category><category term="wheels"></category><category term="dev tools"></category></entry><entry><title>Настраиваем dev-сервер для удобной разработки на django</title><link href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/" rel="alternate"></link><updated>2012-12-22T22:55:00+04:00</updated><author><name>Admin</name></author><id>tag:,2012-12-22:python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/</id><summary type="html">&lt;p&gt;При разработке не хочется тратить время, которого и так не хватает, на
-рутинные действия. После каждой отправки изменений в репозиторий,
-необходимо выполнить обновление кода на dev-сервере, применить миграции
-и тд. Сегодня мы рассмотрим, как быстро настроить автоматический deploy
-django-приложения на dev-сервер. Я рассмотрю максимально простое
-решение, которое подойдет для небольших проектов.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="image" src="/media/2012/12/FotoFlexer_Photo.jpg" /&gt;&lt;/p&gt;
-&lt;h2 id="_1"&gt;Требования к процессу&lt;/h2&gt;
-&lt;p&gt;Итак, давайте определимся какие именно действия необходимо
-автоматизировать:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;подгрузка изменений из репозитория&lt;/li&gt;
-&lt;li&gt;Установка зависимостей&lt;/li&gt;
-&lt;li&gt;Применение миграций&lt;/li&gt;
-&lt;li&gt;Перезагрузка web-сервера&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id="post-receive-hooks"&gt;Post-Receive Hooks&lt;/h2&gt;
-&lt;p&gt;Необходимо каким-то образом отлавливать событие, когда пользователь
-выполняет git push и запускать git pull на dev-сервере. Чаще всего я
-использую github в качестве хостинга для git-репозиториев. Github
-предоставляет возможность отправки POST-запроса на удаленный сервер,
-после того как был получен push-запрос. Для этого необходимо прописать
-url в настройках репозитория:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://help.github.com/articles/post-receive-hooks"&gt;GitHub&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management"&gt;Bitbucket&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3 id="_2"&gt;Обработчик запросов&lt;/h3&gt;
-&lt;p&gt;Как настроить отправку запросов мы узнали, теперь необходимо реализовать
-обработчик запросов. Можно обрабатывать запросы в самом приложении или
-отдельно, вот небольшой пример на node.js:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::javascript
-http = require('http')
-var exec = require('child_process').exec
-  , child;
-server = http.createServer(function(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end();
-    child = exec('/path/to/project/deploy.sh', function(error, out, err){
-        if (error) console.error(error);
-    });
-}).listen(8000, '0.0.0.0');
-console.log('Git monitor server is running at 0.0.0.0:8000');
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Здесь, при поступлении любого запроса, просто выполняется bash скрипт.
-При желании можно добавить дополнительные действия, например логировать
-запросы или добавить валидацию, чтобы запрос мог поступать только с
-определенных серверов.&lt;/p&gt;
-&lt;p&gt;Далее просто нужно добавить адрес, на котором весит наш демон, в
-настройках github/bitbucket.&lt;/p&gt;
-&lt;h2 id="_3"&gt;Применяем изменения&lt;/h2&gt;
-&lt;p&gt;В обработчике запросов мы выполняем bash скрипт. Рассмотрим пример того,
-что может содержать такой скрипт:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-#!/bin/bash
-cd /path/to/project/dir
-# update code
-git pull
-# activate virtualenv
-source ../bin/activate
-# install new packages with pip
-pip install -r ./requirements.txt
-# Sync db changes
-app/manage.py syncdb
-app/manage.py migrate --all --merge
-# kill runserver
-killall python
-nohup app/manage.py 
-runserver 0.0.0.0:9000 &amp;amp;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Итак, что здесь происходит:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Переходим в директорию проекта&lt;/li&gt;
-&lt;li&gt;Выполняем загрузку изменений с репозитория&lt;/li&gt;
-&lt;li&gt;Активируем virtualenv (я надеюсь вы его используете :))&lt;/li&gt;
-&lt;li&gt;Устанавливаем новые пакеты&lt;/li&gt;
-&lt;li&gt;Применяем миграции south&lt;/li&gt;
-&lt;li&gt;Перезапускаем web-сервер&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Здесь все достаточно просто, рассмотрим только как осуществляется
-управление пакетами. При установке нового пакета необходимо добавить его
-в текстовый файл. Создать такой файл можно автоматически при помощи
-следующей команды:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::text
-pip freeze &amp;gt; requirements.txt
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Данная команда сформирует список всех установленных пакетов и также
-укажет их версии. Вот пример сгенерированного файла:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::text
-Django==1.4.2
-PIL==1.1.7
-South==0.7.6
-argparse==1.2.1
-lxml==3.0.1
-....
-mongoengine==0.7.5
-psycopg2==2.4.5
-pymongo==2.3
-python-dateutil==2.1
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;При выполнении нашего bash-скрипта будет вызвана команда:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::text
-pip install -r ./requirements.txt
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Это приведет к установке всех пакетов, из списка в файле, которые ещё
-небыли установлены.&lt;/p&gt;
-&lt;p&gt;Конечно, в зависимости от ваших потребностей, могут понадобится
-дополнительные действия, например трансляция CoffeeScript, Compass или
-выполнение тестов. Добавить новые команды в скрипт, я думаю, не составит
-трудностей :)&lt;/p&gt;
-&lt;h2 id="nginx"&gt;Настройка Nginx&lt;/h2&gt;
-&lt;p&gt;Для того, чтобы перенаправлять запросы с 80 порта на runserver я
-использую nginx (ну не запускать же runserver от root'а :)). Пример
-конфигурации nginx:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::nginx
-user www-data;
-worker_processes 4;
-pid /var/run/nginx.pid;
-
-events {
-    worker_connections 768;
-}
-
-http {
-
-    ##
-    # Basic Settings
-    ##
-
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    ##
-    # Logging Settings
-    ##
-
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
-
-    ##
-    # Proxy Settings
-    ##
-    server {
-        listen *:80;
-
-        location / {
-            proxy_pass  http://localhost:9000;
-            proxy_set_header    Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;На этом все, пишите в комментариях, если я что-то упустил.&lt;/p&gt;</summary><category term="bitbucket"></category><category term="django"></category><category term="git"></category><category term="github"></category><category term="nginx"></category><category term="nodejs"></category><category term="pip"></category><category term="python"></category><category term="south"></category></entry><entry><title>Python 2.7 в Debian 6 Squeeze</title><link href="/python/python-27-v-debian-6-squeeze/" rel="alternate"></link><updated>2012-07-22T09:26:00+04:00</updated><author><name>Admin</name></author><id>tag:,2012-07-22:python/python-27-v-debian-6-squeeze/</id><summary type="html">&lt;p&gt;&lt;img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo" /&gt;&lt;/p&gt;
-&lt;p&gt;Приветствую! На данный момент в stable репозитарии Debian squeeze лежит
-python 2.6.6. Однако, последней (на момент написания поста) стабильной
-версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
-несколько версий python и использовать их независимо.&lt;/p&gt;
-&lt;h2 id="python-273"&gt;Устанавливаем Python 2.7.3&lt;/h2&gt;
-&lt;p&gt;Скомпилируем python 2.7.3 из исходников. Стянуть последнюю версию можно
-&lt;a href="http://www.python.org/download/releases/"&gt;здесь&lt;/a&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-cd /tmp
-wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
-tar xvzf Python-2.7.3.tgz
-cd Python-2.7.3
-./configure --prefix=/usr/local/python-2.7.3
-make &amp;amp;&amp;amp; make install
-ln -s /usr/local/python-2.7.3/bin/python2.7 /usr/bin/python2.7.3
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;После этого можем проверить что все работает:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-python2.7.3 
-Python 2.7.3 (default, Jul 22 2012, 10:05:02) 
-[GCC 4.4.5] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
-&amp;gt;&amp;gt;&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h2 id="virtualenv"&gt;Используем virtualenv&lt;/h2&gt;
-&lt;p&gt;Для того чтобы обеспечить удобную работу с несколькими версиями python
-воспользуемся утилитой virtualenv. Сначала скачиваем скрипт:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-cd /home/dizballanze
-mkdir apps
-cd apps
-wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Теперь нам нужно выполнить скрипт с использованием нужной версии python:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-mkdir test_app
-cd test_app
-python2.7.3 ../virtualenv.py venv
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Таким образом мы успешно добавили виртуальное окружение. В текущей
-директории должна появится директория с названием venv (второй
-параметр). Для того чтобы активировать окружение выполните:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-source venv/bin/activate
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Сразу после этого должна изменится строка ввода в терминале следующим
-образом:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-(venv)dizballanze@dizballanze-desktop:~/apps/test
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Что означает, что мы находимся в окружении с названием venv. Проверим
-версию python:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;:::bash
-python --version
-Python 2.7.3
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Таким образом можно установить любое количество версий Python на одной
-машине и при этом использовать их независимо. Более того, активировав
-virtualenv все устанавливаемые через pip пакеты будут хранится в
-директории с файлами venv и не будут взаимодействовать с другими
-проектами, которые находятся в других окружениях.&lt;/p&gt;</summary><category term="python"></category><category term="virtualenv"></category></entry></feed>
+&lt;h3&gt;Remove unneeded middlewares&lt;/h3&gt;
+&lt;p&gt;Check the list of middlewares (&lt;code&gt;MIDDLEWARE&lt;/code&gt; in &lt;code&gt;settings.py&lt;/code&gt;). Make sure you need all of them and remove unneeded.
+Django calls each middleware for each processed request, so there can be significant overhead.&lt;/p&gt;
+&lt;p&gt;If you have custom middleware, that is used only in the segment of requests, you could try to move this functionality
+to view mixin or decorator. So other endpoints will not have an overhead of this middleware.&lt;/p&gt;</content><category term="python"></category><category term="django"></category><category term="performance"></category><category term="load testing"></category></entry></feed>

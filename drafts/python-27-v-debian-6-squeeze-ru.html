@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/python-27-v-debian-6-squeeze-ru.html" rel="bookmark"
+         title="Permalink to Python 2.7 в Debian 6 Squeeze">Python 2.7 в Debian 6 Squeeze</a></h2>
+    <time class="published" datetime="2012-07-22T09:26:00+04:00">22 июл 2012</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo"></p>
+<p>Приветствую! На данный момент в stable репозитарии Debian squeeze лежит
+python 2.6.6. Однако, последней (на момент написания поста) стабильной
+версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
+несколько версий python и использовать их независимо.</p>
+<h2>Устанавливаем Python 2.7.3</h2>
+<p>Скомпилируем python 2.7.3 из исходников. Стянуть последнюю версию можно
+<a href="http://www.python.org/download/releases/">здесь</a>.</p>
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /tmp
+wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
+tar xvzf Python-2.7.3.tgz
+<span class="nb">cd</span> Python-2.7.3
+./configure --prefix<span class="o">=</span>/usr/local/python-2.7.3
+make <span class="o">&amp;&amp;</span> make install
+ln -s /usr/local/python-2.7.3/bin/python2.7 /usr/bin/python2.7.3
+</pre></div>
+
+
+<p>После этого можем проверить что все работает:</p>
+<div class="highlight"><pre><span></span>python2.7.3 
+Python <span class="m">2</span>.7.3 <span class="o">(</span>default, Jul <span class="m">22</span> <span class="m">2012</span>, <span class="m">10</span>:05:02<span class="o">)</span> 
+<span class="o">[</span>GCC <span class="m">4</span>.4.5<span class="o">]</span> on linux2
+Type <span class="s2">&quot;help&quot;</span>, <span class="s2">&quot;copyright&quot;</span>, <span class="s2">&quot;credits&quot;</span> or <span class="s2">&quot;license&quot;</span> <span class="k">for</span> more information.
+&gt;&gt;&gt;
+</pre></div>
+
+
+<h2>Используем virtualenv</h2>
+<p>Для того чтобы обеспечить удобную работу с несколькими версиями python
+воспользуемся утилитой virtualenv. Сначала скачиваем скрипт:</p>
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /home/dizballanze
+mkdir apps
+<span class="nb">cd</span> apps
+wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
+</pre></div>
+
+
+<p>Теперь нам нужно выполнить скрипт с использованием нужной версии python:</p>
+<div class="highlight"><pre><span></span>mkdir test_app
+<span class="nb">cd</span> test_app
+python2.7.3 ../virtualenv.py venv
+</pre></div>
+
+
+<p>Таким образом мы успешно добавили виртуальное окружение. В текущей
+директории должна появится директория с названием venv (второй
+параметр). Для того чтобы активировать окружение выполните:</p>
+<div class="highlight"><pre><span></span><span class="nb">source</span> venv/bin/activate
+</pre></div>
+
+
+<p>Сразу после этого должна изменится строка ввода в терминале следующим
+образом:</p>
+<div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span>dizballanze@dizballanze-desktop:~/apps/test
+</pre></div>
+
+
+<p>Что означает, что мы находимся в окружении с названием venv. Проверим
+версию python:</p>
+<div class="highlight"><pre><span></span>python --version
+Python <span class="m">2</span>.7.3
+</pre></div>
+
+
+<p>Таким образом можно установить любое количество версий Python на одной
+машине и при этом использовать их независимо. Более того, активировав
+virtualenv все устанавливаемые через pip пакеты будут хранится в
+директории с файлами venv и не будут взаимодействовать с другими
+проектами, которые находятся в других окружениях.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

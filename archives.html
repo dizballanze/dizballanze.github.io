@@ -1,210 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-        <title>Tech blog by @dizballanze</title>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" href="/theme/css/app.css" type="text/css" />
-        <link href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Tech blog by @dizballanze Atom Feed" />
-        <link href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate" title="Tech blog by @dizballanze RSS Feed" />
-        <link href="/static/icons/favicon.ico" rel="icon" type="image/x-icon" />
-        <link href="/static/icons/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-        
-        <!--[if IE]>
-                <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
 
-        <!--[if lte IE 7]>
-                <link rel="stylesheet" type="text/css" media="all" href="/css/ie.css"/>
-                <script src="/js/IE8.js" type="text/javascript"></script><![endif]-->
-
-        <!--[if lt IE 7]>
-                <link rel="stylesheet" type="text/css" media="all" href="/css/ie6.css"/><![endif]-->
-
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
 </head>
-
 <body id="index" class="home">
-
-<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/ru_RU/all.js#xfbml=1&appId=143995599087385";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-
-<a href="https://github.com/dizballanze">
-<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
-</a>
         <header id="banner" class="body">
-                <h1><a href="/">Tech blog by @dizballanze </a></h1>
-                <nav><ul>
-                    <li><a href="/автор/">Автор</a></li>
-                    <li ><a href="/category/bd.html">БД</a></li>
-                    <li ><a href="/category/drugoe.html">Другое</a></li>
-                    <li ><a href="/category/linux.html">Linux</a></li>
-                    <li ><a href="/category/nodejs.html">Node.js</a></li>
-                    <li ><a href="/category/python.html">Python</a></li>
-                </ul></nav>
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
         </header><!-- /#banner -->
-<section id="content" class="body">
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
 <h1>Archives for Tech blog by @dizballanze</h1>
 
 <dl>
-    <dt>пн 08 июня 2015</dt>
-    <dd><a href="/drugoe/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/">Применение Nginx + Lua для обработки контактной формы</a></dd>
-    <dt>пн 23 марта 2015</dt>
-    <dd><a href="/drugoe/frontend-and-backend-collaboration/">Эффективная совместная работа backend и frontend команд</a></dd>
-    <dt>пт 16 января 2015</dt>
-    <dd><a href="/python/python-wheels-dlia-bystroi-ustanovki-zavisimostei/">Python wheels для быстрой установки зависимостей</a></dd>
-    <dt>чт 17 апреля 2014</dt>
-    <dd><a href="/linux/nginx-kak-smtp-proxy-server/">Nginx как SMTP proxy-сервер</a></dd>
-    <dt>сб 15 марта 2014</dt>
-    <dd><a href="/nodejs/servernaia-arkhitektura-debugmail/">Серверная архитектура DebugMail</a></dd>
-    <dt>пт 19 апреля 2013</dt>
-    <dd><a href="/nodejs/ispolzuem-sessiiu-express-v-socketio/">Используем сессию express в socket.io</a></dd>
-    <dt>вс 17 февраля 2013</dt>
-    <dd><a href="/nodejs/masshtabirovanie-nodejs-prilozhenii/">Масштабирование Node.js приложений</a></dd>
-    <dt>сб 19 января 2013</dt>
-    <dd><a href="/nodejs/coffeescript-nodejs-dev-server/">CoffeeScript & node.js dev-сервер</a></dd>
-    <dt>пт 04 января 2013</dt>
-    <dd><a href="/nodejs/ispolzuem-npm-dlia-upravleniia-zavisimostiami/">Используем npm для управления зависимостями</a></dd>
-    <dt>ср 02 января 2013</dt>
-    <dd><a href="/nodejs/nasledovanie-svoistv-modelei-v-mongoose/">Наследование свойств моделей в Mongoose</a></dd>
-    <dt>сб 22 декабря 2012</dt>
-    <dd><a href="/python/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/">Настраиваем dev-сервер для удобной разработки на django</a></dd>
-    <dt>вс 22 июля 2012</dt>
-    <dd><a href="/python/python-27-v-debian-6-squeeze/">Python 2.7 в Debian 6 Squeeze</a></dd>
-    <dt>ср 04 апреля 2012</dt>
-    <dd><a href="/drugoe/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/">Функциональное тестирование Yii приложений с Selenium</a></dd>
-    <dt>ср 14 марта 2012</dt>
-    <dd><a href="/linux/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/">Используем ab для тестирования производительности web-приложения</a></dd>
-    <dt>чт 08 марта 2012</dt>
-    <dd><a href="/drugoe/yii-selenium-na-debian-6/">Yii + Selenium на debian 6</a></dd>
-    <dt>ср 29 февраля 2012</dt>
-    <dd><a href="/drugoe/codeception-problema-s-russkimi-simvolami-v-utf-8/">Codeception проблема с русскими символами в utf-8</a></dd>
-    <dt>пт 24 февраля 2012</dt>
-    <dd><a href="/drugoe/uskoriaem-obrabotku-izobrazhenii/">Ускоряем обработку изображений</a></dd>
-    <dt>ср 08 февраля 2012</dt>
-    <dd><a href="/drugoe/poluchaem-http-zagolovki-zaprosa-v-php/">Получаем HTTP-заголовки запроса в PHP</a></dd>
-    <dt>вс 01 января 2012</dt>
-    <dd><a href="/drugoe/multiple-select-v-php/">Multiple select в PHP</a></dd>
-    <dt>ср 09 ноября 2011</dt>
-    <dd><a href="/drugoe/sphinx-поиск-по-префиксам/">Sphinx - поиск по префиксам</a></dd>
-    <dt>пт 21 октября 2011</dt>
-    <dd><a href="/linux/geoip-sredstvami-nginx/">GeoIP средствами Nginx</a></dd>
-    <dt>чт 13 октября 2011</dt>
-    <dd><a href="/drugoe/zend-framework-day/">Zend Framework Day</a></dd>
-    <dt>пт 07 октября 2011</dt>
-    <dd><a href="/nodejs/ochered-soobshchenii-na-nodejs-i-memcacheq/">Очередь сообщений на node.js и memcacheq</a></dd>
-    <dt>сб 02 июля 2011</dt>
-    <dd><a href="/nodejs/khranilishcha-dannykh-v-nodejs-memcachedb/">Хранилища данных в Node.JS. Memcachedb</a></dd>
-    <dt>вт 28 июня 2011</dt>
-    <dd><a href="/drugoe/opredeliaem-poiskovyi-zapros-sredstvami-js/">Определяем поисковый запрос средствами JS</a></dd>
-    <dt>ср 22 июня 2011</dt>
-    <dd><a href="/drugoe/praktikum-zend-framework-chast-tretiazend_acl/">Практикум Zend Framework. Часть третья:Zend_Acl</a></dd>
-    <dt>вс 12 июня 2011</dt>
-    <dd><a href="/drugoe/praktikum-zend-framework-chast-vtoraia-route-i-registry/">Практикум Zend Framework. Часть вторая: Route и Registry</a></dd>
-    <dt>пт 10 июня 2011</dt>
-    <dd><a href="/drugoe/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/">Практикум Zend Framework. Часть первая: Аутентификация и Acl</a></dd>
-    <dt>вт 07 июня 2011</dt>
-    <dd><a href="/linux/ochistka-proekta-ot-sluzhebnykh-failov-subversion/">Очистка проекта от служебных файлов subversion</a></dd>
-    <dt>пн 06 июня 2011</dt>
-    <dd><a href="/drugoe/php-klass-dlia-raboty-s-typografru/">PHP-класс для работы с typograf.ru</a></dd>
-    <dt>пт 03 июня 2011</dt>
-    <dd><a href="/drugoe/problema-s-keshem-facebook-i-url/">Проблема с кэшем facebook и url</a></dd>
-    <dt>вт 31 мая 2011</dt>
-    <dd><a href="/linux/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/">Быстрое добавление виртуальных хостов Apache в Ubuntu/Debian</a></dd>
-    <dt>вс 22 мая 2011</dt>
-    <dd><a href="/drugoe/kak-ne-nado-razrabatyvat-na-zend-framework/">Как НЕ надо разрабатывать на Zend Framework</a></dd>
-    <dt>вс 10 апреля 2011</dt>
-    <dd><a href="/nodejs/web-chat-polling-na-nodejs/">Web-чат polling на Node.JS</a></dd>
-    <dt>пн 28 марта 2011</dt>
-    <dd><a href="/nodejs/nodejs-mysql/">Node.JS + MySQL</a></dd>
-    <dt>вс 13 марта 2011</dt>
-    <dd><a href="/drugoe/testiruem-proizvoditelnost-konstruktsii-iazyka-php/">Тестируем производительность конструкций языка PHP</a></dd>
-    <dt>пн 07 марта 2011</dt>
-    <dd><a href="/drugoe/special-case-osobyi-sluchai/">Special Case (особый случай)</a></dd>
-    <dt>пн 28 февраля 2011</dt>
-    <dd><a href="/drugoe/registry-reestr/">Registry (реестр)</a></dd>
-    <dt>чт 24 февраля 2011</dt>
-    <dd><a href="/drugoe/gateway-shliuz/">Gateway (шлюз)</a></dd>
-    <dt>ср 23 февраля 2011</dt>
-    <dd><a href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/">Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация</a></dd>
-    <dt>вт 22 февраля 2011</dt>
-    <dd><a href="/linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/">Настройка сети и интернета в Debian/Ubuntu - часть 1 - Настройка сетевых интерфейсов</a></dd>
-    <dt>пн 21 февраля 2011</dt>
-    <dd><a href="/drugoe/lazy-initialization-otlozhennaia-initsializatsiia/">Lazy Initialization (отложенная инициализация)</a></dd>
-    <dt>вс 20 февраля 2011</dt>
-    <dd><a href="/drugoe/builder-stroitel/">Builder (строитель)</a></dd>
-    <dt>сб 19 февраля 2011</dt>
-    <dd><a href="/drugoe/prototype-prototip/">Prototype (прототип)</a></dd>
-    <dt>вс 30 января 2011</dt>
-    <dd><a href="/drugoe/abstract-factory-abstraktnaia-fabrika/">Abstract Factory (абстрактная фабрика)</a></dd>
-    <dt>сб 29 января 2011</dt>
-    <dd><a href="/bd/mysql-obzor-tipov-tablits/">MySQL - обзор типов таблиц</a></dd>
-    <dt>ср 19 января 2011</dt>
-    <dd><a href="/drugoe/factory-method-fabrichnyi-metod/">Factory Method (фабричный метод)</a></dd>
-    <dt>вс 16 января 2011</dt>
-    <dd><a href="/drugoe/singleton-odinochka/">Singleton (одиночка)</a></dd>
-    <dt>пн 03 января 2011</dt>
-    <dd><a href="/linux/stavim-ftp-server-v-debian/">Ставим FTP-сервер в Debian</a></dd>
-    <dt>вс 02 января 2011</dt>
-    <dd><a href="/drugoe/patterny-proektirovaniia-v-php/">Паттерны проектирования в PHP</a></dd>
-    <dt>чт 30 декабря 2010</dt>
-    <dd><a href="/nodejs/prostoi-server-chata-na-nodejs/">Простой сервер чата на Node.JS</a></dd>
-    <dt>ср 22 декабря 2010</dt>
-    <dd><a href="/nodejs/nodejs-vvedenie/">Node.JS - введение</a></dd>
-    <dt>пт 26 ноября 2010</dt>
-    <dd><a href="/linux/podkliuchenie-novogo-zhestkogo-diska-v-linux/">Подключение нового жесткого диска в Linux</a></dd>
-    <dt>пт 26 ноября 2010</dt>
-    <dd><a href="/linux/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/">Как настроить подключение к интернет через мобильный телефон в Debian</a></dd>
+    <dt>14 Jun 2017</dt>
+    <dd><a href="/django-project-optimization-part-1/">Django project optimization guide (part 1)</a></dd>
 </dl>
-</section>
-        <section id="extras" class="body">
-                <div class="blogroll">
-                        <h2>ссылки</h2>
-                        <ul>
-                            <li><a href="http://wbtech.pro">WBTech</a></li>
-                        </ul>
-                </div><!-- /.blogroll -->
-                <div class="social">
-                        <h2>онлайн</h2>
-                        <ul>
-                            <li><a href="http://dizballanze.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
-                            <li><a href="http://dizballanze.com/feeds/all.rss.xml" type="application/rss+xml" rel="alternate">rss feed</a></li>
-
-                            <li><a href="https://twitter.com/dizballanze">Twitter</a></li>
-                            <li><a href="https://github.com/dizballanze">GitHub</a></li>
-                        </ul>
-                </div><!-- /.social -->
-        </section><!-- /#extras -->
-
         <footer id="contentinfo" class="body">
-                <address id="about" class="vcard body">
-                Powered by <a href="http://getpelican.com/">Pelican</a>, <a href="http://python.org">Python</a>.
-                <section class="right">&copy; <a href="/avtor">Yuri Shikanov</a> 2010-2015</section>
-                </address><!-- /#about -->
-
+            (c) 2010-2017
         </footer><!-- /#contentinfo -->
-
-    <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-20497524-1']);
-    _gaq.push(['_trackPageview']);
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-    </script>
-<script type="text/javascript">
-    var disqus_shortname = 'dizballanze';
-    (function () {
-        var s = document.createElement('script'); s.async = true;
-        s.type = 'text/javascript';
-        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
-        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-    }());
-</script>
 </body>
 </html>

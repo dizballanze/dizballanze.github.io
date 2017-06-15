@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/ispolzuem-sessiiu-express-v-socketio-ru.html" rel="bookmark"
+         title="Permalink to Используем сессию express в socket.io">Используем сессию express в socket.io</a></h2>
+    <time class="published" datetime="2013-04-19T13:33:00+04:00">19 апр 2013</time>
+  </header>
+  <div class="entry-content">
+    <p>При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.</p>
+<h2>Используемые пакеты</h2>
+<p>Нам нужно установить несколько пакетов, которые пригодятся для решения поставленной задачи (предполагается что express и soket.io уже установлены):</p>
+<div class="highlight"><pre><span></span>npm install cookie express-session-mongo
+</pre></div>
+
+
+<ul>
+<li><code>cookie</code> - модуль для удобного парсинга cookie</li>
+<li><code>express-session-mongo</code> - back-end для хранения сессий express в MongoDB</li>
+</ul>
+<h2>Настраиваем express</h2>
+<p>Настроим сессии в express:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">DB</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;ip&#39;</span><span class="o">:</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;port&#39;</span><span class="o">:</span> <span class="mi">27017</span><span class="p">,</span>
+  <span class="s1">&#39;db&#39;</span><span class="o">:</span> <span class="s1">&#39;test&#39;</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">MongoSessionStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-session-mongo&#39;</span><span class="p">)</span>
+  <span class="p">,</span> <span class="nx">session_storage</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MongoSessionStore</span><span class="p">(</span><span class="nx">DB</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">();</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">configure</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+
+  <span class="cm">/* .... */</span>
+
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">cookieParser</span><span class="p">(</span><span class="s1">&#39;secret&#39;</span><span class="p">));</span>
+  <span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="nx">session</span><span class="p">({</span>
+    <span class="nx">store</span><span class="o">:</span> <span class="nx">session_storage</span><span class="p">,</span>
+    <span class="nx">secret</span><span class="o">:</span> <span class="s1">&#39;secret&#39;</span><span class="p">,</span>
+    <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;sid&#39;</span>
+  <span class="p">}));</span>
+<span class="p">});</span>
+</pre></div>
+
+
+<p>В данном примере мы используем MongoDB для хранения сессий, но данный приём будет работать и для других хранилищ.</p>
+<h2>Получаем сессионные данные в soket.io</h2>
+<div class="highlight"><pre><span></span><span class="c1">// Запускаем web-сервер</span>
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">listen</span><span class="p">(</span><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">),</span> <span class="kd">function</span><span class="p">(){</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;Express server listening on port &quot;</span> <span class="o">+</span> <span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;port&#39;</span><span class="p">));</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">io</span> <span class="o">=</span> <span class="nx">socketio</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">server</span><span class="p">);</span>
+
+<span class="c1">// Настраиваем socket.io</span>
+<span class="nx">io</span><span class="p">.</span><span class="nx">configure</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="c1">// Аутентификация пользователей</span>
+  <span class="nx">io</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;authorization&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">accept</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Проверяем переданы ли cookie</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">data</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">cookie</span><span class="p">)</span> 
+      <span class="k">return</span> <span class="nx">accept</span><span class="p">(</span><span class="s1">&#39;No cookie transmitted.&#39;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+
+    <span class="c1">// Парсим cookie</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">cookie</span> <span class="o">=</span> <span class="nx">cookie</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">headers</span><span class="p">.</span><span class="nx">cookie</span><span class="p">);</span>
+
+    <span class="c1">// Получаем идентификатор сессии</span>
+    <span class="kd">var</span> <span class="nx">sid</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">cookie</span><span class="p">[</span><span class="s1">&#39;sid&#39;</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">sid</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">accept</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">sid</span> <span class="o">=</span> <span class="nx">sid</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">2</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
+    <span class="nx">sid</span> <span class="o">=</span> <span class="nx">sid</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">sessionID</span> <span class="o">=</span> <span class="nx">sid</span><span class="p">;</span>
+
+    <span class="c1">// Добавляем метод для чтения сессии</span>
+    <span class="c1">// в handshakeData</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">getSession</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Запрашиваем сессию из хранилища</span>
+      <span class="nx">session_storage</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">sid</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">session</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span> <span class="o">||</span> <span class="o">!</span><span class="nx">session</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+          <span class="nx">accept</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+          <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">cb</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">session</span><span class="p">);</span>
+      <span class="p">});</span>
+    <span class="p">}</span>
+    <span class="nx">accept</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+
+
+<span class="c1">// Пример использования</span>
+<span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">socket</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;chat&#39;</span><span class="p">);</span>
+
+  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">socket</span><span class="p">.</span><span class="nx">handshake</span><span class="p">.</span><span class="nx">getSession</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">session</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">data</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">session</span><span class="p">.</span><span class="nx">name</span> <span class="o">||</span> <span class="s1">&#39;guest&#39;</span><span class="p">;</span>
+      <span class="nx">io</span><span class="p">.</span><span class="nx">sockets</span><span class="p">.</span><span class="k">in</span><span class="p">(</span><span class="s1">&#39;chat&#39;</span><span class="p">).</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+
+
+<p>Для чтения сессии в обработчиках socket.io нужно использовать <code>socket.handshake.getSession</code>.</p>
+<h2>Заключение</h2>
+<p>Стоит отметить, что если socket.io у вас слушает другой хост/порт, отличный от express, то необходимо предусмотреть другой способ передачи идентификатора сессии.</p>
+<p>Полный пример можно посмотреть на <a href="https://github.com/dizballanze/express-socketio-session-example/">GitHub</a>.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

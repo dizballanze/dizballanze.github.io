@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/special-case-osobyi-sluchai-ru.html" rel="bookmark"
+         title="Permalink to Special Case (особый случай)">Special Case (особый случай)</a></h2>
+    <time class="published" datetime="2011-03-07T12:56:00+03:00">07 мар 2011</time>
+  </header>
+  <div class="entry-content">
+    <p>Сегодня мы обсудим паттерн Special Case. Данный паттерн представляет
+собой гибкий способ обхода ограничений возникающих при появлении, т.н.
+специальных случаев.</p>
+<h2>Описание</h2>
+<p>При проектировании объектно-ориентированной системы часто возникают
+ситуации, когда нужно обработать какой-либо особый случай, который
+выбивается из обычного цикла работы. При этом возникает необходимость
+проверять возникновение такой ситуации по всей системе, что само-собой
+приводит к неприятным последствиям. Примером такого случая может быть
+возвращение null вместо объекта при отсутствии или некорректности
+каких-либо данных. При этом приходится после получения ссылки на такой
+объект проверять равенство его нулю и отдельным образом обрабатывать
+каждый такой случай. Это очевидно приводит к жуткому дублированию кода,
+что неминуемо будет приводить к копи-пасту и соответственно множеству
+ошибок и ограничений.</p>
+<p>Как вы наверное уже догадались справится с данной проблемой нам поможет
+паттерн Special Case. Суть данного паттерна заключается в замене таких
+особых случаев на специальный объект, имеющий тот же тип и возврат его
+вызывающему коду. Полученный объект будет иметь точно такой же
+интерфейс, как и у обычного класса и соответственно нам не потребуется
+выполнять никаких скучных проверок. Заменив возврат особых случаев на
+специализированный объект мы значительно улучшаем архитектуру
+приложения, т.к. вызывающий код не будет заботится о том каким образом
+создаётся объект и от чего зависит его нормальная инициализация.</p>
+<h2>Пример</h2>
+<p>Самый очевидным примером данного шаблона проектирования может служить
+иерархия классов пользователей. В данном случае особым случаем будет
+пользователь гость, т.к. он не представлен в БД, т.к. другие
+пользователи. Рассмотрим следующий упрощенный пример:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">class</span> <span class="nc">User</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$user_info</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$id_user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// Вытягиваем информацию о пользователе из БД</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getName</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getEmail</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getStatus</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Проверка прав доступа пользователя</span>
+<span class="sd">     * @param string $action</span>
+<span class="sd">     * @return bool </span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">checkAccessRights</span><span class="p">(</span><span class="nv">$action</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$action</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;access_rights&#39;</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nx">bool</span><span class="p">)</span>  <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;access_rights&#39;</span><span class="p">][</span><span class="nv">$action</span><span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">Guest_User</span> <span class="k">extends</span> <span class="nx">User</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// Стандартные значения для гостя</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Uknown user&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;guest&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**</span>
+<span class="sd">     * Гость может только читать</span>
+<span class="sd">     * @param string $action</span>
+<span class="sd">     * @return bool </span>
+<span class="sd">     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">checkAccessRights</span><span class="p">(</span><span class="nv">$action</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;read&#39;</span> <span class="o">==</span> <span class="nv">$action</span><span class="p">)</span>
+            <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>У нас есть два класса: User и Guest_User. Класс Guest_User является
+реализацией шаблона особый случай. Если нет возможности идентифицировать
+пользователя, то мы просто возвращаем экземпляр класса Guest_User,
+который имеет такой же интерфейс, как и класс User. Вызывающий код
+спокойно продолжает работать не замечая подмены объекта. Далее приведу
+пример использования данных классов:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">function</span> <span class="nf">get_user_object</span><span class="p">(){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">])</span> <span class="o">||</span> <span class="o">!</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="nx">instanceof</span> <span class="nx">User</span><span class="p">))</span>
+        <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Guest_User</span><span class="p">();</span>
+    <span class="k">return</span> <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Эта простая функция проверяет наличие объекта в сессии и если он не
+найден или не корректен, то создает нашу реализацию Special Case, иначе
+- значение из сессии.</p>
+<p>На этом всё. Не забывайте подписываться на rss и оставлять свои
+комментарии!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

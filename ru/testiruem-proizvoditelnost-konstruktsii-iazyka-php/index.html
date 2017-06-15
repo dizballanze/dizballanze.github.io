@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/testiruem-proizvoditelnost-konstruktsii-iazyka-php/" rel="bookmark"
+         title="Permalink to Тестируем производительность конструкций языка PHP">Тестируем производительность конструкций языка PHP</a></h2>
+    <time class="published" datetime="2011-03-13T14:18:00+03:00">13 мар 2011</time>
+  </header>
+  <div class="entry-content">
+    <p>Здравствуйте! Часто в повседневной практике программирования мы
+используем те или иные конструкции php не задумываясь о их
+производительности. А учитывая, что VDS сейчас стоят не дёшево, нужно
+стараться уменьшить нагрузку наших приложений всеми доступными
+средствами. Сегодня я проведу сравнительный тест разных конструкций
+языка php выполняющих сходные функции. Выбрав оптимальные, по
+результатам теста, конструкции вы сможете не только отложить покупку
+более дорого серверного оборудования, но и просто ускорить работу ваших
+сайтов, что уж точно оценят пользователи. Итак, поехали!</p>
+<h2>Тестирование производительности</h2>
+<h3>"Конкатенация строк" vs "Двойные кавычки"</h3>
+<p>Данная конструкция используется в каждом приложении и очень часто,
+поэтому стоит оценить различные варианты конкатенации строк:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// Двойные кавычки</span>
+<span class="nv">$string</span> <span class="o">=</span> <span class="s2">&quot;count - </span><span class="si">$i</span><span class="s2">&quot;</span><span class="p">;</span>
+<span class="c1">// Конкатенация</span>
+<span class="nv">$string</span> <span class="o">=</span> <span class="s1">&#39;count - &#39;</span> <span class="o">.</span> <span class="nv">$i</span><span class="p">;</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="left">Тип конструкции</th>
+<th align="left">Время выполнения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Двойные кавычки</td>
+<td align="left">0.505 с</td>
+</tr>
+<tr>
+<td align="left">Конкатенация</td>
+<td align="left">0.424 с</td>
+</tr>
+</tbody>
+</table>
+<p>Конкатенация работает быстрее приблизительно на 16%.</p>
+<h3>Обход массивов</h3>
+<p>Теперь проверим производительность различных способов перебора элементов
+массива. В качестве примера будем считать сумму элементов массива,
+обходя его различными способами</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// Способ №1. Простой foreach без ключа</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$item</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$item</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// Способ №2. Foreach с выборкой ключа</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$key</span><span class="o">=&gt;</span><span class="nv">$item</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$item</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// Способ №3. Foreach с получением значения по ссылке</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="nv">$array</span> <span class="k">as</span> <span class="nv">$key</span><span class="o">=&gt;&amp;</span><span class="nv">$item</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$item</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// Способ №4. Цикл For и функция next()</span>
+<span class="nv">$summ</span> <span class="o">=</span> <span class="nb">current</span><span class="p">(</span><span class="nv">$array</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="nv">$i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nv">$i</span> <span class="o">&lt;</span> <span class="nv">$size</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nb">next</span><span class="p">(</span><span class="nv">$array</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="c1">//Способ №5. While и функция each()</span>
+<span class="k">while</span> <span class="p">(</span><span class="k">list</span><span class="p">(</span><span class="nv">$key</span><span class="p">,</span> <span class="nv">$value</span><span class="p">)</span> <span class="o">=</span> <span class="nb">each</span><span class="p">(</span><span class="nv">$array</span><span class="p">)){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$value</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//Способ №6. Обычный For</span>
+<span class="k">for</span> <span class="p">(</span><span class="nv">$i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nv">$i</span><span class="o">&lt;</span><span class="nv">$count</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$array</span><span class="p">[</span><span class="nv">$i</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="left">Тип конструкции</th>
+<th align="left">Время выполнения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Способ №1. Простой foreach без ключа</td>
+<td align="left">0.112 с</td>
+</tr>
+<tr>
+<td align="left">Способ №2. Foreach с выборкой ключа</td>
+<td align="left">0.131 с</td>
+</tr>
+<tr>
+<td align="left">Способ №3. Foreach с получением значения по ссылке</td>
+<td align="left">0.144 с</td>
+</tr>
+<tr>
+<td align="left">Способ №4. Цикл For и функция next()</td>
+<td align="left">0.383 с</td>
+</tr>
+<tr>
+<td align="left">Способ №5. While и функция each()</td>
+<td align="left">1.180 с</td>
+</tr>
+<tr>
+<td align="left">Способ №6. Обычный For</td>
+<td align="left">0.120 с</td>
+</tr>
+</tbody>
+</table>
+<p>Как выяснилось наиболее быстрым способом обхода массива является foreach
+без выборки ключа. Также на мой взгляд данный способ является наиболее
+удобным, а если совершать выборку ключа и/или значения по ссылке, то он
+становится наиболее универсальным. Также неплохой результат показал
+классический цикл for с перебором элементов используя числовые индексы в
+естественном порядке, но очевидно данный способ нельзя использовать для
+перебора ассоциативных массивов, что является огромным минусом. Самым
+"прожорливым" оказался while с использованием функции each, т.к. он не
+дает никаких особых преимуществ и по сути повторяет функционал foreach,
+то использовать его нет смысла.</p>
+<h3>Добавление элементов в конец массива</h3>
+<p>Тоже довольно часто используемой операцией является добавление новых
+элементов в конец массива. Протестируем наиболее часто используемые
+способы:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">//Способ №1. </span>
+<span class="nv">$array</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="c1">//Способ №2</span>
+<span class="nb">array_push</span><span class="p">(</span><span class="nv">$array</span><span class="p">,</span> <span class="nv">$i</span><span class="p">);</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="left">Тип конструкции</th>
+<th align="left">Время выполнения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Способ №1</td>
+<td align="left">0.503 с</td>
+</tr>
+<tr>
+<td align="left">Способ №2</td>
+<td align="left">0.998 с</td>
+</tr>
+</tbody>
+</table>
+<p>Как вы видите первый способ работает в 2 раза быстрее и при этом менее
+громоздок. Поэтому я рекомендую использовать именно его.</p>
+<h3>"Оператор ветвления" vs "Тернарный оператор"</h3>
+<p>Теперь сравним производительность стандартной операции ветвления на
+примере if-else и тернарного оператора:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// if-else</span>
+<span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="nv">$i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">)</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="k">else</span>
+    <span class="nv">$summ</span> <span class="o">-=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="c1">// Тернарный оператор</span>
+<span class="nv">$summ</span> <span class="o">+=</span> <span class="p">((</span><span class="nv">$i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">?</span><span class="nv">$i</span><span class="o">:</span><span class="p">(</span><span class="o">-</span><span class="nv">$i</span><span class="p">);</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="left">Тип конструкции</th>
+<th align="left">Время выполнения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">if-else</td>
+<td align="left">0.126 с</td>
+</tr>
+<tr>
+<td align="left">Тернарный оператор</td>
+<td align="left">0.176 с</td>
+</tr>
+</tbody>
+</table>
+<p>Тернарный оператор не на много, но всё же отстает от классического
+if-else, но т.к. тернарный оператор менее громоздок, то его можно
+использовать, если конечно это происходит не в цикле на миллион итераций
+;)</p>
+<h3>Проверка существования/не-равенство-null переменной</h3>
+<p>Часто бывает необходимо проверить существует ли переменная и/или равна
+null. Для этого можно воспользоваться несколькими методами, например
+одной из стандартных функций php (is_null, isset, empty) или просто
+сравнивать переменную с null. Протестируем каждый из этих способов:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// Сравнение с null</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$a</span> <span class="o">!=</span> <span class="k">null</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// Эквивалентно null</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$a</span> <span class="o">!==</span> <span class="k">null</span><span class="p">){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// isset</span>
+<span class="k">if</span> <span class="p">(</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$a</span><span class="p">)){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// is_null</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">is_null</span><span class="p">(</span><span class="nv">$a</span><span class="p">)){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">//empty</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$a</span><span class="p">)){</span>
+    <span class="nv">$summ</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="left">Тип конструкции</th>
+<th align="left">Время выполнения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Сравнение с null "=="</td>
+<td align="left">0.652 с</td>
+</tr>
+<tr>
+<td align="left">Эквивалентное сравнение с nul "==="</td>
+<td align="left">0.709 с</td>
+</tr>
+<tr>
+<td align="left">isset</td>
+<td align="left">0.080 с</td>
+</tr>
+<tr>
+<td align="left">is_null</td>
+<td align="left">1.021 с</td>
+</tr>
+<tr>
+<td align="left">empty</td>
+<td align="left">0.105 с</td>
+</tr>
+</tbody>
+</table>
+<p>Как вы видите isset оставил всех конкурентов далеко позади глотать пыль.
+Рекомендую использовать именно isset, т.к. он кроме того что работает
+намного быстрее всех остальных способов, ещё и не генерирует notice'ов,
+так что если вы не уверены установлена ли переменная, лучше проверить её
+при помощи isset и быть спокойным, т.к. никаких нотисов не будет
+выводится. Также стоит отметить первый способ, т.к. он не совсем
+подходит под данную категорию и он будет возвращать true, при любом
+значении переменной являющемся ложным, будь-то null, не установленная
+переменная или пустая строка.</p>
+<h2>Отступление: производительность и сообщения об ошибках php</h2>
+<p>Интерпретатор php генерирует множество разных сообщений: ошибки,
+предупреждения, уведомления и тд. При разработке эти сообщения
+безусловно помогают в поиске ошибок и их устранении, но также они имеют
+и негативное влияние, а именно - жуткое снижение производительности.
+Проведём простой тест:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nb">error_reporting</span><span class="p">(</span><span class="k">null</span><span class="p">);</span>
+<span class="nv">$timer</span><span class="o">-&gt;</span><span class="na">start</span><span class="p">();</span>
+<span class="nv">$a</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="nv">$i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nv">$i</span><span class="o">&lt;=</span><span class="mi">100000</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
+    <span class="nv">$a</span> <span class="o">+=</span> <span class="nv">$i</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">is_null</span><span class="p">(</span><span class="nv">$b</span><span class="p">))</span>
+        <span class="nv">$a</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">echo</span> <span class="nv">$timer</span><span class="o">-&gt;</span><span class="na">end</span><span class="p">();</span>
+</pre></div>
+
+
+<p>Вроде бы простой участок кода, не должен вызывать никаких осложнений. И
+действительно результат выполнения данного теста показывает 0.110 с. А
+теперь мы попробуем убрать первую строку отвечающую за подавление ошибок
+и получим следующий результат: 1.11 c. Т.е. время выполнения увеличилось
+в 10 раз! А всё из-за чего? Из-за того, что переменная $b не была
+определена и соответственно php сгенерировал notice. Из этого стоит
+сделать вывод - сообщения об ошибках только при разработке, но никак не
+на продакшене.</p>
+<h2>Заключение</h2>
+<p>На этом всё, в заключении хочу представить конфигурацию системы на
+которой проводил тесты: Intel Core 2 Duo E8200 (2.6 Ггц), 2 Гб ОП,
+Debian 6.0, PHP 5.3.3-7 with Suhosin-Patch, Apache 2.2.16. Возможно в
+скором времени я протестирую производительность других конструкций php,
+поэтому подписывайтесь на RSS-ленту, чтобы быть в теме :) Спасибо за
+внимание!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

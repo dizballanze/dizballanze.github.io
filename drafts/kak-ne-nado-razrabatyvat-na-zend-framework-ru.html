@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/kak-ne-nado-razrabatyvat-na-zend-framework-ru.html" rel="bookmark"
+         title="Permalink to Как НЕ надо разрабатывать на Zend Framework">Как НЕ надо разрабатывать на Zend Framework</a></h2>
+    <time class="published" datetime="2011-05-22T17:23:00+04:00">22 май 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="image" src="/media/2011/05/picresized_th_1306079147_th_5d32a8e917ad3422678efa27eabc46cc.png" title="Zend Framework"><br>
+Здравствуйте! На днях подвернулась работа - дописать сайт на zend
+framework. Программист, который начал разрабатывать этот проект не
+успевал в сроки, не выполнял требования заказчика и в итоге его
+заменили. Открыв первый раз исходный код я ужаснулся от того количества
+ошибок, которые допускал разработчик и ведь он утверждал заказчику что
+является опытным специалистом... Далее я попытаюсь рассказать про
+некоторые ошибки, которые были им допущены. Данный материал будет
+полезен начинающим ZF-программистам, в качестве инструкции того как
+делать нельзя. Также я расскажу про некоторые моменты непосредственно не
+связанные с фреймворком, но также являющиеся яркими примерами невежества
+разработчиков.</p>
+<h2>Fail-list</h2>
+<h3>Использование встроенных методов модели, вместо написания своих</h3>
+<p>Первое, что сразу бросилось в глаза - выполнение запросов через объект
+модели прямо в коде контроллера, что напрочь перечеркивает все
+преимущества MVC. Чтобы было понятно о чем речь приведу пример исходного
+кода:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nv">$model</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Model</span><span class="p">();</span>
+<span class="nv">$some_data</span> <span class="o">=</span> <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">fetchAll</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;field1 = ?&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;field2 = ?&#39;</span> <span class="o">=&gt;</span> <span class="mi">0</span><span class="p">));</span>
+<span class="nv">$all_data</span> <span class="o">=</span> <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">fetchAll</span><span class="p">();</span>
+</pre></div>
+
+
+<p>Такой винегрет был в каждом файле контроллера, что очень мешало чтению
+кода и исправлению ошибок, постоянно возникали какие-то не очевидные
+зависимости, перезаписывались важные данные. Соответственно так делать
+не в коем случае нельзя, даже если вы разрабатываете небольшой проект.</p>
+<h3>Обращение напрямую к глобальным массивам вместо обращения к объекту Request</h3>
+<p>У ZF есть очень удобная оболочка над глобальными переменными в виде
+объекта класса Zend_Controller_Request_Http. Данный класс
+предоставляет нам массу возможностей по доступу к данным и используется
+фреймворком в процессе диспатчинга. Поэтому не стоит пренебрегать
+использованием объекта запроса.</p>
+<h3>Отсутствие context-switching когда это необходимо</h3>
+<p>Для реализации обработки ajax-запросов можно воспользоваться, т.н.
+context-switch что представляет собой удобный способ изменения формата
+ответа. Если вы используете json то в методе init контроллера задать
+что-то вроде следующего:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_helper</span><span class="o">-&gt;</span><span class="na">AjaxContext</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">addActionContext</span><span class="p">(</span><span class="s1">&#39;ajax-handler&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">initContext</span><span class="p">(</span><span class="s1">&#39;json&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Теперь все данные переданные во view в экшене ajax-handler будут
+перекодированы в формат json. Этот способ является более
+предпочтительным по сравнению с отключением view и ручным
+конвертированием данных в json.</p>
+<h3>Пренебрежение использованием Zend_Form и Zend_Validate</h3>
+<p>Не стоит использовать функции php для валидации данных, т.к. в ZF есть
+очень удобные валидаторы, которые можно объединять в группы и ставить на
+обработку определенных полей формы. Используя ZF-валидаторы вы
+уменьшаете шанс, того вы что-нибудь упустите и тем самым делаете ваши
+приложения более устойчивыми.</p>
+<h3>Отсутствие проверки корректности данных</h3>
+<p>Вы должны проверять все данные полученные вами от пользователя, причем
+вы должны проверять их в контексте прав доступа данного пользователя,
+например, если вы пишите добавление/удаление материалов из списка
+избранного и у вас есть js-функции вроде приведенных ниже, то вам стоит
+очень хорошо задуматься:</p>
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">addObject</span><span class="p">(</span><span class="nx">object_id</span><span class="p">,</span> <span class="nx">user_id</span><span class="p">)</span> <span class="p">{</span>  
+    <span class="k">if</span> <span class="p">(</span><span class="nx">user_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>       
+        <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/realestate/favorite/oid/&#39;</span><span class="o">+</span><span class="nx">object_id</span><span class="o">+</span><span class="s1">&#39;/uid/&#39;</span><span class="o">+</span><span class="nx">user_id</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>            
+            <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#addfavorite&quot;</span><span class="o">+</span><span class="nx">object_id</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">removeObject</span><span class="p">(</span><span class="nx">object_id</span><span class="p">,</span> <span class="nx">user_id</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">user_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/profile/removefavorite/oid/&#39;</span><span class="o">+</span><span class="nx">object_id</span><span class="o">+</span><span class="s1">&#39;/uid/&#39;</span><span class="o">+</span><span class="nx">user_id</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#removefavorite&quot;</span><span class="o">+</span><span class="nx">object_id</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Как выяснилось потом на сервер-сайд user_id не проверялся на равенство
+идентификатору текущего пользователя и это печально...</p>
+<h3>Использование вместо ACL, иерархии классов контроллеров</h3>
+<p>Практически в каждом сайте есть несколько уровней доступа: гости,
+пользователи, администраторы и т.д. Для того чтобы контролировать права
+доступа статусов к определенным частям сайта были использованы иерархии
+контроллеров. Т.е. создавался класс-родитель для контроллеров админки,
+класс для остальных контроллеров и в этом родительском классе
+выполнялось что-то вроде этого:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">preDispatch</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// А вот пример глобальных переменных *fail*</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$_REQUEST</span><span class="p">[</span><span class="s1">&#39;session&#39;</span><span class="p">]))</span> <span class="p">{</span> 
+        <span class="nb">session_id</span><span class="p">(</span><span class="nv">$_REQUEST</span><span class="p">[</span><span class="s1">&#39;session&#39;</span><span class="p">]);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nv">$auth</span> <span class="o">=</span> <span class="nx">Zend_Auth</span><span class="o">::</span><span class="na">getInstance</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$auth</span><span class="o">-&gt;</span><span class="na">hasIdentity</span><span class="p">())</span> <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_redirect</span><span class="p">(</span><span class="s1">&#39;backoffice/auth/login&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Чем плох такой подход? Во-первых, очень сложным является
+перераспределение прав доступа. Во-вторых, тяжело поддерживать несколько
+ролей. Я могу долго продолжать :)</p>
+<p>Для данных целей в ZF, есть прекрасный инструмент формирования списков
+прав доступа или ACL. Лично я использую небольшой плагин, который
+проверяет права доступа данного пользователя на запрашиваемый
+экшн/контроллере в процессе диспатчинга. Данный способ позволяет
+формировать права доступа в простом, легко изменяемом списке, вроде
+этого:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">//Добавляем роли</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;guest&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;manager&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">);</span>
+
+<span class="c1">//Добавляем ресурсы</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;guest_allow&#39;</span><span class="p">));</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;index/index&#39;</span><span class="p">),</span><span class="s1">&#39;guest_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;index/registration&#39;</span><span class="p">),</span><span class="s1">&#39;guest_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;error/error&#39;</span><span class="p">),</span><span class="s1">&#39;guest_allow&#39;</span><span class="p">);</span>
+
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;user_allow&#39;</span><span class="p">));</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;index/logout&#39;</span><span class="p">),</span><span class="s1">&#39;user_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;project/index&#39;</span><span class="p">),</span><span class="s1">&#39;user_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;task/index&#39;</span><span class="p">),</span><span class="s1">&#39;user_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;task/complete&#39;</span><span class="p">),</span><span class="s1">&#39;user_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;task/assigned&#39;</span><span class="p">),</span><span class="s1">&#39;user_allow&#39;</span><span class="p">);</span>
+
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;manager_allow&#39;</span><span class="p">));</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;project/add&#39;</span><span class="p">),</span><span class="s1">&#39;manager_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;task/add&#39;</span><span class="p">),</span><span class="s1">&#39;manager_allow&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;index/add-user&#39;</span><span class="p">),</span><span class="s1">&#39;manager_allow&#39;</span><span class="p">);</span>
+
+<span class="c1">//Выставляем права, по-умолчанию всё запрещено</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">deny</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;guest_allow&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="s1">&#39;user_allow&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;manager&#39;</span><span class="p">,</span><span class="s1">&#39;manager_allow&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<h3>Фильтрация данных в полях формы отвечающих за ввод пароля</h3>
+<p>Никогда, никогда не фильтруйте данные которые поступают из поля ввода
+пароля! Это чревато долгими попытками найти причину, по которой
+пользователи не могут залогинится. В моем случае причиной было
+следующее:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">//...</span>
+<span class="nv">$f</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Zend_Filter_StripTags</span><span class="p">();</span>
+<span class="nv">$pwd</span> <span class="o">=</span> <span class="nv">$f</span><span class="o">-&gt;</span><span class="na">filter</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_request</span><span class="o">-&gt;</span><span class="na">getPost</span><span class="p">(</span><span class="s1">&#39;pwd&#39;</span><span class="p">));</span>
+</pre></div>
+
+
+<p>Учитывая что пароли должны хранится в зашифрованном виде и никогда не
+должны выводится, наличие в них тегов, или пробелов, никаким образом не
+может привести к уязвимостям, соответственно и фильтрация ни к чему</p>
+<h3>Предусматривать локализацию нужно за ранее</h3>
+<p>Часто почему-то локализацию проекта выносят на второй план, т.е. сначала
+все запилим, а потом уже прикрутим локализацию. Это большая ошибка, т.к.
+потом прикрутить её будет очень трудно. Нужно будет отыскать все не
+локализованные строки, а это очень длительный процесс. Намного проще
+сразу корректным образом обработать строки, которые требуют
+мультиязычности.</p>
+<h3>Использование текстовых констант вместо логических переменных</h3>
+<p>В завершении хочу рассказать про интересный способ замены логических
+переменных строками. В коде я нашел что-то вроде этого:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$a</span> <span class="o">&gt;</span> <span class="nv">$b</span><span class="p">)</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">view</span><span class="o">-&gt;</span><span class="na">result</span> <span class="o">=</span> <span class="s1">&#39;ok&#39;</span>
+<span class="k">else</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">view</span><span class="o">-&gt;</span><span class="na">result</span> <span class="o">=</span> <span class="s1">&#39;fail&#39;</span><span class="p">;</span>
+</pre></div>
+
+
+<p>Здесь никакого дополнительного пояснения не требуется, я думаю последняя
+строка очень красноречиво делает это за меня :D</p>
+<h2>Заключение</h2>
+<p>Это далеко не полный список ошибок, которые были найдены в процессе
+доработки проекта, но основные я описал. Надеюсь, кто-то прочитав данный
+материал станет писать лучше. Спасибо за внимание!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

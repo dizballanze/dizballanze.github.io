@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/servernaia-arkhitektura-debugmail/" rel="bookmark"
+         title="Permalink to Серверная архитектура DebugMail">Серверная архитектура DebugMail</a></h2>
+    <time class="published" datetime="2014-03-15T23:46:00+04:00">15 мар 2014</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="debugmail-logo" src="/media/2014/3/debugmail.jpg" title="DebugMail"></p>
+<p>На днях <a href="http://wbtech.ru">мы</a> запустили <a href="http://debugmail.io/">DebugMail</a> - сервис, который помогает упростить тестирование email-рассылок на этапе разработки сайта/приложения/etc. Сервис позволяет сразу после регистрации получить свой виртуальный smtp-сервер, просматривать отправляемые письма, совместно работать над рассылками вместе с коллегами. В этом посте я расскажу про то, как разрабатывался backend сервиса, какие технологии использовались и какие проблемы приходилось решать. Думаю пост будет интересен прежде всего тем, кто работает с Node.js. </p>
+<p>Основные используемые технологии:</p>
+<ul>
+<li><a href="http://nodejs.org/">Node.js</a> для запуска нашего js на сервере.</li>
+<li><a href="http://coffeescript.org/">CoffeeScript</a>, чтобы добавить немного сахара к нашему js.</li>
+<li><a href="https://www.mongodb.org/">MongoDB</a> для хранения всех перманентных данных. <a href="http://mongoosejs.com/">Mongoose</a> - ODM для работы с MongoDB из под Node.js.</li>
+<li><a href="http://redis.io/">Redis</a>, как хранилище для сессий, кэш и для поддержки работы сервера real-time обновлений (<a href="http://redis.io/topics/pubsub">pub/sub</a>).</li>
+<li><a href="http://faye.jcoglan.com/">Faye</a> система для обмена real-time сообщениями между клиентом и сервером при помощи паттерна pub/sub.</li>
+</ul>
+<p>Backend сервиса состоит 3 основных компонентов:</p>
+<ul>
+<li>SMTP-сервер, который сохраняет все полученные письма и умеет отличать проект к которому относится письмо.</li>
+<li>REST Api который позволяет выполнять операции по работе с проектами, пользователями и письмами.</li>
+<li>Сервер для поддержки real-time обновлений при получении новых писем.</li>
+</ul>
+<p>Для того, чтобы сервис было легче масштабировать, каждый из описанных выше компонентов разрабатывался с учетом того, что он может быть запущен отдельно, в том числе на другом сервере. Взаимодействие между компонентами в основном происходит через базу данных и систему обмена сообщениями Faye (для real-time обновлений).</p>
+<p><img alt="debugmail-design" src="/media/2014/3/debugmail-design.png" title="DebugMail design"></p>
+<h2>SMTP-сервер</h2>
+<p>Необходимо было разработать SMTP-север, который бы не осуществлял доставку письма на целевой хост, а только сохранял его в базе данных. В этом нам отлично помогли модули <a href="https://github.com/andris9/simplesmtp">simplesmtp</a> и <a href="https://github.com/andris9/mailparser">mailparser</a>, которые покрывали все базовые функции необходимые для работы smtp-сервера и парсинга писем. Оставалось только прописать нужные обработчики событий и другой специфичный для задачи код.</p>
+<p>В сервисе предполагается, что все письма относятся к определенному проекту. При создании проекта пользователь получает параметры подключения к smtp-серверу среди которых есть пара login-password. На основе этих данных smtp-сервер определяет к какому проекту относится то или иное полученное письмо.</p>
+<h2>REST API</h2>
+<p>Для взаимодействия клиентского приложения (см. скоро пост про клиентскую часть) с backend было разработано REST API на базе фреймворка <a href="http://expressjs.com/">express</a>. Выбран был именно этот фреймворк из-за его простоты, скорости работы и гибкости. При помощи поддержки middleware, которые пришли из <a href="http://www.senchalabs.org/connect/">connect</a>, можно очень просто встраиваться в процесс обработки запросов. Несколько примеров разработанных middleware:</p>
+<ul>
+<li>контроль доступа,</li>
+<li>content negotiation,</li>
+<li>защита от CSRF,</li>
+<li>инициализация сессии и тд.</li>
+</ul>
+<h3>Content negotiation</h3>
+<p>Для того, чтобы максимально распараллелить работу с front-end разработчиком, было принято решение реализовывать сервис в виде SPA (single page application) и REST API. Далее возник вопрос, как различать запросы, которые отправляет клиентское приложение, от запросов, которые генерируются браузером автоматически (при загрузке страниц) при том, то URL-адреса REST API и клиентского приложения пересекаются. Самым корректным решением нам показалось использование content negotiation. При поступлении запроса срабатывает middleware, который проверяет какой формат ответа является предпочтительным для клиента, на основании значения из заголовка запроса <code>Accept</code>. Клиентское приложение отправляет значение данного заголовка как <code>application/json</code>, что сообщает серверу о том, что нужно обрабатывать запрос, как запрос к REST API и вернуть результат в виде JSON-документа. Во всех остальных случаях предполагается, что запрос приходит от браузера и происходит рендеринг основного шаблона с подключенным клиентским приложением.</p>
+<h3>Маршрутизация</h3>
+<p>Изначально было принято решение использовать модуль <a href="https://github.com/visionmedia/express-resource">express-resource</a>, но он оказался недостаточно гибким. Например, нельзя задавать кастомные middleware для определенных маршрутов. <a href="https://github.com/visionmedia/express-resource/pull/66">Pull Request</a> для решения описанной проблемы висит уже больше года, в итоге от <code>express-resource</code> пришлось отказаться в пользу стандартного способа задания маршрутов в express.</p>
+<h2>Real-time updates</h2>
+<p>Одна из фич сервиса предполагает, что при получении нового письма оно должна сразу появляться в интерфейсе. Для реализации таких real-time обновлений существует несколько популярных решений:</p>
+<ul>
+<li><a href="http://socket.io">socket.io</a></li>
+<li><a href="http://sockjs.org">sockjs</a></li>
+<li><a href="http://faye.jcoglan.com/">faye</a></li>
+</ul>
+<p>Мы остановились на Faye, т.к. он:</p>
+<ul>
+<li>имеет достаточно удобное и простое API,</li>
+<li>из коробки поддерживаются server-side clients, что важно, т.к. сообщения генерируются из SMTP-сервера,</li>
+<li>достаточно активно разрабатывается.</li>
+</ul>
+<h3>Аутентификация пользователей</h3>
+<p>Основной сложностью было реализовать аутентификацию клиентов, т.к. сессии, которые используются в основном приложении и REST API, здесь не доступны. Для решения этой проблемы была введена аутентификация при подписке на обновления проекта. Предпологается, что при инициализации подписки на уведомления клиент передает <code>user id</code>, <code>session id</code> и <code>token</code>. <code>token</code> является результатом выполнения хэш-функции к параметрам <code>user id</code>, <code>session id</code> и некоторого закрытого ключа. Чтобы реализовать такой механизм отлично подходят, т.н. <a href="http://faye.jcoglan.com/browser/extensions.html">extensions</a>, которые позволяют перехватывать сообщения и выполнять дополнительные действия (проверки, дополнительную обработку данных и тд.). В итоге получается примерно такой код:</p>
+<div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">addExtension</span><span class="p">({</span>
+  <span class="nx">outgoing</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">channel</span> <span class="o">!==</span> <span class="s1">&#39;/meta/subscribe&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span> <span class="o">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span> <span class="o">||</span> <span class="p">{};</span>
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">uid</span> <span class="o">=</span> <span class="nx">USER_ID</span><span class="p">;</span>
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">sid</span> <span class="o">=</span> <span class="nx">SESSION_ID</span><span class="p">;</span>
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">token</span> <span class="o">=</span> <span class="nx">PRIVATE_TOKEN</span><span class="p">;</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+
+<p>Аналогичная система расширений на стороне сервера позволяет выполнять проверку и разрешать подписываться на обновления по проектам только тем пользователям, которые действительно имеют к ним доступ.</p>
+<h2>Автоматическое тестирование</h2>
+<p>Зачем нужно писать тесты я думаю объяснять не нужно. В данном проекте мы хотели добиться максимального покрытия кода тестами. Для этого практически весь код тестируется сразу на 2х уровнях, на функциональном и на модульном.</p>
+<p>Писать тесты на node.js - одно удовольствие. В основном это так благодаря большому количеству удобных инструментов и модулей в <a href="https://npmjs.org/">npm</a>. Также помогают особенностям javascript и node.js, которые предоставляют все необходимые возможности для удобного создания <a href="http://en.wikipedia.org/wiki/Mock_object">моков</a>. Рассмотрим, какие модули использовались и с какой целью:</p>
+<ul>
+<li><a href="http://visionmedia.github.io/mocha/">mocha</a> - многофункциональный тестовый фреймворк, содержит все необходимые функции для структурирования, поиска, запуска, подсчета метрик, просмотра результатов выполнения тестов и тд. Поддерживает как синхронные так и асинхронные тесты и имеет широкие возможности для кастомизации процесса тестирования.</li>
+<li><a href="https://github.com/visionmedia/supertest">supertest</a> - модуль для выполнения функционального тестирования. Все что нужно для начала работы с supertest - передать ему экземпляр приложения express, после этого можно выполнять запросы к приложению и тестировать полученные ответы. Также supertest предоставляет удобный chaining api, типичный тест выглядит так:</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/user&#39;</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;Accept&#39;</span><span class="p">,</span> <span class="s1">&#39;application/json&#39;</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+    <span class="c1">// ... check something here ...</span>
+
+    <span class="nx">done</span><span class="p">()</span>
+  <span class="p">});</span>
+</pre></div>
+
+
+<ul>
+<li><a href="https://github.com/visionmedia/should.js/">should.js</a> - это библиотека для удобного выполнения assertions. При инициализации библиотека перегружает встроенные объекты javascript, что позволяет использовать красивые конструкции вроде <code>user.should.have.property('company', 'wbtech')</code>. Предоставляет большое количество полезных фич, что делает написание тестов более приятным и быстрым процессом.</li>
+<li><a href="https://github.com/felixge/node-sandboxed-module">sandboxed-module</a> - модуль для <a href="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a>. Позволяет загрузить модуль с подменой указанных модулей, а также локальных и глобальных переменных.</li>
+<li><a href="https://github.com/pgte/nock">nock</a> - позволяет перехватывать запросы, которые делает код, через http протокол. Можно переопределять все запросы или по определенным признакам (например, url запроса, заголовки или тело запроса) и задавать ответ, который будет возвращаться в вызываемый код. Есть много дополнительных плюшек, вроде задания задержек, chaining api и тд.</li>
+</ul>
+<p>Стоит отметить, что тесты выполняются очень быстро. На данный момент 320 тестов выполняются примерно за 17с (в один поток).</p>
+<h2>Некоторые используемые модули</h2>
+<p>Список некоторых полезных модулей, о которых не упоминал выше:</p>
+<ul>
+<li><a href="https://github.com/caolan/async">async</a>, <a href="http://lodash.com/">lodash</a> - незаменимые модули, полезны практически в каждом проекте.<ul>
+<li>async предоставляет очень простой способ для выполнения асинхронного кода.</li>
+<li>lodash модуль для упрощения работы с различными структурами данных, также содержит методы для упрощения функционального программирования и <a href="http://lodash.com/docs">многое другое</a>.</li>
+</ul>
+</li>
+<li><a href="http://ectjs.com/">ect</a> - очень быстрый и в тоже время гибкий шаблонизатор, который работает с синтаксисом CoffeeScript.</li>
+<li><a href="http://www.nodemailer.com/">nodemailer</a> - для отправки писем, есть все что нужно, кастомизируется.</li>
+<li><a href="http://passportjs.org/">passport</a> - все что нужно для аутентификации через сторонние ресурсы. Поддерживает <a href="https://github.com/jaredhanson/passport/wiki/Strategies#providers">множество провайдеров</a> через сторонние модули.</li>
+<li><a href="https://github.com/mattrobenolt/raven-node">raven-node</a> - node.js клент к <a href="https://getsentry.com/">Sentry</a>.</li>
+</ul>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

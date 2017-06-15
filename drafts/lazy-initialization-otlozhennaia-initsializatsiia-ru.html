@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/lazy-initialization-otlozhennaia-initsializatsiia-ru.html" rel="bookmark"
+         title="Permalink to Lazy Initialization (отложенная инициализация)">Lazy Initialization (отложенная инициализация)</a></h2>
+    <time class="published" datetime="2011-02-21T21:22:00+03:00">21 фев 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="lazy initialization" src="/media/2011/02/i-can-but-i-won-t-garfield-262532_800_600-300x225.jpg" title="lazy initialization">Здравствуйте, сегодня речь пойдёт об очередном
+паттерне - lazy initialization (отложенная инициализация). Освоив этот
+паттерн вы научитесь инициализировать ресурсы только, тогда когда они
+действительно нужны и тем самым увеличите скорость работы ваших
+приложений.</p>
+<h2>Описание</h2>
+<p>При проектировании вашего приложения вы можете столкнутся с
+необходимостью создать классы, которые будут выполнять какие-либо
+ресурсоемкие вычисления. Обычно первым приходящим на ум решением
+является инициализация объекта и выполнение всех расчётов в момент
+создания объекта(например в конструкторе), что-бы объект был полностью
+готовым к использованию. Однако это решение хоть и является очевидным,
+но уж точно не является оптимальным, т.к. вы не всегда можете быть
+уверены в том, что результаты работы вашего объекта будут запрошёны тем
+более вы не можете быть уверены что они будут востребованы полностью.
+Существует вероятность того, что будут использоваться только 10% из тех
+данных, которые вы инициализируете при создании объекта, соответственно
+остальные 90% данных будут ненужны и потраченное на их подготовку время
+будет безполезным. А представьте если таких объектов инициализируется
+100...А если 1000? Вот тут то к нам на помощь приходит паттерн lazy
+initialization. Суть данного паттерна в том, что данные обрабатываются
+непосредственно в тот момент в который они запрашиваются. Т.е. когда
+пользовательский код запрашивает какие-то данные у нашего объекта, мы
+сначала проверяем не вычесленны ли эти данные ранее, если нет, то
+вычисляем их сохраняем внутри объекта и возвращаем запрашиваемому коду.
+Таким образом необходимые данные будут вычислинны тогда и только тогда,
+когда они будут необходимы. Это позволит значительным образом
+съекономить время и память, тем более что аренда серверов сейчас стоит
+совсем не дёшево ;)</p>
+<h2>Реализация</h2>
+<p>Давайте рассмотрим реализацию данного шаблона на примере класса, который
+"лениво" вычисляет факториал:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">LazyFactorial</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$factorial</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+    <span class="k">protected</span> <span class="k">function</span> <span class="nf">addFactorials</span><span class="p">(</span><span class="nv">$n</span><span class="p">){</span>
+        <span class="k">echo</span> <span class="s1">&#39;Add &#39;</span> <span class="o">.</span> <span class="nv">$n</span> <span class="o">.</span> <span class="s1">&#39;!&#39;</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="nv">$i</span> <span class="o">=</span> <span class="nb">count</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">);</span> <span class="nv">$i</span> <span class="o">&lt;=</span> <span class="nv">$n</span><span class="p">;</span> <span class="nv">$i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">[</span><span class="nv">$i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nv">$i</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getFactorial</span><span class="p">(</span><span class="nv">$n</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$n</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">)){</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addFactorials</span><span class="p">(</span><span class="nv">$n</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">[</span><span class="nv">$n</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">printFactorials</span><span class="p">(){</span>
+        <span class="nb">print_r</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">factorial</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>В данном примере у нас есть класс, который вычисляет факториал. Как вы
+видите данный класс никаким образом не инициализируется (что для этого
+примера очевидно), затем для того что-бы пользователь смог запросить
+вычисление факториала мы реализуем метод getFactorial, который сначала
+проверяет небыл ли нужный факториал вычеслен ранее, если нет, то
+запускает вычисления. Метод отвечающий за вычисления (addFactorials)
+расширяет массив факториалов до необходимого нам количества. Очевидно,
+что при работе с данным классом мы во-первых будем вычислять факториал
+определённого числа только тогда, когда он нам понадобится, во-вторых мы
+не будем вычислять одно и то же значение дважды. Пример использования
+класса:</p>
+<div class="highlight"><pre><span></span><span class="x">$factorial = new LazyFactorial();</span>
+<span class="x">$factorial-&gt;printFactorials();</span>
+<span class="x">echo $factorial-&gt;getFactorial(2) . &quot;\n&quot;;</span>
+<span class="x">$factorial-&gt;printFactorials();</span>
+<span class="x">echo $factorial-&gt;getFactorial(6) . &quot;\n&quot;;</span>
+<span class="x">$factorial-&gt;printFactorials();</span>
+<span class="x">echo $factorial-&gt;getFactorial(3) . &quot;\n&quot;;</span>
+<span class="x">$factorial-&gt;printFactorials();</span>
+</pre></div>
+
+
+<p>В результате получаем следующий вывод:</p>
+<div class="highlight"><pre><span></span>Array
+(
+    [0] =&gt; 1
+)
+Add 2!
+2
+Array
+(
+    [0] =&gt; 1
+    [1] =&gt; 1
+    [2] =&gt; 2
+)
+Add 6!
+720
+Array
+(
+    [0] =&gt; 1
+    [1] =&gt; 1
+    [2] =&gt; 2
+    [3] =&gt; 6
+    [4] =&gt; 24
+    [5] =&gt; 120
+    [6] =&gt; 720
+)
+6
+Array
+(
+    [0] =&gt; 1
+    [1] =&gt; 1
+    [2] =&gt; 2
+    [3] =&gt; 6
+    [4] =&gt; 24
+    [5] =&gt; 120
+    [6] =&gt; 720
+)
+</pre></div>
+
+
+<p>Как вы видите наши ожидания подтвердились. Возможно данный пример не
+полностью отражает суть паттерна lazy initialization, но основная мысль
+передаётся точно. Если есть какие-либо вопросы задавайте их в
+комментариях. Спасибо за внимание!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

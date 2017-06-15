@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/nodejs-vvedenie-ru.html" rel="bookmark"
+         title="Permalink to Node.JS - введение">Node.JS - введение</a></h2>
+    <time class="published" datetime="2010-12-22T11:33:00+03:00">22 дек 2010</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="image" src="/media/2010/12/media_httpnodeblogfil_occie.png.scaled500.png" title="nodejs"></p>
+<p>Сегодня я хочу рассмотреть библиотеку для асинхронного программирования
+server-side приложений на Java Script - Node.JS.</p>
+<p>Работает библиотека на Java Script движке V8 от самого гугла и
+предоставляет базовые возможности для создания масштабируемых сетевых
+приложений. Изначально Node заточен под высокие нагрузки, так что если
+вы разрабатываете очередной facebook, то задумайтесь об использовании
+server-side JS в своем приложении. Основная фишка библиотеки в работе с
+HTTP протоколом, т.е. для нас web-разработчиков, то что доктор прописал.</p>
+<h2>Установка</h2>
+<p>Я рассмотрю процесс установки в ОС Linux (Debian 5.0). Сначала скачиваем
+архив с исходниками <a href="http://nodejs.org/#download">здесь</a>. Т.к. всё необходимое для работы
+библиотеки включено в дистрибутив, то установка очень простая и знакома
+всем линуксоидам, которые когда-либо собирали что-нибудь из исходников.
+Итак, распаковываем архив, затем переходим в директорию с исходниками и
+выполняем:</p>
+<div class="highlight"><pre><span></span>./configure#make#make install
+</pre></div>
+
+
+<p>После этого можно проверить корректность установки, для этого
+выполните:<code>make test</code></p>
+<h2>Hello world</h2>
+<p>Теперь напишем простой пример web-сервера, который отвечает "Hello
+World" на каждый запрос:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">);</span> <span class="c1">//Подключаем модуль http</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Создаем сервер и устанавливаем обработчик на подключение</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">});</span> <span class="c1">//Устанавливаем заголовок</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s1">&#39;Hello World\n&#39;</span><span class="p">);</span> <span class="c1">// Вывод сообщения и завершение вывода</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8124</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">);</span> <span class="c1">// Заставляем сервер &quot;слушать&quot; 127.0.0.1:8124</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Server running at http://127.0.0.1:8124/&#39;</span><span class="p">);</span> <span class="c1">//Выводим сообщение в консоль</span>
+</pre></div>
+
+
+<p>Для запуска нашего сервера выполняем:</p>
+<div class="highlight"><pre><span></span>node example.jsServer running at http://127.0.0.1:8124/
+</pre></div>
+
+
+<p>Что-бы проверить, что всё работает открываем в браузере
+http://127.0.0.1:8124 и получаем "Hello World" в ответ.</p>
+<p>Таким способом мы получаем работающий web-сервер в несколько строк кода.
+В скором времени будут ещё топики на тему Node.JS, в которых мы
+подробнее рассмотрим процесс написания server-side JS приложений.</p>
+<h2>Ссылки</h2>
+<p><a href="http://nodejs.org/">nodejs.org</a> - оф.сайт. Документация, новости проекта, примеры
+приложений.</p>
+<p><a href="http://nodejs.ru">nodejs.ru</a> - русскоязычный блог о Node.js</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

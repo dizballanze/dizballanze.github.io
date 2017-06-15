@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/geoip-sredstvami-nginx-ru.html" rel="bookmark"
+         title="Permalink to GeoIP средствами Nginx">GeoIP средствами Nginx</a></h2>
+    <time class="published" datetime="2011-10-21T22:03:00+04:00">21 окт 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo"></p>
+<p>Часто при разработке сайтов появляется необходимость определения
+местоположения пользователя. Например, таким образом можно выдавать
+различные версии сайта для аудитории из разных стран. Также можно
+использовать данную возможность для балансировки нагрузки и назначать
+пользователю тот сервер, который находится ближе всего. Для реализации
+данной функции можно воспользоваться средствами <a href="http://nginx.org/ru/">Nginx</a>, прикрутив к
+нему одну из доступных в сети баз данных по GeoIP.</p>
+<h2>Конфигурация Nginx</h2>
+<p>В состав Nginx входит модуль Geo, который позволяет выставлять
+переменные в зависимости от попадания ip в определенный диапазон.
+Сконфигурируем данный модуль на определение города и страны пользователя
+добавив следующий код в секцию http:</p>
+<div class="highlight"><pre><span></span><span class="k">geo</span> <span class="nv">$country</span> <span class="p">{</span>
+    <span class="kn">ranges</span><span class="p">;</span> 
+    <span class="kn">default</span> <span class="s">ETC</span><span class="p">;</span> 
+    <span class="kn">include</span> <span class="s">geo-country.conf</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">geo</span> <span class="nv">$city</span> <span class="p">{</span>
+    <span class="kn">ranges</span><span class="p">;</span> 
+    <span class="kn">default</span> <span class="s">ETC</span><span class="p">;</span> 
+    <span class="kn">include</span> <span class="s">geo-city.conf</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>ETC - значение, которое будет установлено по-умолчанию, если ip на
+попадет не в один диапазон адресов. Теперь у нас в распоряжении 2
+переменные, которые мы можем, например, передать GET-параметром на
+бек-енд:</p>
+<div class="highlight"><pre><span></span><span class="k">location</span> <span class="s">/</span> <span class="p">{</span>
+    <span class="kn">proxy_pass</span> <span class="s">http://127.0.0.1:8080/?city=</span><span class="nv">$city&amp;country=$country</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h2>База Данных GeoIP</h2>
+<p>В конфигурации выше подключаются файлы geo-country.conf и geo-city.conf.
+Данные файлы содержат наборы диапазонов адресов и некоторые значения им
+соответствующие. Такого рода данные можно получить в одной из Баз Данных
+GeoIP. В данном примере я буду использовать <a href="http://ipgeobase.ru/">ipgeobase</a>. По ссылке вы
+можете <a href="http://ipgeobase.ru/cgi-bin/Archive.cgi">скачать актуальную базу данных GeoIP</a>. Далее остается только
+правильно обработать данные и получить конфигурационные файлы Nginx
+корректного формата. Для этих целей я написал два небольших скрипта:
+<a href="http://pastebin.com/EHJR2S2P">парсинг БД городов</a> и <a href="http://pastebin.com/25dKu9fD">парсинг БД стран</a>. На вход данным скриптам
+подается БД из ipgeobase, а на выходе получаем готовые файлы
+geo-country.conf и geo-city.conf. Стоит учесть что из БД получаются
+только диапазоны для Москвы и Санкт-Петербурга. Чтобы получить
+конфигурационный файл для других городов необходимо модифицировать
+скрипт.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

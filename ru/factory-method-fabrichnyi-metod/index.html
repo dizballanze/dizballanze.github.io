@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/factory-method-fabrichnyi-metod/" rel="bookmark"
+         title="Permalink to Factory Method (фабричный метод)">Factory Method (фабричный метод)</a></h2>
+    <time class="published" datetime="2011-01-19T18:39:00+03:00">19 янв 2011</time>
+  </header>
+  <div class="entry-content">
+    <p>Данный топик продолжает тему шаблонов проектирования для генерации
+объектов. Рассмотрим паттерн Factory Method или на великом и могучем (на
+русском, а не php :)) - фабричный метод.</p>
+<h2>Описание</h2>
+<p>Часто при проектировании классов возникает необходимость создавать
+экземпляры одних классов внутри других. При этом могут возникнуть
+требования создавать экземпляры не одного, а нескольких классов одной
+иерархии. Это вполне логично и сразу же напрашивается одно решение -
+использовать условия или switch к параметрам передаваемым в метод
+порождающего класса и в зависимости от параметра создавать нужный
+экземпляр иерархии. Если мы знаем что в порождаемой иерархии классов
+всего несколько подклассов и расширение их не предвидится, то такое
+решение вполне приемлемо, но часто бывает так что иерархии растут и
+очень быстро и вместе с ними растет и условная конструкция. Как мы видим
+сразу появляется ряд недостатков:</p>
+<ul>
+<li>Копипаст. Может возникнуть необходимость выполнять различные
+    действия в зависимости от типа порождаемого класса, что приводит к
+    копированию условной конструкции в различных методах порождающего
+    класса.</li>
+<li>Поддержка. С ростом количества кода неизбежно усложняется его
+    поддержка что приводит к усложнению нахождения ошибок. Также этот
+    недостаток будет особенно сильно проявляться при совместной
+    разработке, когда кто-нибудь добавит новый класс в порождающую
+    иерархию изменит соответственным образом класс, который генерирует
+    объекты и затрет недавно сделанные изменения своего коллеги, который
+    тоже добавил новый case в N-методов класса, за что получит в лучшем
+    случае гневное письмо, а в худшем черепно-мозговую травму :)</li>
+</ul>
+<p>Рассмотрим упрощенный пример такого кода:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">&#39;RegForm&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">&#39;AuthForm&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">&#39;PostForm&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+
+<span class="c1">//Менеджер форм</span>
+<span class="k">class</span> <span class="nc">FormManager</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$type</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span> <span class="o">=</span> <span class="nv">$type</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">(){</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">){</span>
+            <span class="k">case</span> <span class="nx">RegForm</span><span class="o">:</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nx">RegForm</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">AuthForm</span><span class="o">:</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nx">AuthForm</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">PostForm</span><span class="o">:</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nx">PostForm</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Иерархия классов форм</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Form</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">RegForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;Generate registration form!&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">AuthForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;Generate authentication form!&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PostForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;Generate posting form!&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>В данном упрощенном примере рассматривается реализация менеджера форм,
+который в зависимости от переданного в конструктор параметра создает
+нужный класс формы. Как мы видим использование switch-конструкции здесь
+не очень удобно, т.к. требует модификации кода класса при добавлении
+нового класса в иерархию форм. А представьте себе ситуацию, что менеджер
+форм должен иметь ещё какой-либо функционал, который также зависит от
+типа формы, в результате мы получим большое количество методов с
+одинаковыми switch-конструкциями. Вообщем на лицо проблема и решить её
+можно воспользовавшись шаблоном Factory Method.</p>
+<p>Суть данного шаблона заключается в создании иерархии порождающих
+классов, каждый дочерний класс иерархии "знает" какой именно класс из
+порождаемого дерева классов ему нужно инстанциировать. Т.е. мы создаем
+параллельную иерархию порождающих классов, которая в точности
+соответствует иерархии порождаемых классов.</p>
+<h2>Реализация</h2>
+<p>Рассмотрим предыдущий пример улучшенный путём использования шаблона
+Factory Method:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">//Иерархия генерирующих классов</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">FormManager</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">RegFormManager</span> <span class="k">extends</span> <span class="nx">FormManager</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">RegForm</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">AuthFormManager</span> <span class="k">extends</span> <span class="nx">FormManager</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">AuthForm</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PostFormManager</span> <span class="k">extends</span> <span class="nx">FormManager</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">PostForm</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//Иерархия генерируемых классов</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Form</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">RegForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;Generate registration form!&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">AuthForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;Generate authentication form!&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">PostForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">&quot;Generate posting form!&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Здесь мы видим, что создается ещё одна иерархия классов, дочерних
+FormManager. Каждый класс в иерархии FormManager создает экземпляр
+определённого класса иерархии Form. Воспользовавшись рассматриваемым
+шаблоном мы значительно улучшили ситуацию. Теперь для добавления новой
+формы не нужно редактировать код классов, всё сводится к добавлению
+нового класса в иерархию FormManager. Это дает нам ряд преимуществ,
+например более удобную поддержку кода и отсутствие жутких условных или
+switch конструкций. Но мы получили и недостаток - растущую иерархию
+классов, так что если у вас нет серьёзных причин в использовании данного
+шаблона, то следует подумать о каком-либо другом решении.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

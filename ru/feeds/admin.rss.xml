@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"><channel><title>Tech blog by @dizballanze - Admin</title><link>/ru/</link><description></description><lastBuildDate>Wed, 14 Jun 2017 16:47:00 +0300</lastBuildDate><item><title>Оптимизация производительности Django проектов (часть 1)</title><link>/ru/django-project-optimization-part-1/</link><description>&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
+растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
+рассказать о том с какими проблемами …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/ru/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item><item><title>Применение Nginx + Lua для обработки контактной формы</title><link>/ru/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/</link><description>&lt;p&gt;&lt;img alt="lua" src="/media/2015/6/lua.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;Бывает, что нужно развернуть простой, почти полностью статический сайт. И все что мешает ограничится одним Nginx - это 
+простая контактная форма, которая должна только отправлять полученные данные по почте. Конечно можно прикрутить стороннее 
+решение, вроде Google Forms, но такие сторонние решения не всегда хорошо кастомизируются. Разворачивать какой-то свой бекенд 
+отдельно тоже …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 08 Jun 2015 18:25:00 +0300</pubDate><guid isPermaLink="false">tag:None,2015-06-08:/ru/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/</guid><category>http</category><category>nginx</category><category>lua</category></item><item><title>Эффективная совместная работа backend и frontend команд</title><link>/ru/frontend-and-backend-collaboration/</link><description>&lt;p&gt;&lt;img alt="teamwork" src="/media/2015/3/teamwork.jpg" title="Team work!"&gt;&lt;/p&gt;
+&lt;p&gt;В &lt;a href="http://wbtech.ru/"&gt;WB–Tech&lt;/a&gt; мы любим разрабатывать проекты полного цикла, начиная от прототипов на салфетке и
+заканчивая деплоем на продакшн сервер и дальнейшей поддержкой. Часть этапов разработки проекта идет последовательно, 
+например, до тех пор пока не будут собраны все требования и готово ТЗ, мы не начинаем писать код. Основная же часть …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 23 Mar 2015 16:51:00 +0300</pubDate><guid isPermaLink="false">tag:None,2015-03-23:/ru/frontend-and-backend-collaboration/</guid><category>collaboration</category><category>vagrant</category><category>git</category><category>REST</category></item><item><title>Python wheels для быстрой установки зависимостей</title><link>/ru/python-wheels-dlia-bystroi-ustanovki-zavisimostei/</link><description>&lt;p&gt;Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;производительность - каждый раз необходима скачивать и собирать пакеты что занимает большое количество времени&lt;/li&gt;
+&lt;li&gt;работа в оффлайн режиме - без подключения к интернету не получится установить зависимости&lt;/li&gt;
+&lt;li&gt;стабильность - установка зависимостей невозможна в случае …&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 16 Jan 2015 23:30:00 +0300</pubDate><guid isPermaLink="false">tag:None,2015-01-16:/ru/python-wheels-dlia-bystroi-ustanovki-zavisimostei/</guid><category>pip</category><category>wheels</category><category>dev tools</category></item><item><title>Nginx как SMTP proxy-сервер</title><link>/ru/nginx-kak-smtp-proxy-server/</link><description>&lt;blockquote&gt;
+&lt;p&gt;Данный пост прежде всего будет интересен разработчикам, системные администраторы врятле вынесут из него что-то полезное.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx"&gt;&lt;/p&gt;
+&lt;h2&gt;Зачем нужен proxy для SMTP и почему именно Nginx&lt;/h2&gt;
+&lt;p&gt;Если в вашем приложении нужно реализовать кастомный SMTP-сервер, (например, наш &lt;a href="http://debugmail.io/"&gt;Debug Mail&lt;/a&gt; или сервисы вроде Mailjet, Mailgun и тд.), то для вас SMTP proxy-сервер будет полезен …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Thu, 17 Apr 2014 01:15:00 +0400</pubDate><guid isPermaLink="false">tag:None,2014-04-17:/ru/nginx-kak-smtp-proxy-server/</guid><category>nginx</category><category>smtp</category><category>debugmail</category></item><item><title>Серверная архитектура DebugMail</title><link>/ru/servernaia-arkhitektura-debugmail/</link><description>&lt;p&gt;&lt;img alt="debugmail-logo" src="/media/2014/3/debugmail.jpg" title="DebugMail"&gt;&lt;/p&gt;
+&lt;p&gt;На днях &lt;a href="http://wbtech.ru"&gt;мы&lt;/a&gt; запустили &lt;a href="http://debugmail.io/"&gt;DebugMail&lt;/a&gt; - сервис, который помогает упростить тестирование email-рассылок на этапе разработки сайта/приложения/etc. Сервис позволяет сразу после регистрации получить свой виртуальный smtp-сервер, просматривать отправляемые письма, совместно работать над рассылками вместе с коллегами. В этом посте я расскажу про то, как разрабатывался backend сервиса, какие технологии использовались …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sat, 15 Mar 2014 23:46:00 +0400</pubDate><guid isPermaLink="false">tag:None,2014-03-15:/ru/servernaia-arkhitektura-debugmail/</guid><category>node.js</category><category>mongodb</category><category>faye</category><category>debugmail</category></item><item><title>Используем сессию express в socket.io</title><link>/ru/ispolzuem-sessiiu-express-v-socketio/</link><description>&lt;p&gt;При разработке приложения с использованием socket.io + express часто возникает задача использования сессии express в socket.io. Рассмотрим, как можно решить эту задачу.&lt;/p&gt;
+&lt;h2&gt;Используемые пакеты&lt;/h2&gt;
+&lt;p&gt;Нам нужно установить несколько пакетов, которые пригодятся для решения поставленной задачи (предполагается что express и soket.io уже установлены):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;npm install cookie express-session-mongo
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;cookie&lt;/code&gt; - модуль …&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 19 Apr 2013 13:33:00 +0400</pubDate><guid isPermaLink="false">tag:None,2013-04-19:/ru/ispolzuem-sessiiu-express-v-socketio/</guid><category>node.js</category><category>express</category><category>socket.io</category></item><item><title>Масштабирование Node.js приложений</title><link>/ru/masshtabirovanie-nodejs-prilozhenii/</link><description>&lt;p&gt;Все мы знаем, что node.js так популярен благодаря своей производительности. Он работает быстро благодаря разным факторам, таким как использование движка Google V8 и асинхронному i/o. Именно такая высокая производительность позволяет достаточно долго не задумываться о масштабировании приложения, т.к. даже один запущенный Node.js процесс может обслуживать сотни …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 17 Feb 2013 01:17:00 +0400</pubDate><guid isPermaLink="false">tag:None,2013-02-17:/ru/masshtabirovanie-nodejs-prilozhenii/</guid><category>cluster</category><category>load balancing</category><category>clustering</category><category>scaling</category></item><item><title>CoffeeScript &amp; node.js dev-сервер</title><link>/ru/coffeescript-nodejs-dev-server/</link><description>&lt;p&gt;CoffeeScript - язык программирования, компилируемый в javascript. Используя &lt;a href="http://coffeescript.org/"&gt;CoffeeScript&lt;/a&gt; для разработки на &lt;a href="/tag/nodejs/"&gt;node.js&lt;/a&gt; мы можем избавиться от некоторых, не очень приятных, особенностей javascript.
+&lt;img alt="node.js and coffee-script" src="media/2013/01/nodejs-and-coffeescript.png" title="node.js and coffee-script"&gt;
+Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.&lt;/p&gt;
+&lt;h1&gt;Устанавливаем пакеты&lt;/h1&gt;
+&lt;p&gt;Для выполнения нашей цели необходимо установить …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sat, 19 Jan 2013 22:10:00 +0400</pubDate><guid isPermaLink="false">tag:None,2013-01-19:/ru/coffeescript-nodejs-dev-server/</guid><category>coffeescript</category><category>forever</category><category>node.js</category></item><item><title>Используем npm для управления зависимостями</title><link>/ru/ispolzuem-npm-dlia-upravleniia-zavisimostiami/</link><description>&lt;p&gt;npm - пакетный менеджер для &lt;a href="/tag/nodejs/" title="Node.js"&gt;node.js&lt;/a&gt;. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="npm package management" src="media/2013/01/npm.png" title="node packaged modules"&gt;&lt;/p&gt;
+&lt;h1&gt;Установка npm&lt;/h1&gt;
+&lt;p&gt;Если у вас не установлен &lt;code&gt;npm&lt;/code&gt;, то сделать это можно выполнив следующую команду:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;curl https://npmjs.org/install.sh &lt;span class="p"&gt;|&lt;/span&gt; sh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;Установка пакетов&lt;/h1&gt;
+&lt;p&gt;Для того чтобы установить пакет при помощи &lt;code&gt;npm …&lt;/code&gt;&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 04 Jan 2013 20:10:00 +0400</pubDate><guid isPermaLink="false">tag:None,2013-01-04:/ru/ispolzuem-npm-dlia-upravleniia-zavisimostiami/</guid><category>npm</category><category>package.json</category></item><item><title>Наследование свойств моделей в Mongoose</title><link>/ru/nasledovanie-svoistv-modelei-v-mongoose/</link><description>&lt;p&gt;Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
+моделей в &lt;a href="http://mongoosejs.com/" title="Mongoose ODM"&gt;ODM Mongoose&lt;/a&gt;. Для тех, кто не знает mongoose - это 
+ODM (object document mapper) для node.js и &lt;a href="http://www.mongodb.org/" title="MongoDB"&gt;MongoDB&lt;/a&gt;. &lt;/p&gt;
+&lt;h2&gt;Применение&lt;/h2&gt;
+&lt;p&gt;Часто бывает необходимо в рамках одной коллекции объектов выделить несколько
+типов с некоторыми различиями в наборе свойств. Т …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 02 Jan 2013 02:41:00 +0400</pubDate><guid isPermaLink="false">tag:None,2013-01-02:/ru/nasledovanie-svoistv-modelei-v-mongoose/</guid><category>mongoose</category><category>mongodb</category><category>node.js</category><category>sugar.js</category></item><item><title>Настраиваем dev-сервер для удобной разработки на django</title><link>/ru/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/</link><description>&lt;p&gt;При разработке не хочется тратить время, которого и так не хватает, на
+рутинные действия. После каждой отправки изменений в репозиторий,
+необходимо выполнить обновление кода на dev-сервере, применить миграции
+и тд. Сегодня мы рассмотрим, как быстро настроить автоматический deploy
+django-приложения на dev-сервер. Я рассмотрю максимально простое
+решение, которое подойдет для небольших …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sat, 22 Dec 2012 22:55:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-12-22:/ru/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/</guid><category>bitbucket</category><category>django</category><category>git</category><category>github</category><category>nginx</category><category>nodejs</category><category>pip</category><category>python</category><category>south</category></item><item><title>Python 2.7 в Debian 6 Squeeze</title><link>/ru/python-27-v-debian-6-squeeze/</link><description>&lt;p&gt;&lt;img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo"&gt;&lt;/p&gt;
+&lt;p&gt;Приветствую! На данный момент в stable репозитарии Debian squeeze лежит
+python 2.6.6. Однако, последней (на момент написания поста) стабильной
+версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
+несколько версий python и использовать их независимо.&lt;/p&gt;
+&lt;h2&gt;Устанавливаем Python 2.7.3&lt;/h2&gt;
+&lt;p&gt;Скомпилируем python 2.7.3 …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 22 Jul 2012 09:26:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-07-22:/ru/python-27-v-debian-6-squeeze/</guid><category>python</category><category>virtualenv</category></item><item><title>Функциональное тестирование Yii приложений с Selenium</title><link>/ru/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/</link><description>&lt;p&gt;&lt;img alt="selenium" src="/media/2012/04/big-logo.png" title="selenium-logo"&gt;&lt;/p&gt;
+&lt;p&gt;В последних проектах активно использую Selenium для функционального
+тестирования. В процессе написания тестов столкнулся с несколькими
+подводными камнями и в данном посте хочу рассказать о том как с ними
+бороться. Я думаю пост будет полезен тем, кто только начал использовать
+Selenium, в том числе для тестирования Yii приложений. Итак, поехали …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 04 Apr 2012 02:31:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-04-04:/ru/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium/</guid><category>functional testing</category><category>selenium</category><category>testing</category><category>yii</category></item><item><title>Используем ab для тестирования производительности web-приложения</title><link>/ru/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/</link><description>&lt;p&gt;Важной частью разработки web-приложения является тестирование
+производительности. Часто при постановке задачи заказчик требует чтобы
+сервис выдерживал определенную нагрузку. В процессе профилирования и
+оптимизации полезно отслеживать, как изменилась скорость работы
+приложения при новых условиях. Для этой цели можно использовать Apache
+HTTP server benchmarking tool.&lt;/p&gt;
+&lt;h2&gt;Использование ab&lt;/h2&gt;
+&lt;h3&gt;Установка&lt;/h3&gt;
+&lt;p&gt;Для того чтобы установить …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Mar 2012 01:27:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-03-14:/ru/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/</guid><category>ab</category><category>benchmark</category><category>оптимизация</category><category>профилирование</category></item><item><title>Yii + Selenium на debian 6</title><link>/ru/yii-selenium-na-debian-6/</link><description>&lt;p&gt;Для функционального тестирования в Yii используется Selenium. На debian
+и ubuntu при запуске тестов выдается ошибка:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Result is neither &amp;quot;true&amp;quot; nor &amp;quot;false&amp;quot;: &amp;#39;OR Server Exception: sessionId led to start new browser session: Browser not supported
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;В попытках решить данную проблему были испробованы чуть меньше чем все
+версии selenium и огромное …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Thu, 08 Mar 2012 23:07:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-03-08:/ru/yii-selenium-na-debian-6/</guid><category>selenium</category><category>yii</category><category>магия</category></item><item><title>Codeception проблема с русскими символами в utf-8</title><link>/ru/codeception-problema-s-russkimi-simvolami-v-utf-8/</link><description>&lt;p&gt;Разбираюсь с &lt;a href="http://codeception.com/"&gt;codeception&lt;/a&gt;. В acceptance тестах возникла проблема с
+распознаванием русских символов в utf-8:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nv"&gt;$I&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;WebGuy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$scenario&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nv"&gt;$I&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;wantTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;see right title&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$I&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;amOnPage&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$I&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;see&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Заголовок на русском&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;При этом тест фейлится, хотя логах можно увидеть, что заголовок
+установлен правильно. Для решения этой проблемы необходимо установить
+следующий …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 29 Feb 2012 13:57:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-02-29:/ru/codeception-problema-s-russkimi-simvolami-v-utf-8/</guid><category>acceptance</category><category>codeception</category><category>testing</category><category>utf-8</category></item><item><title>Ускоряем обработку изображений</title><link>/ru/uskoriaem-obrabotku-izobrazhenii/</link><description>&lt;p&gt;Всем привет! Сегодняшний пост посвящен производительности при обработке
+изображений. Почти в каждом проекте требуется обработка изображений,
+например, ресайзинг, поворот, обесцвечивание и т.д. Для этих целей я
+использовал широко известное решение, написанное на php и работающее с
+расширением GD - &lt;a href="http://www.verot.net/php_class_upload.htm"&gt;class.upload.php&lt;/a&gt;. До тех пор пока в проектах в
+основном …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 24 Feb 2012 00:07:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-02-24:/ru/uskoriaem-obrabotku-izobrazhenii/</guid><category>benchmark</category><category>GraphicsMagick</category><category>resizing</category><category>upload.class.php</category></item><item><title>Получаем HTTP-заголовки запроса в PHP</title><link>/ru/poluchaem-http-zagolovki-zaprosa-v-php/</link><description>&lt;p&gt;Привет всем! Краткая заметка на тему того, как получить http headers
+запроса, который инициировал выполнение скрипта. Также стоит отметить,
+что в данном случае я использую php, как fastcgi, по-этому некоторые
+функции, которые позволяют решить поставленную задачу, не подходят.&lt;/p&gt;
+&lt;p&gt;Как выяснилось все очень просто и все передаваемые http-заголовки
+запроса благополучно хранятся …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 08 Feb 2012 22:51:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-02-08:/ru/poluchaem-http-zagolovki-zaprosa-v-php/</guid><category>HTTP headers</category><category>PHP</category><category>php fcgi</category></item><item><title>Multiple select в PHP</title><link>/ru/multiple-select-v-php/</link><description>&lt;p&gt;&lt;img alt="php logo" src="/media/2012/01/wordpress-e-gli-script-segreti-per-evitare-lu-L-1-300x182.jpg" title="php logo"&gt;&lt;/p&gt;
+&lt;p&gt;Всех с новым годом! Сегодня решил сделать краткую заметку по работе с
+multiple select в php. Думаю кому-нибудь пригодится.&lt;/p&gt;
+&lt;p&gt;Для примера возьмем форму содержащую multiple select:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;form&lt;/span&gt; &lt;span class="na"&gt;type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;post&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;action&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;select&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;fruits&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;multiple&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;option&lt;/span&gt; &lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;apples&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;option&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;option&lt;/span&gt; &lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;oranges&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;option&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;option&lt;/span&gt; &lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;bananas&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;option&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;select …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 01 Jan 2012 21:39:00 +0400</pubDate><guid isPermaLink="false">tag:None,2012-01-01:/ru/multiple-select-v-php/</guid><category>multiple select</category><category>PHP</category></item><item><title>Sphinx - поиск по префиксам</title><link>/ru/sphinx-%D0%BF%D0%BE%D0%B8%D1%81%D0%BA-%D0%BF%D0%BE-%D0%BF%D1%80%D0%B5%D1%84%D0%B8%D0%BA%D1%81%D0%B0%D0%BC/</link><description>&lt;p&gt;&lt;img alt="sphinx logo" src="/media/2011/11/sphinx.jpg" title="sphinx logo"&gt;&lt;/p&gt;
+&lt;p&gt;Приветствую вас! Сегодня мы обсудим настройку sphinx для посимвольного
+поиска по префиксам слов.&lt;/p&gt;
+&lt;h2&gt;Проблема&lt;/h2&gt;
+&lt;p&gt;Передо мной была поставлена задача реализовать "живой" поиск, т.е. поиск
+с обновлением результатов по мере ввода. Однако, настроив sphinx
+привычным образом было замечено что поиск осуществляется не совсем
+корректно, а именно ведется по целым словам …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 09 Nov 2011 11:37:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-11-09:/ru/sphinx-поиск-по-префиксам/</guid><category>live search</category><category>sphinx</category></item><item><title>GeoIP средствами Nginx</title><link>/ru/geoip-sredstvami-nginx/</link><description>&lt;p&gt;&lt;img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo"&gt;&lt;/p&gt;
+&lt;p&gt;Часто при разработке сайтов появляется необходимость определения
+местоположения пользователя. Например, таким образом можно выдавать
+различные версии сайта для аудитории из разных стран. Также можно
+использовать данную возможность для балансировки нагрузки и назначать
+пользователю тот сервер, который находится ближе всего. Для реализации
+данной функции можно воспользоваться средствами &lt;a href="http://nginx.org/ru/"&gt;Nginx&lt;/a&gt;, прикрутив к
+нему …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 21 Oct 2011 22:03:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-10-21:/ru/geoip-sredstvami-nginx/</guid><category>geoip</category><category>nginx</category></item><item><title>Zend Framework Day</title><link>/ru/zend-framework-day/</link><description>&lt;p&gt;&lt;img alt="Zend Framework Day" src="http://frameworksdays.com/uploads/events/zend-framework-day.png"&gt;12 ноября, в Киеве, пройдет конференция "Zend
+Framework Day" - посвященная популярному PHP фреймворку Zend Framework.
+Среди докладчиков непосредственные разработчики компонент Zend
+Framework. Событие соберет лучших PHP и Zend Framework специалистов из
+Украины, России, Белоруссии и других стран СНГ.&lt;/p&gt;
+&lt;p&gt;С текущим списком тем и докладчиков можно ознакомиться на &lt;a href="http://frameworksdays.com/event/zend-framework-day-2011/speakers"&gt;странице&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Событие будет …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Thu, 13 Oct 2011 17:07:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-10-13:/ru/zend-framework-day/</guid><category>events</category><category>zend framework</category><category>zend framework days</category></item><item><title>Очередь сообщений на node.js и memcacheq</title><link>/ru/ochered-soobshchenii-na-nodejs-i-memcacheq/</link><description>&lt;p&gt;Привет! Столкнулся с необходимостью использования очередей сообщений в
+текущем проекте. Знаю что есть готовые решения, но я все же решил
+написать свой небольшой велосипед. Итак, поехали...&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;&lt;img alt="scheme" src="/media/2011/10/png"&gt;&lt;/p&gt;
+&lt;p&gt;В поставленной передо мной задаче необходимо выполнять ресурсоемкие
+операции (такие как работа с сетью, декодирование mp3-файлов), а также
+обращаться к бизнес-логике приложения для …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 07 Oct 2011 23:24:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-10-07:/ru/ochered-soobshchenii-na-nodejs-i-memcacheq/</guid><category>memcacheq</category><category>node.js</category><category>PHP</category><category>очередь сообщений</category></item><item><title>Хранилища данных в Node.JS. Memcachedb</title><link>/ru/khranilishcha-dannykh-v-nodejs-memcachedb/</link><description>&lt;p&gt;&lt;img alt="MemcacheDB" src="/media/2011/07/Снимок-300x204.png"&gt;&lt;/p&gt;
+&lt;p&gt;Сегодня я расскажу, как начать работать с MemcacheDB в Node.JS.&lt;/p&gt;
+&lt;h2&gt;Memcachedb&lt;/h2&gt;
+&lt;p&gt;Memcachedb - это key-value база данных, основанная на memcached. Для
+тех, кто работал с memcached, начало работы с memcachedb не будет
+требовать особых усилий, т.к. они используют общее API. Основные
+возможности Memcachedb:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Распределенное хранилище пар ключ-значение&lt;/li&gt;
+&lt;li&gt;В отличие …&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sat, 02 Jul 2011 23:04:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-07-02:/ru/khranilishcha-dannykh-v-nodejs-memcachedb/</guid><category>memcachedb</category><category>node.js</category></item><item><title>Определяем поисковый запрос средствами JS</title><link>/ru/opredeliaem-poiskovyi-zapros-sredstvami-js/</link><description>&lt;p&gt;&lt;img alt="searchengines" src="/media/2011/06/441.png" title="searchengines"&gt;&lt;/p&gt;
+&lt;p&gt;Здравствуйте! Сегодня я покажу вам, как можно определить поисковый
+запрос и поисковую систему, которые привели пользователя на сайт. Для
+этого напишем javascript-функцию, которая бы вытягивала данную
+информацию из браузера и позволяла бы легко добавлять новые поисковые
+системы. Информация о странице с которой был осуществлен переход
+хранится в свойстве объекта Document …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Tue, 28 Jun 2011 20:41:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-28:/ru/opredeliaem-poiskovyi-zapros-sredstvami-js/</guid><category>java script</category><category>referrer</category><category>поисковые системы</category></item><item><title>Практикум Zend Framework. Часть третья:Zend_Acl</title><link>/ru/praktikum-zend-framework-chast-tretiazend_acl/</link><description>&lt;p&gt;&lt;img alt="ZendFramework" src="/media/2011/06/ZendFramework-logo-640x1691.png" title="ZendFramework"&gt;&lt;/p&gt;
+&lt;p&gt;Сегодня мы рассмотрим пример создания Acl для системы с большим
+количеством ролей и ресурсов.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/"&gt;&lt;strong&gt;Часть первая&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/#auth"&gt;&lt;strong&gt;Аутентификация&lt;/strong&gt;&lt;/a&gt; - вход пользователей в систему&lt;/li&gt;
+&lt;li&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"&gt;&lt;strong&gt;ACL&lt;/strong&gt;&lt;/a&gt; - распределение прав доступа&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Часть вторая&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#route"&gt;&lt;strong&gt;Маршрутизация&lt;/strong&gt;&lt;/a&gt; - настройка url для различных компонентов
+    системы&lt;/li&gt;
+&lt;li&gt;&lt;a href="#registry"&gt;&lt;strong&gt;Registry&lt;/strong&gt;&lt;/a&gt; - быстрый доступ к системным константам&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Часть третья&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"&gt;&lt;strong&gt;Acl&lt;/strong&gt;&lt;/a&gt; - расширенный пример&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Хабраюзер &lt;a href="http://anexroid.habrahabr.ru/"&gt;Anexroid&lt;/a&gt; любезно предоставил описание …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 22 Jun 2011 11:04:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-22:/ru/praktikum-zend-framework-chast-tretiazend_acl/</guid><category>acl</category><category>zend_acl</category></item><item><title>Практикум Zend Framework. Часть вторая: Route и Registry</title><link>/ru/praktikum-zend-framework-chast-vtoraia-route-i-registry/</link><description>&lt;p&gt;&lt;img alt="ZendFramework logo" src="/media/2011/06/ZendFramework-logo-640x169.png" title="ZendFramework logo"&gt;&lt;/p&gt;
+&lt;p&gt;Продолжим рассмотрение практического использования Zend Framework. Во
+второй части речь пойдет о маршрутизации, что позволит вам создавать
+url-адреса любой необходимой для вас формы. Также мы рассмотрим пример
+организации удобного доступа к системным константам.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/"&gt;&lt;strong&gt;Часть первая&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/#auth"&gt;&lt;strong&gt;Аутентификация&lt;/strong&gt;&lt;/a&gt; - вход пользователей в систему&lt;/li&gt;
+&lt;li&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"&gt;&lt;strong&gt;ACL&lt;/strong&gt;&lt;/a&gt; - распределение прав доступа&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Часть вторая&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#route"&gt;&lt;strong&gt;Маршрутизация&lt;/strong&gt;&lt;/a&gt; - настройка url для …&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 12 Jun 2011 20:17:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-12:/ru/praktikum-zend-framework-chast-vtoraia-route-i-registry/</guid><category>registry</category><category>route</category></item><item><title>Практикум Zend Framework. Часть первая: Аутентификация и Acl</title><link>/ru/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/</link><description>&lt;p&gt;&lt;img alt="Zend Framework" src="/media/2011/06/ZendFramework-logo_small.png" title="Zend Framework"&gt;&lt;/p&gt;
+&lt;p&gt;В последнее время я все сильнее и сильнее убеждаюсь в универсальности
+Zend Framework, как платформы для создания web-приложений. Сегодня я
+расскажу о процессе создания каркаса сайта на Zend Framework, который
+предоставит необходимую основу для реализации сайтов средней сложности:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Часть первая&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#auth"&gt;&lt;strong&gt;Аутентификация&lt;/strong&gt;&lt;/a&gt; - вход пользователей в систему&lt;/li&gt;
+&lt;li&gt;&lt;a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"&gt;&lt;strong&gt;ACL&lt;/strong&gt;&lt;/a&gt; - распределение прав доступа&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Часть …&lt;/strong&gt;&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 10 Jun 2011 17:09:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-10:/ru/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/</guid><category>acl</category><category>auth</category><category>i18n</category><category>layout</category><category>registry</category><category>route</category><category>zend framework</category></item><item><title>Очистка проекта от служебных файлов subversion</title><link>/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/</link><description>&lt;p&gt;&lt;img alt="subversion" src="/media/2011/06/subversion_logo_hor-468x64.png" title="subversion"&gt;&lt;/p&gt;
+&lt;p&gt;Если вы используете svn, то при переносе проекта на хостинг вам
+понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
+свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
+удалить все директории .svn нужно выполнить следующие команды:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /var/www/projectfind . -name .svn -exec rm -R &lt;span class="o"&gt;{}&lt;/span&gt; &lt;span class="se"&gt;\;&lt;/span&gt; -print …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Tue, 07 Jun 2011 20:32:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-07:/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/</guid><category>Linux</category><category>svn</category></item><item><title>PHP-класс для работы с typograf.ru</title><link>/ru/php-klass-dlia-raboty-s-typografru/</link><description>&lt;p&gt;С недавнего времени начал использовать сервис для подготовки текстов к
+web-изданию - &lt;img alt="ТИПО - правильно!" src="http://www.typograf.ru/img/typograf.gif"&gt;. Очень полезный и удобный
+сервис, который позволяет проводить различного рода корректировки
+символов и даже выполняет исправление орфографических ошибок.&lt;/p&gt;
+&lt;p&gt;Также у данного сервиса есть свое api, которое позволяет внешним сайтам
+выполнять запросы на обработку текстов. Для задания дополнительных
+параметров обработки …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 06 Jun 2011 22:14:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-06:/ru/php-klass-dlia-raboty-s-typografru/</guid><category>php class</category><category>typograf</category></item><item><title>Проблема с кэшем facebook и url</title><link>/ru/problema-s-keshem-facebook-i-url/</link><description>&lt;p&gt;&lt;img alt="facebook" src="/media/2011/06/n20531316728_2183540_7053-300x99.jpg" title="facebook"&gt;&lt;/p&gt;
+&lt;p&gt;Здравствуйте! Недавно столкнулся с проблемой при использовании кнопки
+like от facebook. Проблема заключалась в том, что в open graph теге был
+указан некорректный url. Заметив данную оплошность я сразу её устранил,
+но это не повлекло за собой нужного эффекта. Как оказалось, дело в том
+что facebook кэширует данные о страницах …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 03 Jun 2011 10:55:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-06-03:/ru/problema-s-keshem-facebook-i-url/</guid><category>cache</category><category>facebook</category><category>url</category></item><item><title>Быстрое добавление виртуальных хостов Apache в Ubuntu/Debian</title><link>/ru/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/</link><description>&lt;p&gt;&lt;img alt="apache" src="/media/2011/05/feather.gif" title="apache"&gt;&lt;/p&gt;
+&lt;p&gt;Если вы web-разработчик, который работает сразу над несколькими
+проектами, то вам может показаться не удобным использование localhost и
+под-директорий для разграничения проектов. Кроме того такой подход
+иногда не позволяет приблизится к боевому окружению, когда сайт висит на
+отдельном хосте. Поэтому удобно было бы создавать отдельный виртуальный
+хост для каждого разрабатываемого …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Tue, 31 May 2011 17:51:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-05-31:/ru/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/</guid><category>apache</category><category>debian</category><category>hosts</category><category>Linux</category><category>администрирование</category></item><item><title>Как НЕ надо разрабатывать на Zend Framework</title><link>/ru/kak-ne-nado-razrabatyvat-na-zend-framework/</link><description>&lt;p&gt;&lt;img alt="image" src="/media/2011/05/picresized_th_1306079147_th_5d32a8e917ad3422678efa27eabc46cc.png" title="Zend Framework"&gt;&lt;br&gt;
+Здравствуйте! На днях подвернулась работа - дописать сайт на zend
+framework. Программист, который начал разрабатывать этот проект не
+успевал в сроки, не выполнял требования заказчика и в итоге его
+заменили. Открыв первый раз исходный код я ужаснулся от того количества
+ошибок, которые допускал разработчик и ведь он утверждал заказчику что
+является …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 22 May 2011 17:23:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-05-22:/ru/kak-ne-nado-razrabatyvat-na-zend-framework/</guid><category>code rules</category><category>fail</category><category>zend framework</category></item><item><title>Web-чат polling на Node.JS</title><link>/ru/web-chat-polling-na-nodejs/</link><description>&lt;p&gt;&lt;img alt="чат" src="/media/2011/04/conversacion-150x150.png" title="чат"&gt;&lt;/p&gt;
+&lt;p&gt;Продолжим тему создания чата на Node.JS. На этот раз напишем чат,
+который будет в качестве клиентов использовать браузеры.&lt;/p&gt;
+&lt;h2&gt;Проблема&lt;/h2&gt;
+&lt;p&gt;Т.к. протокол HTTP не позволяет устанавливать постоянное соединение
+сервера с клиентом, то нам необходимо самостоятельно инициировать
+соединение для считывания новых сообщений. Для этого существует
+множество способов, но мы для …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 10 Apr 2011 21:49:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-04-10:/ru/web-chat-polling-na-nodejs/</guid><category>cross domain ajax</category><category>java script</category><category>jquery</category><category>node.js</category><category>polling</category></item><item><title>Node.JS + MySQL</title><link>/ru/nodejs-mysql/</link><description>&lt;p&gt;&lt;img alt="Mysql + Node.js" src="/media/2011/03/Mysql-300x76.png" title="Mysql + Node.js"&gt;&lt;/p&gt;
+&lt;p&gt;В последнем проекте появилась необходимость
+организации работы Node.JS с MySQL. Для создания данного взаимодействия
+существует несколько модулей, я решил использовать &lt;strong&gt;node-mysql&lt;/strong&gt;, т.к.
+он предоставляет все необходимые мне функции.&lt;/p&gt;
+&lt;h2&gt;Установка node-mysql&lt;/h2&gt;
+&lt;p&gt;Для установки воспользуемся git:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; ~/.node_libraries
+git clone git://github.com/felixge/node-mysql.git mysql
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;После этого вы …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 28 Mar 2011 18:47:00 +0400</pubDate><guid isPermaLink="false">tag:None,2011-03-28:/ru/nodejs-mysql/</guid><category>MySQL</category><category>node-mysql</category><category>node.js</category></item><item><title>Тестируем производительность конструкций языка PHP</title><link>/ru/testiruem-proizvoditelnost-konstruktsii-iazyka-php/</link><description>&lt;p&gt;Здравствуйте! Часто в повседневной практике программирования мы
+используем те или иные конструкции php не задумываясь о их
+производительности. А учитывая, что VDS сейчас стоят не дёшево, нужно
+стараться уменьшить нагрузку наших приложений всеми доступными
+средствами. Сегодня я проведу сравнительный тест разных конструкций
+языка php выполняющих сходные функции. Выбрав оптимальные, по …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 13 Mar 2011 14:18:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-03-13:/ru/testiruem-proizvoditelnost-konstruktsii-iazyka-php/</guid><category>benchmark</category><category>PHP</category></item><item><title>Special Case (особый случай)</title><link>/ru/special-case-osobyi-sluchai/</link><description>&lt;p&gt;Сегодня мы обсудим паттерн Special Case. Данный паттерн представляет
+собой гибкий способ обхода ограничений возникающих при появлении, т.н.
+специальных случаев.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;При проектировании объектно-ориентированной системы часто возникают
+ситуации, когда нужно обработать какой-либо особый случай, который
+выбивается из обычного цикла работы. При этом возникает необходимость
+проверять возникновение такой ситуации по …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 07 Mar 2011 12:56:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-03-07:/ru/special-case-osobyi-sluchai/</guid><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Registry (реестр)</title><link>/ru/registry-reestr/</link><description>&lt;p&gt;&lt;img alt="registry" src="/media/2011/02/Windows-7-Registry-Tricks-150x150.jpg" title="registry"&gt;&lt;/p&gt;
+&lt;p&gt;Рассмотрим паттерн проектирования - реестр. Данный паттерн является
+чем-то вроде безопасной замены глобальных переменных. При помощи данного
+шаблона вы сможете обмениваться данными в многоуровневом приложении.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;Наверное все сложные системы являются многоуровневыми, иначе мы бы
+просто не смогли уследить за всеми зависимостями и связями внутри
+системы. Разбивая систему на независимые уровни …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 28 Feb 2011 21:38:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-28:/ru/registry-reestr/</guid><category>global variables</category><category>interfaces</category><category>json</category><category>magic methods</category><category>PHP</category><category>registry</category><category>serialize</category><category>singleton</category><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Gateway (шлюз)</title><link>/ru/gateway-shliuz/</link><description>&lt;p&gt;Сегодня мы поговорим о базовом паттерне проектирования - шлюзе. Данный
+паттерн поможет нам избежать всех издержек, которые мы получаем при
+использовании внешних, не объектных ресурсов.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;Почти всегда при написании программ нам приходится учитывать внешние
+ресурсы без которых нам не обойтись. Примером таких ресурсов может быть
+реляционная база данных или API …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Thu, 24 Feb 2011 18:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-24:/ru/gateway-shliuz/</guid><category>gateway</category><category>PHP</category><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация</title><link>/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/</link><description>&lt;p&gt;&lt;img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet"&gt;Приветствую вас, товарищи линуксоиды! Сегодня мы
+продолжим рассмотрение настройки сети и интернета в linux. В данной
+части статьи я постараюсь раскрыть темы DHCP, DNS и маршрутизация. Перед
+прочтением данной статьи прочитайте &lt;a href="/Linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/"&gt;первую часть&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;Автоматическая настройка сети через DHCP&lt;/h2&gt;
+&lt;p&gt;Часто для настройки компьютеров в сети используется протокол DHCP
+(dynamic host configuration …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 23 Feb 2011 17:50:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-23:/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/</guid><category>debian</category><category>dhcp</category><category>dns</category><category>network</category><category>route</category><category>ubuntu</category><category>администрирование</category></item><item><title>Настройка сети и интернета в Debian/Ubuntu - часть 1 - Настройка сетевых интерфейсов</title><link>/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/</link><description>&lt;p&gt;Здравствуйте, товарищи линуксоиды ;[&lt;/p&gt;
+&lt;p&gt;&lt;img alt="network" src="/media/2011/02/network-300x225.jpg" title="network"&gt;В данном топике я хочу рассказать всё что может
+потребоваться для настройки сети и подключения к интернету в linux. Я
+буду рассматривать на примере своего любимого дистрибутива - Debian, но
+я думаю это будет действительно и для других дистрибутивов, особенно для
+Ubuntu, т.к. эти дистрибутивы близкие родственники …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Tue, 22 Feb 2011 13:17:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-22:/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/</guid><category>debian</category><category>ifconfig</category><category>ifdown</category><category>ifup</category><category>interfaces</category><category>network</category><category>ubuntu</category><category>администрирование</category></item><item><title>Lazy Initialization (отложенная инициализация)</title><link>/ru/lazy-initialization-otlozhennaia-initsializatsiia/</link><description>&lt;p&gt;&lt;img alt="lazy initialization" src="/media/2011/02/i-can-but-i-won-t-garfield-262532_800_600-300x225.jpg" title="lazy initialization"&gt;Здравствуйте, сегодня речь пойдёт об очередном
+паттерне - lazy initialization (отложенная инициализация). Освоив этот
+паттерн вы научитесь инициализировать ресурсы только, тогда когда они
+действительно нужны и тем самым увеличите скорость работы ваших
+приложений.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;При проектировании вашего приложения вы можете столкнутся с
+необходимостью создать классы, которые будут выполнять какие-либо
+ресурсоемкие вычисления …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 21 Feb 2011 21:22:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-21:/ru/lazy-initialization-otlozhennaia-initsializatsiia/</guid><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Builder (строитель)</title><link>/ru/builder-stroitel/</link><description>&lt;p&gt;&lt;img alt="builder pattern" src="/media/2011/02/images.jpg" title="builder"&gt;&lt;/p&gt;
+&lt;p&gt;И снова рассуждение на тему порождающих шаблонов. На этот раз будем
+говорить о паттерне строитель. Данный паттерн позволяет скрыть
+инициализацию сложного объекта и создает простой интерфейс для
+инстанциирования сложных объектов с различным внутренним состоянием.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;Если при проектировании вы столкнулись с тем что необходимо создавать
+сложные объекты, инициализация которых состоит …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 20 Feb 2011 18:27:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-20:/ru/builder-stroitel/</guid><category>builder</category><category>PHP</category><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Prototype (прототип)</title><link>/ru/prototype-prototip/</link><description>&lt;p&gt;Следующий порождающий объекты шаблон, который мы рассмотрим - прототип.
+Данный шаблон является более гибкой версией шаблона Abstract Factory.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;Часто приходится отказываться от затеи использовать шаблон &lt;a href="/PHP/abstract-factory-abstraktnaia-fabrika/"&gt;абстрактная
+фабрика&lt;/a&gt; из-за необходимости поддерживать дополнительные иерархии
+классов. С этой проблемой нам может помочь шаблон prototype, который
+основан на использовании средства clone языка php для …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sat, 19 Feb 2011 23:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-02-19:/ru/prototype-prototip/</guid><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Abstract Factory (абстрактная фабрика)</title><link>/ru/abstract-factory-abstraktnaia-fabrika/</link><description>&lt;p&gt;Рассмотрим ещё один порождающий шаблон - абстрактная фабрика. Перед
+прочтением рекомендую ознакомится с шаблоном Factory Method &lt;a href="/PHP/factory-method-fabrichnyi-metod/"&gt;здесь&lt;/a&gt;,
+т.к. в данном топике я буду расширять рассмотренный там пример.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;Во время проектирования может возникнуть необходимость создавать
+взаимосвязанные объекты из различных иерархии при этом решение о том
+какие именно объекты создавать должно …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 30 Jan 2011 01:34:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-01-30:/ru/abstract-factory-abstraktnaia-fabrika/</guid><category>abstract factory</category><category>PHP</category><category>ООП</category><category>Паттерны проектирования</category></item><item><title>MySQL - обзор типов таблиц</title><link>/ru/mysql-obzor-tipov-tablits/</link><description>&lt;p&gt;&lt;img alt="mysql" src="/media/2011/01/mysql-125x125.png" title="MySQL logo"&gt;&lt;/p&gt;
+&lt;p&gt;Здравствуйте, сегодня мы поговорим о типах таблиц в MySQL. Архитектура
+MySQL позволяет подключать разные движки таблиц. На данный момент MySQL
+поддерживает множество различных типов таблиц, каждый из которых имеет
+свои преимущества и недостатки. Я перечислю и коротко опишу основные
+типы таблиц, а затем проведу небольшой тест производительности наиболее
+часто используемых …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sat, 29 Jan 2011 18:42:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-01-29:/ru/mysql-obzor-tipov-tablits/</guid><category>benchmark</category><category>innodb</category><category>myisam</category><category>MySQL</category><category>БД</category></item><item><title>Factory Method (фабричный метод)</title><link>/ru/factory-method-fabrichnyi-metod/</link><description>&lt;p&gt;Данный топик продолжает тему шаблонов проектирования для генерации
+объектов. Рассмотрим паттерн Factory Method или на великом и могучем (на
+русском, а не php :)) - фабричный метод.&lt;/p&gt;
+&lt;h2&gt;Описание&lt;/h2&gt;
+&lt;p&gt;Часто при проектировании классов возникает необходимость создавать
+экземпляры одних классов внутри других. При этом могут возникнуть
+требования создавать экземпляры не одного, а нескольких классов …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 19 Jan 2011 18:39:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-01-19:/ru/factory-method-fabrichnyi-metod/</guid><category>Factory Method</category><category>PHP</category><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Singleton (одиночка)</title><link>/ru/singleton-odinochka/</link><description>&lt;p&gt;Приветствую Вас, читатель моего блога! Первая статья из цикла паттерны
+проектирования посвящена очень полезному шаблону - singleton. Почему я
+решил начать именно с него? Всё очень просто, этот шаблон является
+первым шаблоном который я начал использовать в практической разработке и
+сразу же ощутил всю его мощь. Относится данный шаблон к шаблонам …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 16 Jan 2011 13:20:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-01-16:/ru/singleton-odinochka/</guid><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Ставим FTP-сервер в Debian</title><link>/ru/stavim-ftp-server-v-debian/</link><description>&lt;p&gt;&lt;img alt="image" src="/media/2011/01/ftp_client.png" title="ftp_client"&gt;&lt;/p&gt;
+&lt;p&gt;По просьбе моего друга рассматриваю установку ftp-сервера в Linux.&lt;/p&gt;
+&lt;p&gt;Начнем с того что установим демон ftpd. Т.к. я использую Debian, то
+устанавливать будем при помощи apt-get:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install ftpd
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Итак, поставили, теперь проверяем запущен или нет:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps aux &lt;span class="p"&gt;|&lt;/span&gt; grep ftp
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;В моём случае не запущен, значит запускаем:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/etc/init …&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Mon, 03 Jan 2011 00:42:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-01-03:/ru/stavim-ftp-server-v-debian/</guid><category>debian</category><category>ftp</category><category>ftpd</category><category>администрирование</category></item><item><title>Паттерны проектирования в PHP</title><link>/ru/patterny-proektirovaniia-v-php/</link><description>&lt;p&gt;Здравствуйте, товарищи программисты!&lt;/p&gt;
+&lt;p&gt;Данным топиком я открываю цикл статей про паттерны(шаблоны)
+проектирования в общем и их реализацию на php в частном. Каждый
+программист, который разрабатывает действительно масштабные проекты со
+временем начинает замечать, что сталкивается с одними и теми же
+проблемами. Здесь речь идет не о использовании библиотек и фреймворков …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 02 Jan 2011 16:43:00 +0300</pubDate><guid isPermaLink="false">tag:None,2011-01-02:/ru/patterny-proektirovaniia-v-php/</guid><category>PHP</category><category>ООП</category><category>Паттерны проектирования</category></item><item><title>Простой сервер чата на Node.JS</title><link>/ru/prostoi-server-chata-na-nodejs/</link><description>&lt;p&gt;Здравствуйте! В продолжении темы Node.JS хочу рассмотреть пример
+создания простого сервера чата на базе данной библиотеки.&lt;/p&gt;
+&lt;p&gt;Во-первых нужно определится с функционалом. Наш сервер должен принимать
+подключения от клиентов по протоколу tcp, открывать потоки и рассылать
+всем клиентам полученные от каждого данные. Т.е. при получении данных от
+одного из …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Thu, 30 Dec 2010 18:20:00 +0300</pubDate><guid isPermaLink="false">tag:None,2010-12-30:/ru/prostoi-server-chata-na-nodejs/</guid><category>java script</category><category>node.js</category></item><item><title>Node.JS - введение</title><link>/ru/nodejs-vvedenie/</link><description>&lt;p&gt;&lt;img alt="image" src="/media/2010/12/media_httpnodeblogfil_occie.png.scaled500.png" title="nodejs"&gt;&lt;/p&gt;
+&lt;p&gt;Сегодня я хочу рассмотреть библиотеку для асинхронного программирования
+server-side приложений на Java Script - Node.JS.&lt;/p&gt;
+&lt;p&gt;Работает библиотека на Java Script движке V8 от самого гугла и
+предоставляет базовые возможности для создания масштабируемых сетевых
+приложений. Изначально Node заточен под высокие нагрузки, так что если
+вы разрабатываете очередной facebook, то задумайтесь об …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 22 Dec 2010 11:33:00 +0300</pubDate><guid isPermaLink="false">tag:None,2010-12-22:/ru/nodejs-vvedenie/</guid><category>java script</category><category>node.js</category></item><item><title>Подключение нового жесткого диска в Linux</title><link>/ru/podkliuchenie-novogo-zhestkogo-diska-v-linux/</link><description>&lt;p&gt;Доброго времени суток, товарищи линуксоиды!!&lt;/p&gt;
+&lt;p&gt;В этой статье я хочу рассказать о процессе подключения нового жёсткого
+диска в ОС Linux.&lt;/p&gt;
+&lt;p&gt;Подключив жёсткий диск убедитесь, что система распознаёт его. Для этого
+можно обратиться к программе конфигурации BIOS. Убедившись в том что
+жёсткий диск успешно подключён можно приступать к загрузке системы.&lt;/p&gt;
+&lt;p&gt;Сразу …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 26 Nov 2010 21:14:00 +0300</pubDate><guid isPermaLink="false">tag:None,2010-11-26:/ru/podkliuchenie-novogo-zhestkogo-diska-v-linux/</guid><category>Linux</category><category>администрирование</category></item><item><title>Как настроить подключение к интернет через мобильный телефон в Debian</title><link>/ru/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/</link><description>&lt;p&gt;В этой статье я расскажу как использовать ваш мобильный телефон в
+качестве 3G/GPRS/EDGE модема в ОС Linux.&lt;/p&gt;
+&lt;p&gt;В качестве тестового примера использовались ПК с установленной Debian
+5.0 «Lenny» и мобильный телефон Nokia N96 соединённые между собой usb
+кабелем.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Устанавливаем соединение компьютера с телефоном.Подключаем телефон к
+    компьютеру …&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Fri, 26 Nov 2010 20:02:00 +0300</pubDate><guid isPermaLink="false">tag:None,2010-11-26:/ru/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/</guid><category>debian</category><category>Linux</category><category>wvdial</category></item></channel></rss>

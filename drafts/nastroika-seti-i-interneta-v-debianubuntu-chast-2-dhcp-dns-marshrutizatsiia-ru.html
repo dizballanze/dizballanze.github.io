@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia-ru.html" rel="bookmark"
+         title="Permalink to Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация">Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация</a></h2>
+    <time class="published" datetime="2011-02-23T17:50:00+03:00">23 фев 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet">Приветствую вас, товарищи линуксоиды! Сегодня мы
+продолжим рассмотрение настройки сети и интернета в linux. В данной
+части статьи я постараюсь раскрыть темы DHCP, DNS и маршрутизация. Перед
+прочтением данной статьи прочитайте <a href="/Linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/">первую часть</a>.</p>
+<h2>Автоматическая настройка сети через DHCP</h2>
+<p>Часто для настройки компьютеров в сети используется протокол DHCP
+(dynamic host configuration protocol). Данный протокол позволяет быстро
+настраивать параметры сети автоматически при помощи запроса к
+DHCP-серверу. Получив запрос DHCP-сервер назначает клиенту ip-адрес из
+числа свободных и клиент может использовать его для работы в сети до
+следующей реконфигурации. Также сервер может выдавать клиентам другие
+параметры сети, такие как маска подсети, dns-сервера и шлюзы, но о них
+мы поговорим позже. Перед тем, как выполнять запрос на получение
+параметров от сети, необходимо правильно настроить сетевой интерфейс,
+для этого необходимо отредактировать уже знакомый вам файл
+/etc/network/interfaces. В данном файле необходимо добавить строку на
+подобии следующей:</p>
+<div class="highlight"><pre><span></span>iface eth0 inet dhcp
+</pre></div>
+
+
+<p>Итак, для того что-бы вручную осуществить запрос к dhcp серверу на
+получение настроек необходимо выполнить следующую команду:</p>
+<div class="highlight"><pre><span></span>dhclient eth0
+</pre></div>
+
+
+<p>Параметром команде dhclient мы передаем название сетевого интерфейса.
+После этого будет выполнена автоматическая настройка параметров.
+Зачастую параметры сети будут настраиваться автоматически при включении
+компьютера или активации сетевого подключения. Но иногда может
+понадобится выполнить этот запрос вручную, например в случае
+необходимости смены адреса или при недоступности DHCP-сервера в момент
+активации интерфейса.</p>
+<p>Иногда вам может потребоваться освободить занятый вашим компьютером
+адрес, для этого выполните следующую команду:</p>
+<div class="highlight"><pre><span></span>dhclient -r eth0
+</pre></div>
+
+
+<h2>Настройка DNS</h2>
+<p>DNS (domain name system) - распределенная система отвечающая за
+установление соответствия между символьными и цифровыми адресами
+компьютеров в сети. Т.е. данная система позволяет нам обращаться к
+компьютерам в сети по простому символическому имени, которое намного
+проще запомнить чем ip-адрес. Для того что-бы узнать ip-адрес машины по
+её доменному имени необходимо воспользоваться командой host:</p>
+<div class="highlight"><pre><span></span>host www.google.com
+www.google.com is an <span class="nb">alias</span> <span class="k">for</span> www.l.google.com.
+www.l.google.com has address <span class="m">74</span>.125.87.99
+www.l.google.com has address <span class="m">74</span>.125.87.104
+</pre></div>
+
+
+<p>Как вы видите 74.125.87.104 ip-адрес всеми известной поисковой системы.
+И если вы наберете его в адресной строке своего браузера, то вы увидите
+что это google. Часто в локальных сетях есть свои dns-сервера, например
+если вы подключены к городской сети и получаете через неё доступ к
+Интернет, то в вашей сети должен быть свой сервер имён. Для того что-бы
+ваша система могла корректно обращаться к нему, вам необходимо настроить
+параметры dns, добавив ip-адрес dns-сервера в конфигурационный файл.
+Итак, отредактируйте от пользователя root файл /etc/resolve.conf:</p>
+<div class="highlight"><pre><span></span>nameserver <span class="m">10</span>.32.0.1
+</pre></div>
+
+
+<p>Теперь ваша машина будет знать, что 10.32.0.1 - это сервер имён.</p>
+<h2>Настройка параметров маршрутизации (шлюза)</h2>
+<p>Для настройки маршрутизации воспользуемся утилитой route. Стандартной
+задачей является установка шлюза по-умолчанию, часто это бывает
+необходимо для настройки доступа к интернет. Для того чтобы установить
+стандартный шлюз (gateway) воспользуйтесь следующей командой:</p>
+<div class="highlight"><pre><span></span>route add default gw <span class="m">10</span>.32.0.1
+</pre></div>
+
+
+<p>Данной командой мы устанавливаем стандартный шлюз (10.32.0.1), который
+будет принимать пакеты из сети при отсутствии других доступных
+маршрутов. После настройки всех маршрутов можно проверить правильность
+роутинга при помощи следующей команды:</p>
+<div class="highlight"><pre><span></span>route
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+localnet        *               <span class="m">255</span>.255.252.0   U     <span class="m">0</span>      <span class="m">0</span>        <span class="m">0</span> eth0
+default         <span class="m">10</span>.32.0.1     <span class="m">0</span>.0.0.0         UG    <span class="m">0</span>      <span class="m">0</span>        <span class="m">0</span> eth0
+</pre></div>
+
+
+<p>Если вам нужно более детальная настройка маршрутизации, то я рекомендую
+вам прочитать справочное руководство к команде route.</p>
+<p>Эти настройки действительны только до следующей перезагрузки системы,
+для того, чтобы настройки устанавливались автоматически необходимо
+добавить в файл /etc/network/interface следующие строки(от пользователя
+root):</p>
+<div class="highlight"><pre><span></span>gateway 10.32.0.1
+</pre></div>
+
+
+<h2>Проверка соединения</h2>
+<p>После настройки сети полезно поверить работоспособность всех внесенных
+изменений. Для начала лучше перезагрузить сетевые параметры для этого
+выполните от root:</p>
+<div class="highlight"><pre><span></span>/etc/init.d/networking restart
+</pre></div>
+
+
+<p>Теперь можно проверить доступность какого-либо узла сети, для этого
+воспользуемся утилитой ping:</p>
+<div class="highlight"><pre><span></span>ping -c <span class="m">4</span> <span class="m">10</span>.32.0.1
+PING <span class="m">10</span>.32.0.1 <span class="o">(</span><span class="m">10</span>.32.0.1<span class="o">)</span> <span class="m">56</span><span class="o">(</span><span class="m">84</span><span class="o">)</span> bytes of data.
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">1</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">2</span>.11 ms
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">2</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">1</span>.86 ms
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">3</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">1</span>.25 ms
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">4</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">2</span>.00 ms
+
+--- <span class="m">10</span>.32.0.1 ping statistics ---
+<span class="m">4</span> packets transmitted, <span class="m">4</span> received, <span class="m">0</span>% packet loss, <span class="nb">time</span> 3003ms
+rtt min/avg/max/mdev <span class="o">=</span> <span class="m">1</span>.255/1.809/2.110/0.334 ms
+</pre></div>
+
+
+<p>Данной командой я отправляю 4 эхо-пакета на узел 10.32.0.1. Сервер
+обязан ответить мне обратно, что он и делает. Команда выводит информацию
+по каждому пакету и в конце статистику по всем пакетам указывая время
+передачи, процент потерянных пакетов и тд.</p>
+<p>Для проверки параметров маршрутизации пакетов часто бывает удобно
+воспользоваться утилитой traceroute:</p>
+<div class="highlight"><pre><span></span>traceroute www.google.com
+traceroute to www.google.com <span class="o">(</span><span class="m">74</span>.125.87.99<span class="o">)</span>, <span class="m">30</span> hops max, <span class="m">60</span> byte packets
+ <span class="m">1</span>  ti.holl.net <span class="o">(</span><span class="m">10</span>.32.0.1<span class="o">)</span>  <span class="m">5</span>.595 ms * *
+ <span class="m">2</span>  <span class="m">192</span>.168.1.1 <span class="o">(</span><span class="m">192</span>.168.1.1<span class="o">)</span>  <span class="m">7</span>.374 ms  <span class="m">7</span>.370 ms  <span class="m">7</span>.842 ms
+ <span class="m">3</span>  * * *
+ <span class="m">4</span>  <span class="m">10</span>.50.19.34 <span class="o">(</span><span class="m">10</span>.50.19.34<span class="o">)</span>  <span class="m">83</span>.307 ms  <span class="m">87</span>.352 ms  <span class="m">87</span>.350 ms
+ <span class="m">5</span>  <span class="m">82</span>.207.106.42 <span class="o">(</span><span class="m">82</span>.207.106.42<span class="o">)</span>  <span class="m">136</span>.875 ms  <span class="m">139</span>.480 ms  <span class="m">139</span>.478 ms
+ <span class="m">6</span>  <span class="m">209</span>.85.241.54 <span class="o">(</span><span class="m">209</span>.85.241.54<span class="o">)</span>  <span class="m">135</span>.527 ms  <span class="m">129</span>.398 ms  <span class="m">131</span>.854 ms
+ <span class="m">7</span>  <span class="m">72</span>.14.239.14 <span class="o">(</span><span class="m">72</span>.14.239.14<span class="o">)</span>  <span class="m">136</span>.508 ms  <span class="m">136</span>.780 ms  <span class="m">136</span>.592 ms
+ <span class="m">8</span>  <span class="m">209</span>.85.248.39 <span class="o">(</span><span class="m">209</span>.85.248.39<span class="o">)</span>  <span class="m">131</span>.577 ms <span class="m">209</span>.85.248.41 <span class="o">(</span><span class="m">209</span>.85.248.41<span class="o">)</span>  <span class="m">138</span>.317 ms  <span class="m">102</span>.821 ms
+ <span class="m">9</span>  <span class="m">72</span>.14.232.221 <span class="o">(</span><span class="m">72</span>.14.232.221<span class="o">)</span>  <span class="m">100</span>.853 ms  <span class="m">102</span>.081 ms <span class="m">72</span>.14.238.101 <span class="o">(</span><span class="m">72</span>.14.238.101<span class="o">)</span>  <span class="m">106</span>.566 ms
+<span class="m">10</span>  hb-in-f99.1e100.net <span class="o">(</span><span class="m">74</span>.125.87.99<span class="o">)</span>  <span class="m">107</span>.843 ms  <span class="m">114</span>.659 ms  <span class="m">110</span>.048 ms
+</pre></div>
+
+
+<p>Данная команда подробно показывает маршрут прохождения пакета, отображая
+каждый узел через который проходит пакет и временные характеристики.
+Изучая отчёты данной команды можно выявлять ошибки маршрутизации,
+которые могут состоять в не оптимальном прохождении пакета по сети.</p>
+<h2>Заключение</h2>
+<p>Этот топик завершает тему настройки сети/интернета в linux. Если есть,
+какие-то вопросы по данной теме, которые я не рассмотрел, отписывайтесь
+в комментариях. Спасибо за внимание!</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

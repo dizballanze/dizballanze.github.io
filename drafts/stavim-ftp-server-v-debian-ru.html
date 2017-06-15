@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/stavim-ftp-server-v-debian-ru.html" rel="bookmark"
+         title="Permalink to Ставим FTP-сервер в Debian">Ставим FTP-сервер в Debian</a></h2>
+    <time class="published" datetime="2011-01-03T00:42:00+03:00">03 янв 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="image" src="/media/2011/01/ftp_client.png" title="ftp_client"></p>
+<p>По просьбе моего друга рассматриваю установку ftp-сервера в Linux.</p>
+<p>Начнем с того что установим демон ftpd. Т.к. я использую Debian, то
+устанавливать будем при помощи apt-get:</p>
+<div class="highlight"><pre><span></span>apt-get install ftpd
+</pre></div>
+
+
+<p>Итак, поставили, теперь проверяем запущен или нет:</p>
+<div class="highlight"><pre><span></span>ps aux <span class="p">|</span> grep ftp
+</pre></div>
+
+
+<p>В моём случае не запущен, значит запускаем:</p>
+<div class="highlight"><pre><span></span>/etc/init.d/ftpd start
+bash: /etc/init.d/ftpd: Нет такого файла или каталога
+</pre></div>
+
+
+<p>Хмм...</p>
+<div class="highlight"><pre><span></span>whereis ftpd
+ftpd:
+</pre></div>
+
+
+<p>Так, что-то непонятное. При всём этом man ftpd выдаёт страницу
+руководства. Пробуем перезагрузится...После перезагрузки ps не выдаёт
+никакого результата при поиске слова ftpd также и whereis. Но проверив
+свой хост nmap'ом я увидел следующее:</p>
+<div class="highlight"><pre><span></span>nmap <span class="m">127</span>.0.0.1
+
+Starting Nmap <span class="m">4</span>.62 <span class="o">(</span> http://nmap.org <span class="o">)</span> at <span class="m">2011</span>-01-02 <span class="m">23</span>:37 EET
+Interesting ports on localhost <span class="o">(</span><span class="m">127</span>.0.0.1<span class="o">)</span>:
+Not shown: <span class="m">1708</span> closed ports
+PORT     STATE SERVICE
+<span class="m">21</span>/tcp   open  ftp
+<span class="m">25</span>/tcp   open  smtp
+<span class="m">80</span>/tcp   open  http
+<span class="m">111</span>/tcp  open  rpcbind
+<span class="m">631</span>/tcp  open  ipp
+<span class="m">2049</span>/tcp open  nfs
+<span class="m">3306</span>/tcp open  mysql
+
+Nmap <span class="k">done</span>: <span class="m">1</span> IP address <span class="o">(</span><span class="m">1</span> host up<span class="o">)</span> scanned in <span class="m">0</span>.098 seconds
+</pre></div>
+
+
+<p>Как мы видим 21 порт открыт и на нём висит ftp-сервер. Бегло просмотрев
+man ftpd разобрался с файлами конфигураций. Итак, смотрим что к чему:</p>
+<ul>
+<li><code>/etc/ftpusers</code> - список пользователей которым запрещён доступ к ftp.
+    Формат файла прост, как рубанок - каждая новая строка имя
+    пользователя, которому нужно обрезать доступ к питательному вымени
+    file transfer protocol :)</li>
+<li><code>/etc/ftpchroot</code> - список пользователей для которых текущая директория
+    должна быть установлена в "искусственный" корень при помощи "chroot"
+    перед началом работы.</li>
+<li><code>/etc/ftpwelcome</code> - приветственное сообщение</li>
+<li><code>/etc/motd</code> - сообщение после авторизации</li>
+</ul>
+<p>Оказалось всё довольно просто. Пробуем залогинится:</p>
+<div class="highlight"><pre><span></span>ftp <span class="m">127</span>.0.0.1
+Connected to <span class="m">127</span>.0.0.1.
+<span class="m">220</span> dizballanze-laptop FTP server <span class="o">(</span>Version <span class="m">6</span>.4/OpenBSD/Linux-ftpd-0.17<span class="o">)</span> ready.
+Name <span class="o">(</span><span class="m">127</span>.0.0.1:root<span class="o">)</span>: dizballanze
+<span class="m">331</span> Password required <span class="k">for</span> dizballanze.
+Password:
+<span class="m">230</span>- Linux dizballanze-laptop <span class="m">2</span>.6.26-2-686 <span class="c1">#1 SMP Sat Dec 26 09:01:51 UTC 2009 i686</span>
+<span class="m">230</span>- 
+<span class="m">230</span>- The programs included with the Debian GNU/Linux system are free software<span class="p">;</span>
+<span class="m">230</span>- the exact distribution terms <span class="k">for</span> each program are described in the
+<span class="m">230</span>- individual files in /usr/share/doc/*/copyright.
+<span class="m">230</span>- 
+<span class="m">230</span>- Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+<span class="m">230</span>- permitted by applicable law.
+<span class="m">230</span> User dizballanze logged in.
+Remote system <span class="nb">type</span> is UNIX.
+Using binary mode to transfer files.
+ftp&gt; <span class="nb">pwd</span>
+<span class="m">257</span> <span class="s2">&quot;/home/dizballanze&quot;</span> is current directory.
+</pre></div>
+
+
+<p>Авторизация прошла успешно и я сразу получил доступ к файловой системе
+от пользователя dizballanze без каких-либо дополнительных настроек.
+Единственная проблема - это некорректное отображения русских надписей в
+терминальном клиенте, но в gFTP всё отображается отлично. Советую
+использовать именно его в качестве клиента. Подводя итоги перечислим 5
+правил аутентификации ftpd:</p>
+<ol>
+<li>Логин должен находится в базе паролей системы - <code>/etc/passwd</code> и не
+    должен быть равен null.</li>
+<li>Логин не должен встречаться в <code>/etc/ftpusers</code></li>
+<li>Пользователь должен иметь стандартный интерпретатор команд
+    возвращаемый <code>getusershell</code></li>
+<li>Если имя пользователя встречается в <code>/etc/ftpchroot</code> сессионный корень
+    будет изменён на директорию входа при помощи chroot, как для
+    "anonymous" или "ftp" аккаунта. Но тем не менее всёравно требуется
+    пароль. Данная функция - это промежуточный этап между полностью
+    анонимным и полностью привилегированным аккаунтом.</li>
+<li>Если имя пользователя "anonymous" или "ftp", то анонимный
+    ftp-аккаунт должен быть представлен в файле паролей (пользователь
+    "ftp"). В таком случае пользователь получает возможность
+    авторизироваться используя любой пароль (по соглашению принято
+    использовать email в качестве пароля).</li>
+</ol>
+<p>FTPd предоставляет простой способ удалённого доступа к системе без траты
+времени на конфигурирование системы. Очень удобно использовать свои
+данные для удалённой авторизации. Но при этом стоит учитывать опасность,
+которая возникает, т.к. теперь любой пользователь сможет получить доступ
+к файлам узнав ваши логин и пароль, к тому же зачастую пароли для
+пользователей на локальных машинах далеки от безопасных (по себе знаю).
+Так что если вы планируете использовать FTPd советую изменить пароли на
+безопасные или заблокировать аккаунты путём добавления их в
+/etc/ftpusers. Спасибо за внимание! Да прибудет с вами сила :) !</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

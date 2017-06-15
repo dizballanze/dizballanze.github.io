@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/nasledovanie-svoistv-modelei-v-mongoose-ru.html" rel="bookmark"
+         title="Permalink to Наследование свойств моделей в Mongoose">Наследование свойств моделей в Mongoose</a></h2>
+    <time class="published" datetime="2013-01-02T02:41:00+04:00">02 янв 2013</time>
+  </header>
+  <div class="entry-content">
+    <p>Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
+моделей в <a href="http://mongoosejs.com/" title="Mongoose ODM">ODM Mongoose</a>. Для тех, кто не знает mongoose - это 
+ODM (object document mapper) для node.js и <a href="http://www.mongodb.org/" title="MongoDB">MongoDB</a>. </p>
+<h2>Применение</h2>
+<p>Часто бывает необходимо в рамках одной коллекции объектов выделить несколько
+типов с некоторыми различиями в наборе свойств. Т.к. MongoDB реализует schema-less дизайн, 
+мы не ограничены базой данных и не обязаны следовать какому-то строгому набору
+полей в наших коллекциях. Однако, удобнее использовать ODM, которые реализовывают
+дополнительные плюшки, такие как валидация, фильтрация, методы модели и т.д.
+Соответственно описание данных на уровне исходного кода модели все же остаётся.
+Для того, чтобы решить проблему с типами объектов в рамках одной коллекции можно
+наследовать базовые свойства и дополнять их специфическими для каждого типа объектов.</p>
+<p>Рассмотрим простой пример. У нас есть два типа пользователей: юридическое лицо и физическое
+лицо. Каждый тип имеет общие и специфические поля. Чтобы выделить общие поля создадим объект
+с набором полей, которые встречаются в каждом из типов:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">BaseUser</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">inn</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> 
+        <span class="nx">validate</span><span class="o">:</span> <span class="nx">inn_validator</span><span class="p">,</span>
+        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
+    <span class="nx">email</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">unique</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">validate</span><span class="o">:</span> <span class="nx">email_validator</span><span class="p">},</span>
+    <span class="nx">phone</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">validate</span><span class="o">:</span> <span class="nx">phone_validator</span><span class="p">,</span>
+        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
+    <span class="nx">username</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">unique</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">validate</span><span class="o">:</span> <span class="nx">username_validator</span><span class="p">},</span>
+    <span class="nx">password</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> 
+        <span class="nx">validate</span><span class="o">:</span> <span class="nx">password_validator</span><span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>Далее для каждого из типов пользователей создаём объект со специфическими полями:</p>
+<div class="highlight"><pre><span></span><span class="c1">// Физическое лицо</span>
+<span class="kd">var</span> <span class="nx">IndividualPerson</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">first_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">validate</span><span class="o">:</span> <span class="nx">first_name_validator</span><span class="p">},</span>
+    <span class="nx">last_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">valdiate</span><span class="o">:</span> <span class="nx">last_name_validator</span><span class="p">},</span>
+    <span class="nx">patronymic</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> 
+        <span class="nx">validate</span><span class="o">:</span> <span class="nx">patronymic_validator</span><span class="p">},</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="k">default</span><span class="o">:</span> <span class="s1">&#39;individual&#39;</span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// Юридическое лицо</span>
+<span class="kd">var</span> <span class="nx">LegalPerson</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">full_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">validate</span><span class="o">:</span> <span class="nx">full_name_validator</span><span class="p">,</span> 
+        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
+    <span class="nx">short_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> 
+        <span class="nx">validate</span><span class="o">:</span> <span class="nx">short_name_validator</span><span class="p">},</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="k">default</span><span class="o">:</span> <span class="s1">&#39;legal&#39;</span><span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>Также мы добавили поле <code>type</code> для дифференциации записей, т.к. они будут храниться в одной коллекции.
+Далее необходимо просто при создании схемы модели выполнять слияние (merge) значений из <code>BaseUser</code> и
+соответствующего объекта типа:</p>
+<div class="highlight"><pre><span></span><span class="nx">IndividualUserSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">extended</span><span class="p">(</span><span class="nx">BaseUser</span><span class="p">).</span><span class="nx">merge</span><span class="p">(</span><span class="nx">IndividualPerson</span><span class="p">));</span>
+<span class="nx">LegalUserSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">extended</span><span class="p">(</span><span class="nx">BaseUser</span><span class="p">).</span><span class="nx">merge</span><span class="p">(</span><span class="nx">LegalPerson</span><span class="p">));</span>
+</pre></div>
+
+
+<p>Здесь я использую <a href="http://sugarjs.com/" title="Sugar.js">sugar.js</a>, но при необходимости это можно реализовать
+и вручную.</p>
+<p>Затем модели необходимо создавать таким образом, чтобы они использовали одну и ту же коллекцию в базе данных:</p>
+<div class="highlight"><pre><span></span><span class="nx">exports</span><span class="p">.</span><span class="nx">LegalUser</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;LegalUser&#39;</span><span class="p">,</span> <span class="nx">LegalUserSchema</span><span class="p">,</span> <span class="s1">&#39;users&#39;</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">IndividualUser</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;IndividualUser&#39;</span><span class="p">,</span> <span class="nx">IndividualUserSchema</span><span class="p">,</span> <span class="s1">&#39;users&#39;</span><span class="p">);</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<h2>Заключение</h2>
+<p>В итоге мы получили две модели со своими наборами полей/валидаторов и при этом остались
+преимущества использования одной коллекции - поиск записей по одной коллекции, уникальные
+значения <code>username</code> и <code>email</code> через индексы и т.д.
+При желании можно реализовать что-то вроде фабрики, чтобы при поиске в зависимости от значения
+в поле <code>type</code> создавался объект соответствующей модели.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

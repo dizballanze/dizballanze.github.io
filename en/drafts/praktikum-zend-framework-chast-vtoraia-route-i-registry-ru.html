@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/praktikum-zend-framework-chast-vtoraia-route-i-registry-ru.html" rel="bookmark"
+         title="Permalink to Практикум Zend Framework. Часть вторая: Route и Registry">Практикум Zend Framework. Часть вторая: Route и Registry</a></h2>
+    <time class="published" datetime="2011-06-12T20:17:00+04:00">12 июн 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="ZendFramework logo" src="/media/2011/06/ZendFramework-logo-640x169.png" title="ZendFramework logo"></p>
+<p>Продолжим рассмотрение практического использования Zend Framework. Во
+второй части речь пойдет о маршрутизации, что позволит вам создавать
+url-адреса любой необходимой для вас формы. Также мы рассмотрим пример
+организации удобного доступа к системным константам.</p>
+<ul>
+<li>
+<p><a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/"><strong>Часть первая</strong></a></p>
+<ul>
+<li><a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/#auth"><strong>Аутентификация</strong></a> - вход пользователей в систему</li>
+<li><a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"><strong>ACL</strong></a> - распределение прав доступа</li>
+</ul>
+</li>
+<li>
+<p><strong>Часть вторая</strong></p>
+<ul>
+<li><a href="#route"><strong>Маршрутизация</strong></a> - настройка url для различных компонентов
+    системы</li>
+<li><a href="#registry"><strong>Registry</strong></a> - быстрый доступ к системным константам</li>
+</ul>
+</li>
+<li>
+<p><strong>Часть третья</strong></p>
+<ul>
+<li><a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"><strong>Acl</strong></a> - расширенный пример</li>
+</ul>
+</li>
+</ul>
+<h2>Маршрутизация</h2>
+<p>Маршрутизация - очень важная тема. Как вы знаете, по-умолчанию, в Zend
+Framework используются url формата -
+controller/action/param1/value1/param2/value2. Именно благодаря
+средствам маршрутизации мы можем организовывать url такого формата,
+который требуется в проекте. К примеру, вы можете организовать простой
+доступ к статическим страницам через url вида - site.com/static-page или
+реализовать доступ к товарам через ссылки вида -
+site.com/catalog/category/good-name. В особенности это полезно для нужд
+seo, но также помогает пользователям при получении ссылок, сразу понять
+что находится на странице сайта.</p>
+<p>Рассмотрим пример создания маршрутов для ссылок форматов указанных выше.
+Для начала нужно сформировать маршруты, для этого напишем метод в файле
+bootstrap.php:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">_initRoute</span><span class="p">(){</span>
+    <span class="c1">// Получаем маршрут, по-умолчанию</span>
+    <span class="nv">$router</span> <span class="o">=</span> <span class="nx">Zend_Controller_Front</span><span class="o">::</span><span class="na">getInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getRouter</span><span class="p">();</span>
+    <span class="c1">// создаем пользовательские маршруты</span>
+    <span class="c1">// маршрут для статических страниц</span>
+    <span class="nv">$route_static</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Zend_Controller_Router_Route</span><span class="p">(</span>
+            <span class="s1">&#39;/:page&#39;</span><span class="p">,</span>
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">&#39;controller&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;static&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;action&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;page&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;default-page-name&#39;</span>
+            <span class="p">),</span> 
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">&#39;page&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;[\w\-]+&#39;</span>
+            <span class="p">)</span>
+    <span class="p">);</span>
+    <span class="nv">$router</span><span class="o">-&gt;</span><span class="na">addRoute</span><span class="p">(</span><span class="s1">&#39;static&#39;</span><span class="p">,</span> <span class="nv">$route_static</span><span class="p">);</span>
+    <span class="c1">// маршрут для товаров</span>
+    <span class="nv">$route_goods</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Zend_Controller_Router_Route</span><span class="p">(</span>
+            <span class="s1">&#39;/catalog/:category/:good/*&#39;</span><span class="p">,</span>
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">&#39;controller&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;goods&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;action&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;show&#39;</span>
+            <span class="p">),</span> 
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">&#39;category&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;[\w\-]+&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;good&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;[\w\-]+&#39;</span>
+            <span class="p">)</span>
+    <span class="p">);</span>
+    <span class="nv">$router</span><span class="o">-&gt;</span><span class="na">addRoute</span><span class="p">(</span><span class="s1">&#39;goods&#39;</span><span class="p">,</span> <span class="nv">$route_goods</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Сначала мы получаем стандартный маршрутизатор и добавляем к нему
+пользовательские маршруты. В данном случае мы используем
+перезаписывающий маршрутизатор Zend_Controller_Router_Route. Первым
+параметром конструктору маршрутизатора передается строка описывающая
+формат url. Для задания динамических частей используются идентификаторы
+вида ":variable". Такие динамические части удобно рассматривать как
+переменные, значения которых подставляются из определенного участка url.
+Вторым параметром передается массив стандартных значений маршрутизатора.
+В данном массиве нужно указать значения названия контроллера и экшена
+который будет обрабатывать запрос по данному маршруту, а также значения
+переменных по-умолчанию, которые будут использоваться в случае если
+соответствующее значение url пропущено. Также удобным бывает задать
+требования к переменным. Для этого третьим параметром необходимо
+передать паттерн, который описывает формат допустимого значения
+переменной. Я рекомендую указывать данный параметр всегда, когда это
+возможно. Это полезно в целях безопасности, т.к. в случае не совпадения
+шаблона со значением переменной, будет инициирована ошибка и код экшена
+не получит потенциально опасного значения.</p>
+<p>После создания маршрутизатора, нам необходимо добавить его в стандартный
+маршрутизатор при помощи метода addRoute. Каждому маршруту должна
+соответствовать уникальная строка-идентификатор, которая будет
+использована нами в дальнейшем.</p>
+<p>Далее в коде действия для того чтобы получить значение переменной нам
+необходимо выполнить следующий код:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$page</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getRequest</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getParam</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Также нам может потребоваться создание ссылок с использованием данного
+маршрутизатора. Для этого воспользуемся стандартным помощником вида url.</p>
+<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">&lt;?php</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">url</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;about&#39;</span><span class="p">),</span> <span class="s1">&#39;test&#39;</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="s">&quot;</span><span class="p">&gt;</span>О проекте<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
+
+
+<p>Мы рассмотрели только один из маршрутизаторов используемых в Zend
+Framework. Подробнее можете прочитать в документации <a href="http://framework.zend.com/manual/ru/zend.controller.router.html">здесь</a>.</p>
+<h2>Registry</h2>
+<p>Сейчас мы рассмотрим, как в ZF можно организовать удобный и быстрый
+доступ к константам из секции файла application.ini. Для начала зададим
+несколько констант:</p>
+<div class="highlight"><pre><span></span><span class="na">[constants]paths.photo</span> <span class="o">=</span> <span class="s">&quot;/photo/&quot;paths.uploads = &quot;/uploads/&quot;paths.video = &quot;/video/&quot;secret_code = &quot;key_for_check&quot;</span>
+</pre></div>
+
+
+<p>Код выше необходимо разместить в файле application.ini. Далее
+воспользуемся компонентом Zend_Registry, который реализует паттерн
+Registry, для того чтобы сделать наши константы доступными во всем
+проекте:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">_initConfig</span><span class="p">(){</span>
+    <span class="nx">Zend_Registry</span><span class="o">::</span><span class="na">set</span><span class="p">(</span><span class="s1">&#39;constants&#39;</span><span class="p">,</span>  <span class="k">new</span> <span class="nx">Zend_Config_Ini</span><span class="p">(</span><span class="nx">APPLICATION_PATH</span> <span class="o">.</span> <span class="s1">&#39;/configs/application.ini&#39;</span><span class="p">,</span> <span class="s1">&#39;constants&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Метод представленный выше нужно добавить в bootstrap.php. Далее, чтобы
+обратится к константе используем следующий код:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$path_photo</span> <span class="o">=</span> <span class="nx">Zend_Registry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">&#39;constants&#39;</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">paths</span><span class="o">-&gt;</span><span class="na">photo</span><span class="p">;</span>
+</pre></div>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

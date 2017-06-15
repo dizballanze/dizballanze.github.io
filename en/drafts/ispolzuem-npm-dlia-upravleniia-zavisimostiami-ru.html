@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/ispolzuem-npm-dlia-upravleniia-zavisimostiami-ru.html" rel="bookmark"
+         title="Permalink to Используем npm для управления зависимостями">Используем npm для управления зависимостями</a></h2>
+    <time class="published" datetime="2013-01-04T20:10:00+04:00">04 янв 2013</time>
+  </header>
+  <div class="entry-content">
+    <p>npm - пакетный менеджер для <a href="/tag/nodejs/" title="Node.js">node.js</a>. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.</p>
+<p><img alt="npm package management" src="media/2013/01/npm.png" title="node packaged modules"></p>
+<h1>Установка npm</h1>
+<p>Если у вас не установлен <code>npm</code>, то сделать это можно выполнив следующую команду:</p>
+<div class="highlight"><pre><span></span>curl https://npmjs.org/install.sh <span class="p">|</span> sh
+</pre></div>
+
+
+<h1>Установка пакетов</h1>
+<p>Для того чтобы установить пакет при помощи <code>npm</code> нужно использовать команду <code>npm install &lt;package&gt;</code>.
+Где <code>package</code> может быть:</p>
+<ul>
+<li>Путь к директории содержащей пакет описываемый файлом <code>package.json</code></li>
+<li>Архив в формате gzipped tarball</li>
+<li>URL для скачивания архива в формате gzipped tarball</li>
+<li>Название пакета в <a href="https://npmjs.org/" title="Реестр пакетов npm">реестре пакетов</a> с возможностью указания версии после знака <code>@</code></li>
+<li>URL удаленного репозитория git</li>
+</ul>
+<p>По-умолчания, установка будет произведена локально, в текущую директорию. Для того чтобы выполнить установку глобально
+необходимо вызывать <code>npm</code> с флагом <code>-g</code>.</p>
+<h1>Управление зависимостями</h1>
+<p>При разработке приложений на <a href="/tag/nodejs/" title="Node.js">node.js</a> я использую множество различных модулей. Соответственно,
+при разворачивании приложения необходимо быть уверенным, что в системе установлены все требуемые пакеты. Рассмотрим, как npm
+помогает нам решить эту проблему.</p>
+<p>Для описания пакета npm использует файл <code>package.json</code>, который размещается в корневой директории пакета. В файле содержится
+большое количество разной информации о пакете, рекомендую вам ознакомиться с <a href="https://npmjs.org/doc/json.html">форматом файла</a>. Нас на данный момент интересует раздел <a href="https://npmjs.org/doc/json.html#dependencies">dependencies</a>, который содержит
+список пакетов от которых зависит приложение. К счастью вручную заполнять этот список не придётся, т.к npm умеет генерировать
+его самостоятельно. Для того, чтобы сгенерировать <code>package.json</code> выполните команду <code>npm init</code>, после чего вам необходимо будет ответить на несколько вопросов, вроде названия и версии пакета.</p>
+<p>Для того чтобы установить, содержащийся в <code>package.json</code>, список пакетов необходимо выполнить команду <code>npm install</code> без указания дополнительных аргументов. Соответственно, для того чтобы автоматизировать процесс установки зависимостей, нужно
+поддерживать список зависимостей в <code>package.json</code> в актуальном состоянии и при каждом обновлении/разворачивании приложения
+выполнять команду <code>npm install</code>.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

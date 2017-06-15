@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/praktikum-zend-framework-chast-tretiazend_acl/" rel="bookmark"
+         title="Permalink to Практикум Zend Framework. Часть третья:Zend_Acl">Практикум Zend Framework. Часть третья:Zend_Acl</a></h2>
+    <time class="published" datetime="2011-06-22T11:04:00+04:00">22 июн 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="ZendFramework" src="/media/2011/06/ZendFramework-logo-640x1691.png" title="ZendFramework"></p>
+<p>Сегодня мы рассмотрим пример создания Acl для системы с большим
+количеством ролей и ресурсов.</p>
+<ul>
+<li>
+<p><a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/"><strong>Часть первая</strong></a></p>
+<ul>
+<li><a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/#auth"><strong>Аутентификация</strong></a> - вход пользователей в систему</li>
+<li><a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"><strong>ACL</strong></a> - распределение прав доступа</li>
+</ul>
+</li>
+<li>
+<p><strong>Часть вторая</strong></p>
+<ul>
+<li><a href="#route"><strong>Маршрутизация</strong></a> - настройка url для различных компонентов
+    системы</li>
+<li><a href="#registry"><strong>Registry</strong></a> - быстрый доступ к системным константам</li>
+</ul>
+</li>
+<li>
+<p><strong>Часть третья</strong></p>
+<ul>
+<li><a href="/PHP/praktikum-zend-framework-chast-tretiazend_acl/"><strong>Acl</strong></a> - расширенный пример</li>
+</ul>
+</li>
+</ul>
+<p>Хабраюзер <a href="http://anexroid.habrahabr.ru/">Anexroid</a> любезно предоставил описание такого проекта:</p>
+<div class="highlight"><pre><span></span>Существуют следующие права доступа: Админ, с доступом в админку. Причем в админке порядка 20-30
+разделов, 5 админов. У всех доступ разный. То есть у кого-то 2-3 раздела, у кого-то — все 20. Все
+пункты меню храняться в БД. Пользователь — зарегестированный на сайте. Может создавать фотоальбомы,
+комментировать новости без ввода капчи и т.д. + всё то, что может делать гость.Предприятие — имеет
+личную страницу в каталоге, в зависимости от купленного пакета — различные пункты в личном кабинете.
+Ну и гость, который может всё неограниченно просматривать. Комментарии — с капчей.Еще есть
+консультанты — отвечают на вопросы в консультациях.Причем у предприятий и консультантов — нет
+регистрации, добавляются админом. +опять же, все таблицы в БД отдельные — отдельно админы, отдельно
+пользователи, отдельно — предприятия, отдельно — консультанты.
+</pre></div>
+
+
+<p>Для начала определимся с ролями и ресурсами, составим иерархии
+наследования ресурсов и ролей:</p>
+<p><img alt="Иерархия ролей" src="/media/2011/06/1-1024x537.png" title="Иерархия ролей"></p>
+<p>В нашем примере верхняя часть иерархия ресурсов будет совпадать по
+структуре с иерархией ролей. Для того чтобы, удобно отобразить иерархию
+ресурсов, добавим в наш список прав доступа абстрактные ресурсы для
+каждой роли, кроме Admin1-N, CompanyPackage1-N. Это так, потому что
+ресурсы для статусов Guest, User и общие ресурсы для всех админов и
+компаний имеют простую древовидную структуру, чего нельзя сказать про
+нижние узлы дерева в которых будут пересечения. Например Admin1 и Admin2
+могут иметь доступ к общему ресурсу "Добавление новостей", а деревья
+ресурсов Zend_Acl, к сожалению, не поддерживает множественное
+наследование. Поэтому ресурсы для ролей Admin1-N, CompanyPackage1-N
+будут распределятся как исключения, явно назначаясь нужным ролям.</p>
+<p><img alt="Иерархия ресурсов" src="/media/2011/06/bbb.png" title="Иерархия ресурсов"></p>
+<p>Итак, мы разобрались с иерархией ресурсов, теперь создадим
+непосредственно Acl. Для этого расширим класс Zend_Acl:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">Acl</span> <span class="k">extends</span> <span class="nx">Zend_Acl</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// Добавляем роли</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;guest&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company-package-1&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company-package-2&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company-package-3&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">);</span>
+        <span class="c1">// ...</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin-1&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin-2&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">);</span>
+        <span class="c1">// ...</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin-5&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">);</span>
+
+        <span class="c1">//Добавляем ресурсы</span>
+        <span class="c1">//</span>
+        <span class="c1">// РЕСУРСЫ ГОСТЯ !</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;guest_res&#39;</span><span class="p">));</span>
+        <span class="c1">// перечисляем все ресурсы гостя, как дочерние для guest_res</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;add-comments-with-captcha&#39;</span><span class="p">),</span> <span class="s1">&#39;guest_res&#39;</span><span class="p">);</span>
+
+        <span class="c1">// РЕСУРСЫ ПОЛЬЗОВАТЕЛЯ !</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;user_res&#39;</span><span class="p">));</span>
+        <span class="c1">// перечисляем все ресурсы пользователя, как дочерние для user_res</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;add-comments&#39;</span><span class="p">),</span> <span class="s1">&#39;user_res&#39;</span><span class="p">);</span>
+
+        <span class="c1">// РЕСУРСЫ АДМИНА !</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;admin_res&#39;</span><span class="p">));</span>
+        <span class="c1">// перечисляем общие ресурсы для всех админов, как дочерние для admin_res</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;admin-tools-list&#39;</span><span class="p">),</span> <span class="s1">&#39;admin_res&#39;</span><span class="p">);</span>
+
+        <span class="c1">// РЕСУРСЫ КОМПАНИИ !</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;company_res&#39;</span><span class="p">));</span>
+        <span class="c1">// перечисляем общие ресурсы для пакетов компаний, как дочерние для company_res</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;show-company-statistics&#39;</span><span class="p">),</span> <span class="s1">&#39;company_res&#39;</span><span class="p">);</span>
+
+        <span class="c1">// Специфические ресурсы для админов и компаний, ничего не наследуют</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;advertise&#39;</span><span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;add-company&#39;</span><span class="p">));</span>
+
+        <span class="c1">//Выставляем права, по-умолчанию всё запрещено</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">deny</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;guest_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="s1">&#39;admin_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;company&#39;</span><span class="p">,</span><span class="s1">&#39;company_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+
+        <span class="c1">// Выставляем ресурсы для пакетов компаний и админов</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;company-package-1&#39;</span><span class="p">,</span><span class="s1">&#39;advertise&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;admin-1&#39;</span><span class="p">,</span><span class="s1">&#39;add-company&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>И сразу проверим что все работает как мы ожидали:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;add-comments-with-captcha&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// yes</span>
+<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;add-comments&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// no</span>
+<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;admin-1&#39;</span><span class="p">,</span> <span class="s1">&#39;add-company&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// yes</span>
+<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;company-package-2&#39;</span><span class="p">,</span> <span class="s1">&#39;advertise&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// no</span>
+</pre></div>
+
+
+<p>В данном примере я разрешил себе сделать упрощение и ввел одну
+привилегию show, которая соответствует возможности просмотра
+определённой страницы. Однако вы можете расширить этот пример и добавить
+различные привилегии, если это потребуется.</p>
+<p>Также, очевидно, что данный код не соответствует тому, что пакеты
+компании и администраторы будут добавляться, а права других ролей могут
+меняться со временем. Поэтому вам нужно будет хранить данные в базе
+данных и, либо строить объект по требованию, извлекая необходимые
+данные, или хранить сериализованный экземпляр класса Acl в каком либо
+хранилище (например memcached). Этот выбор за вами, лично мне больше
+нравится второй вариант.</p>
+<p>В <a href="/PHP/praktikum-zend-framework-chast-pervaia-autentifikatsiia-i-acl/">первом посте</a> данного цикла я рассматривал как
+можно создать Acl используя в качестве ресурсов строки типа
+"controller/action", что очень удобно в небольших проектах.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

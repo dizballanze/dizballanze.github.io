@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/opredeliaem-poiskovyi-zapros-sredstvami-js/" rel="bookmark"
+         title="Permalink to Определяем поисковый запрос средствами JS">Определяем поисковый запрос средствами JS</a></h2>
+    <time class="published" datetime="2011-06-28T20:41:00+04:00">28 июн 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="searchengines" src="/media/2011/06/441.png" title="searchengines"></p>
+<p>Здравствуйте! Сегодня я покажу вам, как можно определить поисковый
+запрос и поисковую систему, которые привели пользователя на сайт. Для
+этого напишем javascript-функцию, которая бы вытягивала данную
+информацию из браузера и позволяла бы легко добавлять новые поисковые
+системы. Информация о странице с которой был осуществлен переход
+хранится в свойстве объекта Document под названием referrer. В нем
+хранится все необходимые данные и нам нужно только правильно их
+обработать. Для начала нужно определить был ли это переход с поисковой
+системы, для этих целей мы будем проверять referrer на наличие ключевых
+слов вроде google. После того как мы определим, что это был запрос с
+поисковой системы нам нужно получить запрос, который передается как
+GET-параметр. Например, для google свойство referrer будет выглядеть
+примерно так:</p>
+<div class="highlight"><pre><span></span>http://www.google.com.ua/search?source=ig&amp;hl=ru&amp;q=dizballanze
+</pre></div>
+
+
+<p>Очевидно, что нас интересует значение параметра q. В итоге мы можем
+сделать вывод, что для получения информации о запросе нам нужно ключевое
+слово (для определения поисковой системы) и GET-параметр (для получения
+поискового запроса). Можем приступить к написанию. У меня получилось
+следующее:  </p>
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">referer</span><span class="p">(){</span>
+    <span class="nx">engines</span> <span class="o">=</span> 
+    <span class="p">[</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;http://www.google.&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;google&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;http://yandex.&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;yandex&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;rambler.ru/search&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;query&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;rambler&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;http://go.mail.ru/&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;mailru&#39;</span><span class="p">,</span> <span class="nx">cp1251</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;http://www.bing.com/&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;bing&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;search.yahoo.com/search&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;yahoo&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;http://ru.ask.com/&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;ask&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">&#39;http://search.qip.ru/search&#39;</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">&#39;query&#39;</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">&#39;qip&#39;</span><span class="p">}</span>
+    <span class="p">];</span>
+
+    <span class="kd">var</span> <span class="nx">ref</span><span class="o">=</span><span class="nb">document</span><span class="p">.</span><span class="nx">referrer</span><span class="p">,</span><span class="nx">req</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="nx">engine</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nx">start</span><span class="p">,</span> <span class="nx">cp1251</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">engines</span><span class="p">){</span>
+        <span class="k">if</span>  <span class="p">(</span><span class="o">!</span><span class="nx">engines</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">i</span><span class="p">))</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">start</span><span class="p">)</span><span class="o">==-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="nx">start</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;?&#39;</span> <span class="o">+</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">query</span> <span class="o">+</span> <span class="s1">&#39;=&#39;</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="p">(</span><span class="nx">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+            <span class="nx">start</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span> <span class="o">+</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">query</span> <span class="o">+</span> <span class="s1">&#39;=&#39;</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">engine</span> <span class="o">=</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">name</span><span class="p">;</span>
+        <span class="nx">req</span> <span class="o">=</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">query</span><span class="p">;</span>
+        <span class="nx">cp1251</span> <span class="o">=</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;cp1251&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">engine</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="nx">ref</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="nx">start</span> <span class="o">+</span> <span class="nx">req</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">end</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">end</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="nx">ref</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">end</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">cp1251</span><span class="p">){</span>
+        <span class="kd">function</span> <span class="nx">win2unicode</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">charmap</span>   <span class="o">=</span> <span class="nx">unescape</span><span class="p">(</span>
+            <span class="s2">&quot;%u0402%u0403%u201A%u0453%u201E%u2026%u2020%u2021%u20AC%u2030%u0409%u2039%u040A%u040C%u040B%u040F&quot;</span><span class="o">+</span>
+            <span class="s2">&quot;%u0452%u2018%u2019%u201C%u201D%u2022%u2013%u2014%u0000%u2122%u0459%u203A%u045A%u045C%u045B%u045F&quot;</span><span class="o">+</span>
+            <span class="s2">&quot;%u00A0%u040E%u045E%u0408%u00A4%u0490%u00A6%u00A7%u0401%u00A9%u0404%u00AB%u00AC%u00AD%u00AE%u0407&quot;</span><span class="o">+</span>
+            <span class="s2">&quot;%u00B0%u00B1%u0406%u0456%u0491%u00B5%u00B6%u00B7%u0451%u2116%u0454%u00BB%u0458%u0405%u0455%u0457&quot;</span><span class="p">)</span>
+            <span class="kd">var</span> <span class="nx">code2char</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span> <span class="p">{</span>
+               <span class="k">if</span><span class="p">(</span><span class="nx">code</span> <span class="o">&gt;=</span> <span class="mh">0xC0</span> <span class="o">&amp;&amp;</span> <span class="nx">code</span> <span class="o">&lt;=</span> <span class="mh">0xFF</span><span class="p">)</span> <span class="k">return</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">code</span> <span class="o">-</span> <span class="mh">0xC0</span> <span class="o">+</span> <span class="mh">0x0410</span><span class="p">)</span>
+               <span class="k">if</span><span class="p">(</span><span class="nx">code</span> <span class="o">&gt;=</span> <span class="mh">0x80</span> <span class="o">&amp;&amp;</span> <span class="nx">code</span> <span class="o">&lt;=</span> <span class="mh">0xBF</span><span class="p">)</span> <span class="k">return</span> <span class="nx">charmap</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">code</span> <span class="o">-</span> <span class="mh">0x80</span><span class="p">)</span>
+               <span class="k">return</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">res</span> <span class="o">+</span> <span class="nx">code2char</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="nx">i</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nx">res</span>
+        <span class="p">}</span>
+        <span class="nx">ref</span> <span class="o">=</span> <span class="nx">unescape</span><span class="p">(</span><span class="nx">ref</span><span class="p">);</span>
+        <span class="nx">ref</span> <span class="o">=</span> <span class="nx">win2unicode</span><span class="p">(</span><span class="nx">ref</span><span class="p">);</span>
+    <span class="p">}</span><span class="k">else</span>
+        <span class="nx">ref</span> <span class="o">=</span> <span class="nb">decodeURIComponent</span><span class="p">(</span><span class="nx">ref</span><span class="p">);</span>
+    <span class="nx">ref</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/[+]+/g</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;engine&quot;</span><span class="o">:</span> <span class="nx">engine</span><span class="p">,</span> <span class="s2">&quot;query&quot;</span><span class="o">:</span> <span class="nx">ref</span><span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>В случае, если страница была загружена переходом по ссылке с одной из
+забитых поисковых систем мы получим объект содержащий имя поисковой
+системы и запрос. Иначе получим логическое false.</p>
+<p>Спасибо за внимание. Подписывайтесь на RSS и будьте в теме ;)</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

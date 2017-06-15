@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/uskoriaem-obrabotku-izobrazhenii/" rel="bookmark"
+         title="Permalink to Ускоряем обработку изображений">Ускоряем обработку изображений</a></h2>
+    <time class="published" datetime="2012-02-24T00:07:00+04:00">24 фев 2012</time>
+  </header>
+  <div class="entry-content">
+    <p>Всем привет! Сегодняшний пост посвящен производительности при обработке
+изображений. Почти в каждом проекте требуется обработка изображений,
+например, ресайзинг, поворот, обесцвечивание и т.д. Для этих целей я
+использовал широко известное решение, написанное на php и работающее с
+расширением GD - <a href="http://www.verot.net/php_class_upload.htm">class.upload.php</a>. До тех пор пока в проектах в
+основном изображения загружались через админку меня это решение
+полностью устраивало. Но в одном из последних проектов изображения
+являются одним из главных видов контента и загружаются пользователями в
+больших объемах. При профилировании я заметил что процесс ресайзинга и
+обработки изображений занимает очень много времени. Особенно это
+бросалось в глаза при использовании функции "повернуть изображение",
+которая должна делать ajax-запрос и отображать повернутое изображение
+пользователю. При достаточно большом разрешении изображения скрипт падал
+по timeout не успев вложиться в 30 с в других случаях была очень большая
+задержка. Далее я опишу каким образом была решена данная проблема и
+предоставлю несколько результатов тестов для сравнения.</p>
+<h2>Выбор инструмента</h2>
+<p>Очевидным решением было перенести данный функционал на консольную
+утилиту. Мой выбор пал на <strong>GraphicsMagick</strong>, т.к. данная утилита
+реализует все необходимые мне функции и при этом достаточно проста в
+использовании и хорошо документирована. Для установки в debian
+необходимо выполнить:</p>
+<div class="highlight"><pre><span></span>apt-get install graphicsmagick
+</pre></div>
+
+
+<p>Запуск выполняется при помощи команды <strong>gm</strong>. Рассмотрим несколько
+примеров использования.</p>
+<h3>Конвертирование изображений.</h3>
+<div class="highlight"><pre><span></span>gm convert -quality <span class="m">80</span> input.png output.jpg
+</pre></div>
+
+
+<p>Утилита выполнит конвертирование файла input.png в формат jpeg и
+сохранит как output.jpg. При помощи опции -quality выставляем качество
+выходного изображения в стандартной для jpeg форме.</p>
+<h3>Ресайзинг</h3>
+<p>Ресайзинг с установленной шириной (300px) и автоматически выбранной
+высотой с сохранением соотношения сторон:</p>
+<div class="highlight"><pre><span></span>gm convert -resize <span class="m">300</span> input.jpg output.jpg
+</pre></div>
+
+
+<p>Ресайзинг с установленной высотой (200px) и автоматически выбранной
+шириной:</p>
+<div class="highlight"><pre><span></span>gm convert -resize x200 input.jpg output.jpg
+</pre></div>
+
+
+<p>Ресайзинг без сохранения пропорций:</p>
+<div class="highlight"><pre><span></span>gm convert -resize 300x200! input.jpg output.jpg
+</pre></div>
+
+
+<p>Ресайзинг с сохранением пропорций и вписыванием в заданный размер по
+большей стороне:</p>
+<div class="highlight"><pre><span></span>gm convert -resize 300x200 input.jpg output.jpg
+</pre></div>
+
+
+<p>Ресайзинг с сохранением пропорций и вписыванием в заданный размер по
+меньшей стороне:</p>
+<div class="highlight"><pre><span></span>gm convert -resize 300x200^ input.jpg output.jpg
+</pre></div>
+
+
+<p>Ресайзинг с сохранением пропорций, вписыванием по меньшей стороне и
+обрезкой лишнего с центированием:</p>
+<div class="highlight"><pre><span></span>gm convert -resize 200x300^ -gravity center -crop 200x300+0+0 input.jpg output.jpg
+</pre></div>
+
+
+<h3>Поворот</h3>
+<div class="highlight"><pre><span></span>gm convert -rotate <span class="m">90</span> input.jpg output.jpg
+</pre></div>
+
+
+<p>Поворачиваем изображение на 90 градусов. Также можно задавать
+отрицательные значения, чтобы поворачивать против часовой стрелки.</p>
+<p>Параметры можно комбинировать, что значительно упрощает выполнение
+сложных операций</p>
+<h2>Бенчмарк</h2>
+<p>Теперь, как и обещал, немного цифр. Сравним производительность php
+решения (class.upload.php) и утилиты GraphicsMagick.</p>
+<h3>Конвертирование изображений</h3>
+<p>Конвертируем 40 Mb изображение из png в jpeg.</p>
+<table>
+<thead>
+<tr>
+<th align="left">&nbsp;</th>
+<th align="left">Время (с)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">upload.class.php</td>
+<td align="left">97.150</td>
+</tr>
+<tr>
+<td align="left">GraphicsMagick</td>
+<td align="left">3.304</td>
+</tr>
+</tbody>
+</table>
+<h3>Ротация изображений</h3>
+<p>Поворачиваем изображение (jpeg файл 6.4 Mb) на 90 градусов.</p>
+<table>
+<thead>
+<tr>
+<th align="left">&nbsp;</th>
+<th align="left">Время (с)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">upload.class.php</td>
+<td align="left">162.750</td>
+</tr>
+<tr>
+<td align="left">GraphicsMagick</td>
+<td align="left">2.6597</td>
+</tr>
+</tbody>
+</table>
+<h3>Нарезка thumbnails</h3>
+<p>Нарезка 5 thumbnails различной конфигурации из jpeg файла 6.4 Mb.</p>
+<table>
+<thead>
+<tr>
+<th align="left">&nbsp;</th>
+<th align="left">Время (с)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">upload.class.php</td>
+<td align="left">12.010</td>
+</tr>
+<tr>
+<td align="left">GraphicsMagick</td>
+<td align="left">4.594</td>
+</tr>
+</tbody>
+</table>
+<h2>Выводы</h2>
+<p>Результаты теста вполне ожидаемы и из них можно сделать выводы, что
+обрабатывать изображения средствами php следуют только в крайних случая.
+Например, если вы используете shared hosting или если изображения
+добавляются не часто и только через админку. Также к плюсам
+upload.class.php можно отнести простоту в использовании, т.к. он
+предоставляет удобный класс со всеми необходимыми методами, но написать
+небольшую объектную обертку для GraphicsMagick я думаю не составит
+труда.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

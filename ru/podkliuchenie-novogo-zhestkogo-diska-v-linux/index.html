@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/podkliuchenie-novogo-zhestkogo-diska-v-linux/" rel="bookmark"
+         title="Permalink to Подключение нового жесткого диска в Linux">Подключение нового жесткого диска в Linux</a></h2>
+    <time class="published" datetime="2010-11-26T21:14:00+03:00">26 ноя 2010</time>
+  </header>
+  <div class="entry-content">
+    <p>Доброго времени суток, товарищи линуксоиды!!</p>
+<p>В этой статье я хочу рассказать о процессе подключения нового жёсткого
+диска в ОС Linux.</p>
+<p>Подключив жёсткий диск убедитесь, что система распознаёт его. Для этого
+можно обратиться к программе конфигурации BIOS. Убедившись в том что
+жёсткий диск успешно подключён можно приступать к загрузке системы.</p>
+<p>Сразу после загрузки необходимо проверить существует ли файл устройств
+для нового диска. В Linux жёсткие диски обозначаются в формате
+/dev/sdXN, где X — буква латинского алфавита, означает диск, а N номер
+раздела на жёстком диске.</p>
+<p>Убедившись в том что файл устройства существует можно приступать к
+разбивке диска на разделы. В моём случае файл устройства называется
+/dev/sdb, т.к. это второй диск в системе (первый как вы наверное
+догадались /dev/sda).</p>
+<p>Итак для создания разделам будем использовать утилиту fdisk.</p>
+<div class="highlight"><pre><span></span>fdisk /dev/sdb
+
+:::text
+Device contains neither a valid DOS partition table, nor Sun, SGI or OSF disklabel
+Building a new DOS disklabel with disk identifier 0x07611c35.
+Changes will remain in memory only, <span class="k">until</span> you decide to write them.
+After that, of course, the previous content won<span class="err">&#39;</span>t be recoverable.
+The number of cylinders <span class="k">for</span> this disk is <span class="nb">set</span> to <span class="m">60801</span>.
+There is nothing wrong with that, but this is larger than <span class="m">1024</span>,
+and could in certain setups cause problems with:
+<span class="m">1</span><span class="o">)</span> software that runs at boot <span class="nb">time</span> <span class="o">(</span>e.g., old versions of LILO<span class="o">)</span>
+<span class="m">2</span><span class="o">)</span> booting and partitioning software from other OSs
+<span class="o">(</span>e.g., DOS FDISK, OS/2 FDISK<span class="o">)</span>
+Warning: invalid flag 0x0000 of partition table <span class="m">4</span> will be corrected by w<span class="o">(</span>rite<span class="o">)</span>
+</pre></div>
+
+
+<p>Утилита выводит информацию о жёстком диске: идентификатор диска,
+количество цилиндров. Потом она ожидает ввода команды, для вывода
+справочной информации о всех доступных командах введите m. Мы будем
+использовать три инструкции:</p>
+<p><code>n (new)</code> - создать новый раздел.</p>
+<p><code>p (print)</code> - вывести информацию о разделах</p>
+<p><code>w (write)</code> — записать таблицу разделов на диск</p>
+<p>Я создам только один раздел, который будет занимать весь доступный объём
+диска. Для этого я ввожу команду new, номер раздела 1, первый цилиндр 1
+и последний цилиндр 60801 (значение по умолчанию). Если вы хотите
+создать большее количество разделов, то просто аналогичным образом
+добавьте необходимое количество разделов. Размер раздела можно задавать
+в цилиндрах, как в показанном примере, или более простым способом, в
+байтах (мегабайтах или гигабайтах) .</p>
+<div class="highlight"><pre><span></span>Command (m for help): new
+Command action
+e extended
+p primary partition (1-4)
+p
+Partition number (1-4): 1
+First cylinder (1-60801, default 1): 1
+Last cylinder or +size or +sizeM or +sizeK (1-60801, default 60801):
+Using default value 60801
+</pre></div>
+
+
+<p>Выводим информацию о разделах при помощи команды print.</p>
+<div class="highlight"><pre><span></span>Command (m for help): print
+
+Disk /dev/sdb: 500.1 GB, 500107862016 bytes
+255 heads, 63 sectors/track, 60801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x07611c35
+
+Device Boot Start End Blocks Id System
+/dev/sdb1 1 60801 488384001 83 Linux
+</pre></div>
+
+
+<p>Убедившись что разделы созданы так как вы рассчитывали записываем
+таблицу разделов на диск при помощи команды <code>write</code>.</p>
+<div class="highlight"><pre><span></span>Command (m for help): write
+The partition table has been altered!
+Calling ioctl() to re-read partition table.
+Syncing disks.
+</pre></div>
+
+
+<p>Теперь можно приступить к форматировании разделов.</p>
+<p>Для этого мы будем использовать команду <code>mke2fs -j</code>, указав в качестве
+аргумента имя раздела.</p>
+<div class="highlight"><pre><span></span>mke2fs -j /dev/sdb1
+mke2fs <span class="m">1</span>.41.3 <span class="o">(</span><span class="m">12</span>-Oct-2008<span class="o">)</span>
+Filesystem <span class="nv">label</span><span class="o">=</span>
+OS type: Linux
+Block <span class="nv">size</span><span class="o">=</span><span class="m">4096</span> <span class="o">(</span><span class="nv">log</span><span class="o">=</span><span class="m">2</span><span class="o">)</span>
+Fragment <span class="nv">size</span><span class="o">=</span><span class="m">4096</span> <span class="o">(</span><span class="nv">log</span><span class="o">=</span><span class="m">2</span><span class="o">)</span>
+<span class="m">30531584</span> inodes, <span class="m">122096000</span> blocks
+<span class="m">6104800</span> blocks <span class="o">(</span><span class="m">5</span>.00%<span class="o">)</span> reserved <span class="k">for</span> the super user
+First data <span class="nv">block</span><span class="o">=</span><span class="m">0</span>
+Maximum filesystem <span class="nv">blocks</span><span class="o">=</span><span class="m">0</span>
+<span class="m">3727</span> block groups
+<span class="m">32768</span> blocks per group, <span class="m">32768</span> fragments per group
+<span class="m">8192</span> inodes per group
+Superblock backups stored on blocks:
+<span class="m">32768</span>, <span class="m">98304</span>, <span class="m">163840</span>, <span class="m">229376</span>, <span class="m">294912</span>, <span class="m">819200</span>, <span class="m">884736</span>, <span class="m">1605632</span>, <span class="m">2654208</span>,
+<span class="m">4096000</span>, <span class="m">7962624</span>, <span class="m">11239424</span>, <span class="m">20480000</span>, <span class="m">23887872</span>, <span class="m">71663616</span>, <span class="m">78675968</span>,
+<span class="m">102400000</span>
+
+Writing inode tables: <span class="k">done</span>
+Creating journal <span class="o">(</span><span class="m">32768</span> blocks<span class="o">)</span>: <span class="k">done</span>
+Writing superblocks and filesystem accounting information: <span class="k">done</span>
+
+This filesystem will be automatically checked every <span class="m">34</span> mounts or
+<span class="m">180</span> days, whichever comes first. Use tune2fs -c or -i to override.
+</pre></div>
+
+
+<p>Теперь необходимо настроить монтирование новых разделов. Сначала
+создадим каталог, который мы будем использовать как точку монтирования.</p>
+<div class="highlight"><pre><span></span>mkdir /media/mediahdd
+</pre></div>
+
+
+<p>Пробуем монтировать раздел.</p>
+<div class="highlight"><pre><span></span>mount /dev/sdb1 /media/mediahdd
+</pre></div>
+
+
+<p>Теперь необходимо добавить информацию о новом разделе в файл <code>/etc/fstab</code>
+для, того чтобы раздел автоматически монтировался при каждой загрузке
+системы. Для этого открываем этот файл в любом текстовом редакторе.</p>
+<div class="highlight"><pre><span></span>nano /etc/fstab
+</pre></div>
+
+
+<p>Добавляем строку формата: <code>имя_раздела</code> <code>точка_монтирования</code>
+<code>файловая_система</code> <code>частота_создания_резервных_копий</code>
+<code>кол-во_запусков_fsck</code></p>
+<div class="highlight"><pre><span></span>/dev/sdb1 /media/mediahdd ext3 defaults 0 0
+</pre></div>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

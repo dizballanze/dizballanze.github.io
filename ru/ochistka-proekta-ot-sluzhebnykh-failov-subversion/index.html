@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/" rel="bookmark"
+         title="Permalink to Очистка проекта от служебных файлов subversion">Очистка проекта от служебных файлов subversion</a></h2>
+    <time class="published" datetime="2011-06-07T20:32:00+04:00">07 июн 2011</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="subversion" src="/media/2011/06/subversion_logo_hor-468x64.png" title="subversion"></p>
+<p>Если вы используете svn, то при переносе проекта на хостинг вам
+понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
+свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
+удалить все директории .svn нужно выполнить следующие команды:</p>
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /var/www/projectfind . -name .svn -exec rm -R <span class="o">{}</span> <span class="se">\;</span> -print
+</pre></div>
+
+
+<p>Я рекомендую выполнять удаление служебных файлов из копии проекта, если
+вы не уверены на 100% что не будете использовать svn в дальнейшем.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

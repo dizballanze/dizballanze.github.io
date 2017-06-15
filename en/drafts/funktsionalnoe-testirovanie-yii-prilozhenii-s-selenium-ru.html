@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/funktsionalnoe-testirovanie-yii-prilozhenii-s-selenium-ru.html" rel="bookmark"
+         title="Permalink to Функциональное тестирование Yii приложений с Selenium">Функциональное тестирование Yii приложений с Selenium</a></h2>
+    <time class="published" datetime="2012-04-04T02:31:00+04:00">04 апр 2012</time>
+  </header>
+  <div class="entry-content">
+    <p><img alt="selenium" src="/media/2012/04/big-logo.png" title="selenium-logo"></p>
+<p>В последних проектах активно использую Selenium для функционального
+тестирования. В процессе написания тестов столкнулся с несколькими
+подводными камнями и в данном посте хочу рассказать о том как с ними
+бороться. Я думаю пост будет полезен тем, кто только начал использовать
+Selenium, в том числе для тестирования Yii приложений. Итак, поехали...</p>
+<h2>Настраиваем Url Manager</h2>
+<p>Перед тем как начать написание тестов, нужно настроить приложение. Я
+заметил что на старте чаще всего сталкиваются с проблемой формирования
+корректных url для того, чтобы тесты работали правильно. Важным здесь
+является, то что все запросы должны идти через <code>index-test.php</code>. Таким
+образом мы добиваемся корректной инициализации тестового окружения,
+вместо config/main.php подгружается <code>config/test.php</code>.</p>
+<p>Если вы скрыли index.php в url, то нужно снова включить его отображение
+для тестового окружения. Для этого добавим в <code>config/test.php</code> в
+components следующие строки:</p>
+<div class="highlight"><pre><span></span><span class="x">&#39;urlManager&#39; =&gt; array(</span>
+<span class="x">    &#39;urlFormat&#39; =&gt; &#39;path&#39;,</span>
+<span class="x">    &#39;showScriptName&#39; =&gt; true,</span>
+<span class="x">),</span>
+</pre></div>
+
+
+<p>При этом стоит отметить, что дублировать здесь все маршруты нет
+необходимости, т.к. yii сам корректным образом объединяет тестовые
+параметры с "боевыми" и все маршруты описанные в main.php останутся
+доступными в тестовом окружении.</p>
+<p>Для получения корректного uri нужно всегда использовать метод
+<code>Yii::app()-&gt;createUrl()</code>. Важно не забывать генерировать uri через
+данный метод для задания атрибута action форм, иначе вы рискуете
+провести много времени в борьбе с призраками в непонимании почему данные
+сохраняются не в тестовую БД, а в боевую.</p>
+<p>В тестах, для того чтобы всегда открывать правильный url, нужно также
+пользоваться <code>Yii::app()-&gt;createUrl()</code>. Например, так:
+<code>$this-&gt;open(Yii::app()-&gt;createUrl('/settings'));</code></p>
+<h2>Element locators</h2>
+<p>Практически во всех методах, которые предоставляет selenium api, первым
+аргументом принимается locator - строка, которая позволяет указать
+элемент DOM дерева с которым будет работать метод. Рассмотрим виды:</p>
+<ul>
+<li><code>id=:id</code> - выбираем атрибут с элементом id равным заданному
+    значению. Например: <code>$this-&gt;submitAndWait('id=reg-form');</code></li>
+<li><code>link=:textPattern</code> - выбираем ссылку с заданным текстом. Например:
+    <code>$this-&gt;clickAndWait('link=Войти');</code></li>
+<li><code>css=cssSelectorSyntax</code> - часто, наиболее удобный способ. Будет
+    знаком всем, кто любит jquery. Например:
+    <code>$this-&gt;assertElementContainsText('css=.sidebar-menu .sidebar-menu-sub sup', 'some text');</code></li>
+</ul>
+<p>Для того чтобы <em>проверить значение атрибута элемента</em>, нужно добавить к
+locator название атрибута после знака @, например:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertAttribute</span><span class="p">(</span><span class="s1">&#39;css=.sidebar-fb-list li:eq(0) img@alt&#39;</span><span class="p">,</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">getFullName</span><span class="p">());</span>
+</pre></div>
+
+
+<h2>Создание скриншотов</h2>
+<p>Часто после каких-то значительных изменений падает много тестов, т.к.
+скорость их выполнения не радует для облегчения отладки можно настроить
+selenium на создание скриншотов, после того как тест падает. Для этого
+достаточно добавить следующие строки в метод <code>WebTestCase::setUp():</code></p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// директория в которую будут сохранятся </span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">screenshotPath</span> <span class="o">=</span> <span class="s1">&#39;/var/www/report/&#39;</span><span class="p">;</span>
+<span class="c1">// Url, по которому доступна директория указанная в предыдущей строке</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">screenshotUrl</span> <span class="o">=</span> <span class="s2">&quot;http://localhost/report&quot;</span><span class="p">;</span>
+<span class="c1">// Включаем создание скриншотов</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">captureScreenshotOnFailure</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+</pre></div>
+
+
+<p>После этого скриншоты будут сохранятся в указанную директорию, а в
+терминале будет выводится ссылка, через которую можно будет быстро
+открыть определенный скриншот. Скриншоты можно создавать только в
+firefox, к сожалению webkit пока не поддерживается.</p>
+<h2>Выполнение javascript</h2>
+<p>Хотя Selenium и дает казалось бы все нужные средства для работы с
+браузером, но иногда его возможностей не хватает. В таких случаях можно
+подключить всю мощь клиентского javascript к нашим тестам. Например,
+так:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$items_count</span> <span class="o">=</span> <span class="p">(</span><span class="nx">int</span><span class="p">)</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getEval</span><span class="p">(</span><span class="s1">&#39;selenium.browserbot.getCurrentWindow().jQuery(&quot;.item&quot;).size()&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nx">Item</span><span class="o">::</span><span class="na">PER_PAGE</span><span class="p">,</span> <span class="nv">$items_count</span><span class="p">);</span>
+</pre></div>
+
+
+<h2>Избавляемся от появляющихся окон браузера</h2>
+<p>Для того чтобы избавится от надоедливых всплывающих окон браузера в
+linux можно использовать утилиту Xvfb. В интернете можно найти <a href="http://goo.gl/gmkj2">много
+подробных руководств</a> на эту тему.</p>
+<h2>Ожидание выполнения ajax-запросов</h2>
+<p>Если ваше приложение использует ajax, значит после инициации запроса,
+необходимо подождать его завершения, чтобы проверить, например,
+изменение какого-то блока на странице. Для этого добавим в класс
+WebTestCase метод:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">waitForAjax</span><span class="p">(){</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">waitForCondition</span><span class="p">(</span><span class="s1">&#39;selenium.browserbot.getCurrentWindow().jQuery.active == 0&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Естественно, что данное решение будет работать, только если вы
+используете jquery, но для других фреймворков, я думаю, не составит
+труда найти аналогичное решение. Пример использования:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">&#39;id=field&#39;</span><span class="p">,</span> <span class="nv">$value</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">click</span><span class="p">(</span><span class="s1">&#39;css=#ajax-form input[type=&quot;submit&quot;]&#39;</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">waitForAjax</span><span class="p">();</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">verifyElementPresent</span><span class="p">(</span><span class="s1">&#39;id=result-block &#39;</span><span class="p">,</span> <span class="nv">$value</span><span class="p">);</span>
+</pre></div>
+
+
+<h2>Боремся с дублированием кода</h2>
+<p>Часто будут встречаться повторяющиеся операции, например, аутентификация
+пользователя. Для того чтобы избежать дублирования, можно просто вынести
+общие для нескольких тестов алгоритмы в родительский класс
+(WebTestCase). Наример:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">login</span><span class="p">(){</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">open</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">createUrl</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">));</span>
+    <span class="nv">$user</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">users</span><span class="p">(</span><span class="s1">&#39;first_user&#39;</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">&#39;id=f_username&#39;</span><span class="p">,</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">user_name</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">&#39;id=f_password&#39;</span><span class="p">,</span> <span class="s1">&#39;111111&#39;</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">submitAndWait</span><span class="p">(</span><span class="s1">&#39;id=login-form&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nv">$user</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h2>Автодополнение</h2>
+<p>У меня автодополнение кода для методов selenium api работает не совсем
+корректно. Присутствуют не все методы, а те что присутствуют с
+некорректными аргументами. Для того чтобы было удобнее работать я
+добавил описание наиболее часто используемых мной методов в описание
+WebTestCase. В будущем планирую описать все методы, которые доступны и
+выложить здесь в блоге. Вот некоторые методы, может кому-то пригодится:</p>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="sd">/**</span>
+<span class="sd"> * @method assertTextPresent($pattern)</span>
+<span class="sd"> * @method assertTextNotPresent($pattern)</span>
+<span class="sd"> * @method assertText($locator, $pattern)</span>
+<span class="sd"> * @method assertNotText($locator, $pattern)</span>
+<span class="sd"> * @method assertTitle($pattern)</span>
+<span class="sd"> * @method assertNotTitle($pattern)</span>
+<span class="sd"> * @method verifyElementPresent($locator)</span>
+<span class="sd"> * @method verifyElementNotPresent($locator)</span>
+<span class="sd"> * @method assertVisible($locator)</span>
+<span class="sd"> * @method assertNotVisible($locator)</span>
+<span class="sd"> * @method assertAttribute ($attributeLocator, $pattern)</span>
+<span class="sd"> */</span>
+</pre></div>
+
+
+<h2>P.S.</h2>
+<p>Для того чтобы ознакомится со всеми возможностями selenium api,
+рекомендую прочитать следующий док - <a href="http://release.seleniumhq.org/selenium-core/1.0.1/reference.html">selenium reference</a>. Если есть
+какие-то вопросы-дополнения-etc пишите в комментарии, постараюсь
+ответить.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/en/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/en/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/en/drafts/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django-ru.html" rel="bookmark"
+         title="Permalink to Настраиваем dev-сервер для удобной разработки на django">Настраиваем dev-сервер для удобной разработки на django</a></h2>
+    <time class="published" datetime="2012-12-22T22:55:00+04:00">22 дек 2012</time>
+  </header>
+  <div class="entry-content">
+    <p>При разработке не хочется тратить время, которого и так не хватает, на
+рутинные действия. После каждой отправки изменений в репозиторий,
+необходимо выполнить обновление кода на dev-сервере, применить миграции
+и тд. Сегодня мы рассмотрим, как быстро настроить автоматический deploy
+django-приложения на dev-сервер. Я рассмотрю максимально простое
+решение, которое подойдет для небольших проектов.</p>
+<p><img alt="image" src="/media/2012/12/FotoFlexer_Photo.jpg"></p>
+<h2>Требования к процессу</h2>
+<p>Итак, давайте определимся какие именно действия необходимо
+автоматизировать:</p>
+<ul>
+<li>подгрузка изменений из репозитория</li>
+<li>Установка зависимостей</li>
+<li>Применение миграций</li>
+<li>Перезагрузка web-сервера</li>
+</ul>
+<h2>Post-Receive Hooks</h2>
+<p>Необходимо каким-то образом отлавливать событие, когда пользователь
+выполняет git push и запускать git pull на dev-сервере. Чаще всего я
+использую github в качестве хостинга для git-репозиториев. Github
+предоставляет возможность отправки POST-запроса на удаленный сервер,
+после того как был получен push-запрос. Для этого необходимо прописать
+url в настройках репозитория:</p>
+<ul>
+<li><a href="https://help.github.com/articles/post-receive-hooks">GitHub</a></li>
+<li><a href="https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management">Bitbucket</a></li>
+</ul>
+<h3>Обработчик запросов</h3>
+<p>Как настроить отправку запросов мы узнали, теперь необходимо реализовать
+обработчик запросов. Можно обрабатывать запросы в самом приложении или
+отдельно, вот небольшой пример на node.js:</p>
+<div class="highlight"><pre><span></span><span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">exec</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">exec</span>
+  <span class="p">,</span> <span class="nx">child</span><span class="p">;</span>
+<span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span> <span class="s1">&#39;text/plain&#39;</span><span class="p">});</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+    <span class="nx">child</span> <span class="o">=</span> <span class="nx">exec</span><span class="p">(</span><span class="s1">&#39;/path/to/project/deploy.sh&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">out</span><span class="p">,</span> <span class="nx">err</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8000</span><span class="p">,</span> <span class="s1">&#39;0.0.0.0&#39;</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Git monitor server is running at 0.0.0.0:8000&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Здесь, при поступлении любого запроса, просто выполняется bash скрипт.
+При желании можно добавить дополнительные действия, например логировать
+запросы или добавить валидацию, чтобы запрос мог поступать только с
+определенных серверов.</p>
+<p>Далее просто нужно добавить адрес, на котором весит наш демон, в
+настройках github/bitbucket.</p>
+<h2>Применяем изменения</h2>
+<p>В обработчике запросов мы выполняем bash скрипт. Рассмотрим пример того,
+что может содержать такой скрипт:</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="nb">cd</span> /path/to/project/dir
+<span class="c1"># update code</span>
+git pull
+<span class="c1"># activate virtualenv</span>
+<span class="nb">source</span> ../bin/activate
+<span class="c1"># install new packages with pip</span>
+pip install -r ./requirements.txt
+<span class="c1"># Sync db changes</span>
+app/manage.py syncdb
+app/manage.py migrate --all --merge
+<span class="c1"># kill runserver</span>
+killall python
+nohup app/manage.py 
+runserver <span class="m">0</span>.0.0.0:9000 <span class="p">&amp;</span>
+</pre></div>
+
+
+<p>Итак, что здесь происходит:</p>
+<ul>
+<li>Переходим в директорию проекта</li>
+<li>Выполняем загрузку изменений с репозитория</li>
+<li>Активируем virtualenv (я надеюсь вы его используете :))</li>
+<li>Устанавливаем новые пакеты</li>
+<li>Применяем миграции south</li>
+<li>Перезапускаем web-сервер</li>
+</ul>
+<p>Здесь все достаточно просто, рассмотрим только как осуществляется
+управление пакетами. При установке нового пакета необходимо добавить его
+в текстовый файл. Создать такой файл можно автоматически при помощи
+следующей команды:</p>
+<div class="highlight"><pre><span></span>pip freeze &gt; requirements.txt
+</pre></div>
+
+
+<p>Данная команда сформирует список всех установленных пакетов и также
+укажет их версии. Вот пример сгенерированного файла:</p>
+<div class="highlight"><pre><span></span>Django==1.4.2
+PIL==1.1.7
+South==0.7.6
+argparse==1.2.1
+lxml==3.0.1
+....
+mongoengine==0.7.5
+psycopg2==2.4.5
+pymongo==2.3
+python-dateutil==2.1
+</pre></div>
+
+
+<p>При выполнении нашего bash-скрипта будет вызвана команда:</p>
+<div class="highlight"><pre><span></span>pip install -r ./requirements.txt
+</pre></div>
+
+
+<p>Это приведет к установке всех пакетов, из списка в файле, которые ещё
+небыли установлены.</p>
+<p>Конечно, в зависимости от ваших потребностей, могут понадобится
+дополнительные действия, например трансляция CoffeeScript, Compass или
+выполнение тестов. Добавить новые команды в скрипт, я думаю, не составит
+трудностей :)</p>
+<h2>Настройка Nginx</h2>
+<p>Для того, чтобы перенаправлять запросы с 80 порта на runserver я
+использую nginx (ну не запускать же runserver от root'а :)). Пример
+конфигурации nginx:</p>
+<div class="highlight"><pre><span></span><span class="k">user</span> <span class="s">www-data</span><span class="p">;</span>
+<span class="k">worker_processes</span> <span class="mi">4</span><span class="p">;</span>
+<span class="k">pid</span> <span class="s">/var/run/nginx.pid</span><span class="p">;</span>
+
+<span class="k">events</span> <span class="p">{</span>
+    <span class="kn">worker_connections</span> <span class="mi">768</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">http</span> <span class="p">{</span>
+
+    <span class="c1">##</span>
+    <span class="c1"># Basic Settings</span>
+    <span class="c1">##</span>
+
+    <span class="kn">sendfile</span> <span class="no">on</span><span class="p">;</span>
+    <span class="kn">tcp_nopush</span> <span class="no">on</span><span class="p">;</span>
+    <span class="kn">tcp_nodelay</span> <span class="no">on</span><span class="p">;</span>
+    <span class="kn">keepalive_timeout</span> <span class="mi">65</span><span class="p">;</span>
+    <span class="kn">types_hash_max_size</span> <span class="mi">2048</span><span class="p">;</span>
+
+    <span class="kn">include</span> <span class="s">/etc/nginx/mime.types</span><span class="p">;</span>
+    <span class="kn">default_type</span> <span class="s">application/octet-stream</span><span class="p">;</span>
+
+    <span class="c1">##</span>
+    <span class="c1"># Logging Settings</span>
+    <span class="c1">##</span>
+
+    <span class="kn">access_log</span> <span class="s">/var/log/nginx/access.log</span><span class="p">;</span>
+    <span class="kn">error_log</span> <span class="s">/var/log/nginx/error.log</span><span class="p">;</span>
+
+    <span class="c1">##</span>
+    <span class="c1"># Proxy Settings</span>
+    <span class="c1">##</span>
+    <span class="kn">server</span> <span class="p">{</span>
+        <span class="kn">listen</span> <span class="s">*:80</span><span class="p">;</span>
+
+        <span class="kn">location</span> <span class="s">/</span> <span class="p">{</span>
+            <span class="kn">proxy_pass</span>  <span class="s">http://localhost:9000</span><span class="p">;</span>
+            <span class="kn">proxy_set_header</span>    <span class="s">Host</span> <span class="nv">$host</span><span class="p">;</span>
+            <span class="kn">proxy_set_header</span> <span class="s">X-Real-IP</span> <span class="nv">$remote_addr</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>На этом все, пишите в комментариях, если я что-то упустил.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

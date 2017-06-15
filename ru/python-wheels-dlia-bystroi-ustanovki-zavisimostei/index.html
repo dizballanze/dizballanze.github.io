@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/python-wheels-dlia-bystroi-ustanovki-zavisimostei/" rel="bookmark"
+         title="Permalink to Python wheels для быстрой установки зависимостей">Python wheels для быстрой установки зависимостей</a></h2>
+    <time class="published" datetime="2015-01-16T23:30:00+03:00">16 янв 2015</time>
+  </header>
+  <div class="entry-content">
+    <p>Часто все зависимые python пакеты устанавливаются при помощи pip из PyPI и/или VCS. Такой подход имеет ряд недостатков:</p>
+<ul>
+<li>производительность - каждый раз необходима скачивать и собирать пакеты что занимает большое количество времени</li>
+<li>работа в оффлайн режиме - без подключения к интернету не получится установить зависимости</li>
+<li>стабильность - установка зависимостей невозможна в случае:<ul>
+<li>неполадок на стороне PyPI</li>
+<li>неполадок на стороне VCS (GitHub, Bitbucket, etc)</li>
+<li>нарушения зависимостей (удаление репозитория с Github, удаление пакета из PyPI и тд)</li>
+<li>неполадок у хостинг провайдера, которые могут привести к недоступности необходимых сетевых ресурсов (PyPI, VSC, etc)</li>
+</ul>
+</li>
+</ul>
+<p>Для решения этой проблемы предлагается использование заранее подготовленных пакетов wheel для всех зависимостей и хранение их в репозитории системы.</p>
+<h2>Создаем архив wheel пакетов</h2>
+<p>Wheel - это современный формат распространения пакетов в Python среде, который пришел на замену eggs. Рассмотрим процесс создания архива wheel для всех зависимостей системы. </p>
+<p>Представим типичный Python проект с файлом requirements.txt содержащим зависимости. Пример файла <code>requirements.txt</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">svgwrite</span><span class="o">==</span><span class="mf">1.1.6</span>
+<span class="n">ipython</span><span class="o">==</span><span class="mf">2.3.0</span>
+<span class="n">flask</span><span class="o">==</span><span class="mf">0.10.1</span>
+<span class="n">flask</span><span class="o">-</span><span class="n">mongoengine</span><span class="o">==</span><span class="mf">0.7.1</span>
+<span class="n">flask</span><span class="o">-</span><span class="n">uploads</span><span class="o">==</span><span class="mf">0.1.3</span>
+<span class="o">-</span><span class="n">e</span> <span class="nl">git</span><span class="p">:</span><span class="c1">//github.com/Samael500/flask-principal.git@dab7f391f0eeb76a25fa1b3dae7308a0924c8a12#egg=flask-principal</span>
+<span class="o">-</span><span class="n">e</span> <span class="nl">git</span><span class="p">:</span><span class="c1">//github.com/Samael500/flask-security.git@f1042b5db67147b8ddaa8b767b2dfe063bb56ffa#egg=flask-security</span>
+<span class="n">Flask</span><span class="o">-</span><span class="n">Admin</span><span class="o">==</span><span class="mf">1.0.8</span>
+<span class="n">Flask</span><span class="o">-</span><span class="n">Session</span><span class="o">==</span><span class="mf">0.1.1</span>
+<span class="n">Flask</span><span class="o">-</span><span class="n">Script</span><span class="o">==</span><span class="mf">2.0.5</span>
+<span class="n">gunicorn</span><span class="o">==</span><span class="mf">19.1.1</span>
+<span class="n">Flask</span><span class="o">-</span><span class="n">Testing</span><span class="o">==</span><span class="mf">0.4.2</span>
+<span class="n">tornado</span><span class="o">==</span><span class="mf">4.0.2</span>
+<span class="n">nose</span><span class="o">==</span><span class="mf">1.3.4</span>
+<span class="n">pep8</span><span class="o">==</span><span class="mf">1.5.7</span>
+<span class="n">Pillow</span><span class="o">==</span><span class="mf">2.6.1</span>
+<span class="n">pyflakes</span><span class="o">==</span><span class="mf">0.8.1</span>
+<span class="n">pylama</span><span class="o">==</span><span class="mf">6.1.1</span>
+<span class="n">spec</span><span class="o">==</span><span class="mf">0.11.1</span>
+<span class="n">py</span><span class="o">-</span><span class="n">bcrypt</span><span class="o">==</span><span class="mf">0.4</span>
+<span class="n">WTForms</span><span class="o">==</span><span class="mf">1.0.4</span>
+<span class="n">blessings</span><span class="o">==</span><span class="mf">1.6</span>
+<span class="n">beautifulsoup4</span><span class="o">==</span><span class="mf">4.3.2</span>
+<span class="n">lxml</span><span class="o">==</span><span class="mf">3.4.1</span>
+<span class="o">-</span><span class="n">e</span> <span class="nl">git</span><span class="p">:</span><span class="c1">//github.com/Samael500/jinja-assets-compressor.git@8e1639cec6f8b347794fe1334519daacc6b763b0#egg=jac</span>
+<span class="n">PyYAML</span><span class="o">==</span><span class="mf">3.10</span>
+</pre></div>
+
+
+<p>В нашем файле <code>requirements.txt</code> есть зависимости из внешних ресурсов (не PyPI), которые предполагают загрузку пакетов из VCS (в данном случае из git репозиториев на Github). Скопируем старый <code>requirements.txt</code> в <code>requirements-remote.txt</code>, а в <code>requirements.txt</code> заменим внешние ресурсы на обычные пакеты из PyPI и получим:</p>
+<div class="highlight"><pre><span></span>svgwrite==1.1.6
+ipython==2.3.0
+flask==0.10.1
+flask-mongoengine==0.7.1
+flask-uploads==0.1.3
+flask-principal
+flask-security
+Flask-Admin==1.0.8
+Flask-Session==0.1.1
+Flask-Script==2.0.5
+gunicorn==19.1.1
+Flask-Testing==0.4.2
+tornado==4.0.2
+nose==1.3.4
+pep8==1.5.7
+Pillow==2.6.1
+pyflakes==0.8.1
+pylama==6.1.1
+spec==0.11.1
+py-bcrypt==0.4
+WTForms==1.0.4
+blessings==1.6
+beautifulsoup4==4.3.2
+lxml==3.4.1
+jac
+PyYAML==3.10
+</pre></div>
+
+
+<p>Это делается для того, чтобы при установке из архива wheel пакетов не происходили запросы к внешним VCS, а брались локальные wheel, которые мы сейчас будем генерировать.</p>
+<p>Cоздаем и активируем <code>venv</code>:</p>
+<div class="highlight"><pre><span></span>pyvenv venv
+. venv/bin/activate
+</pre></div>
+
+
+<p>Устанавливаем все пакеты как обычно, но из <code>requirements-remote.txt</code>:</p>
+<div class="highlight"><pre><span></span>pip install -r requirements-remote.txt
+</pre></div>
+
+
+<p>Сгенерируем архив всех пакетов PyPI, всех их зависимостей и всех зависимостей внешних пакетов (VCS). Для этого нам потребуется свежая версия <code>pip</code> и пакет <code>wheel</code>:</p>
+<div class="highlight"><pre><span></span>pip install -U pip
+pip install wheel
+mkdir wheels
+pip wheel -w wheels/ -r requirements-remote.txt --pre --allow-all-external
+</pre></div>
+
+
+<p>После этого получаем архив wheel пакетов для всех зависимостей кроме внешних (VCS). Для внешних пакетов устанавливаемых из исходников необходимо сгенерировать пакеты вручную при помощи <code>setup.py bdist_wheel</code>:</p>
+<div class="highlight"><pre><span></span>cd venv/src/flask-principal
+python setup.py bdist_wheel --dist-dir ../../../wheels/
+cd ../flask-security
+python setup.py bdist_wheel --dist-dir ../../../wheels/
+cd ../jac
+python setup.py bdist_wheel --dist-dir ../../../wheels/
+</pre></div>
+
+
+<p>Теперь в директории <code>wheels</code> есть все необходимые пакеты для установки всех зависимостей системы. Процесс уставновки зависимостей из локального архива пакетов выполняется так:</p>
+<div class="highlight"><pre><span></span>pip install --no-index -f wheels/ -r requirements.txt
+</pre></div>
+
+
+<p>обратите внимание, что используется файл <code>requirements.txt</code>, а не <code>requirements-remote.txt</code>.</p>
+<h2>Тестирование скорости установки</h2>
+<p>Обычная установка со скачиванием пакетов из PyPI и VCS:</p>
+<div class="highlight"><pre><span></span>time pip install -r requirements-remote.txt
+real    4m20.655s
+user    1m31.242s
+sys 0m55.539s
+</pre></div>
+
+
+<p>Установка из локального архива wheels:</p>
+<div class="highlight"><pre><span></span>time pip install --no-index -f wheels/ -r requirements.txt
+real    1m3.412s
+user    0m4.808s
+sys 0m31.210s
+</pre></div>
+
+
+<p>Из результатов можно сделать вывод, что время установки пакетов из локального архива в нашем случае меньше в 4 раза.
+Что логично, т.к. пакеты заново не скачиваются из интернета и не компилируются.</p>
+<h2>Бонус</h2>
+<p>Для удобства написал <a href="https://gist.github.com/dizballanze/070434f4eb3b5febae39">небольшой скрипт</a>, автоматизирующий сборку пакетов установленных из исходников.</p>
+<script src="https://gist.github.com/dizballanze/070434f4eb3b5febae39.js"></script>
+
+<p>Пример использования скрипта:</p>
+<div class="highlight"><pre><span></span>python build_wheels --sources-dir venv/src/ --wheels-dir wheels/
+</pre></div>
+
+
+<p>Скрипт пройдется по всем поддиректориям <code>venv/src/</code> и в каждой из них попробует собрать пакет в директорию <code>wheels/</code>.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

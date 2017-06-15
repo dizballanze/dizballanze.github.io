@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/prostoi-server-chata-na-nodejs-ru.html" rel="bookmark"
+         title="Permalink to Простой сервер чата на Node.JS">Простой сервер чата на Node.JS</a></h2>
+    <time class="published" datetime="2010-12-30T18:20:00+03:00">30 дек 2010</time>
+  </header>
+  <div class="entry-content">
+    <p>Здравствуйте! В продолжении темы Node.JS хочу рассмотреть пример
+создания простого сервера чата на базе данной библиотеки.</p>
+<p>Во-первых нужно определится с функционалом. Наш сервер должен принимать
+подключения от клиентов по протоколу tcp, открывать потоки и рассылать
+всем клиентам полученные от каждого данные. Т.е. при получении данных от
+одного из клиентов нужно записать их в каждый из поток остальных
+клиентов.</p>
+<p>Для того что-бы реализовать сервер в ноде нам понадобится стандартный
+модуль net. Подключим его добавив строку <code>var net = require('net');</code> в
+начало кода программы. Теперь мы можем обращаться ко всему функционалу
+модуля через переменную net. В данном случае мы будем использовать метод
+createServer который создает tcp сервер. В качестве параметров
+передается функция, которая будет обрабатывать подключения к серверу.
+При вызове в эту функцию передается один параметр - поток net.Stream,
+созданного соединения. Данный поток является потоком ввода/вывода и
+будет использоваться для непосредственного обмена данными с клиентом.
+Итак, создаем сервер:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//Обрабатываем новое соединение</span>
+<span class="p">});</span>
+</pre></div>
+
+
+<p>Сервер мы создали, но соединения он принимать не будет, т.к. мы не
+назначили его на определённый ip:port или сокет. Для этого необходимо
+воспользоваться методом <code>server.listen(port, [host], [callback])</code>, если
+хотим назначить сервер "слушать" порт или
+<code>server.listen(path, [callback])</code> для сокета. Назначим сервер "слушать"
+10.32.3.23:8124:</p>
+<div class="highlight"><pre><span></span><span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8124</span><span class="p">,</span> <span class="s1">&#39;10.32.3.23&#39;</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Дальше для корректной работы нашего сервера необходимо описать
+обработчики некоторых событий. Т.к. <code>net.Server</code> и <code>net.Stream</code> являются
+EventEmitter, то они могут вызывать события. Рассмотрим нужные нам
+события сервера:</p>
+<p><em>'connection'</em> - <code>function (stream) {}</code> - вызывается при подключении
+нового клиента. Мы в данном примере будем использовать следующий
+обработчик:</p>
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">c</span><span class="p">.</span><span class="nx">setEncoding</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">);</span> <span class="c1">//Устанавливаем кодировку</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">c</span><span class="p">);</span>      <span class="c1">//Добавляем поток в массив</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">){</span> <span class="c1">//Обходим все сохраненные потоки</span>
+        <span class="nx">stream</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">remoteAddress</span> <span class="o">+</span> <span class="s1">&#39; - is connected\n&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">);</span> <span class="c1">//Выводим сообщение о новом клиенте</span>
+    <span class="p">});</span>
+    <span class="nx">c</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">onStreamData</span><span class="p">);</span> <span class="c1">//Добавляем обработчик события &#39;data&#39; нового потока</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>net.Stream.remote Address - ip адрес клиента подключенного к данному
+потоку.</p>
+<p><em>'close'</em> - <code>function () {}</code> - вызывается при закрытии сервера. Наш
+обработчик:</p>
+<div class="highlight"><pre><span></span><span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">){</span> <span class="c1">//Обходим все сохраненные потоки</span>
+        <span class="nx">stream</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;Server is going down! Bye-bye!&#39;</span><span class="p">,</span><span class="s1">&#39;utf8&#39;</span><span class="p">);</span> <span class="c1">//Выводим сообщение</span>
+        <span class="nx">stream</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span> <span class="c1">//Уничтожаем поток</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Хочу обратить внимание, что в данном участке кода нет непосредственного
+завершения процесса, но он приводит к этому. Связанно это с тем что
+программы на node работают пока есть активные обработчики, а после
+выполнения этого кода все обработчики назначенные потокам будут
+отключены и это приведет к завершению процесса.</p>
+<p>Теперь рассмотрим события потока:</p>
+<p><em>'data'</em> - <code>function (data) {}</code> - вызывается при получении данных от
+клиента. data - буфер, но если до этого вызван метод setEncoding, то
+data - строка в заданной кодировке. Рассмотрим наш обработчик:</p>
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">onStreamData</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+    <span class="c1">// Обработка команды завершения работы сервера</span>
+    <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;.down&#39;</span><span class="p">)){</span>
+        <span class="nx">server</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span> <span class="c1">// Приводит к тому, что сервер больше не принимает соединения, а также вызывает событие &#39;close&#39;</span>
+        <span class="k">return</span> <span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">// Заносим в переменную текущий поток</span>
+    <span class="kd">var</span> <span class="nx">current_stream</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">stream</span> <span class="o">!=</span> <span class="nx">current_stream</span><span class="p">)</span> <span class="c1">//Если поток не является текущим потоком, то выводим полученные данные</span>
+            <span class="nx">stream</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">current_stream</span><span class="p">.</span><span class="nx">remoteAddress</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Теперь полный код программы:</p>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">net</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;net&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">streams</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">();</span>
+
+<span class="kd">function</span> <span class="nx">onStreamData</span><span class="p">(</span><span class="nx">data</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;.down&#39;</span><span class="p">)){</span>
+        <span class="nx">server</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+        <span class="k">return</span> <span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kd">var</span> <span class="nx">current_stream</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">stream</span> <span class="o">!=</span> <span class="nx">current_stream</span><span class="p">)</span>
+            <span class="nx">stream</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">current_stream</span><span class="p">.</span><span class="nx">remoteAddress</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">server</span> <span class="o">=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">c</span><span class="p">.</span><span class="nx">setEncoding</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">c</span><span class="p">);</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">){</span>
+        <span class="nx">stream</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">remoteAddress</span> <span class="o">+</span> <span class="s1">&#39; - is connected\n&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
+    <span class="p">});</span>
+    <span class="nx">c</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">onStreamData</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">stream</span><span class="p">){</span>
+        <span class="nx">stream</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;Server is going down! Bye-bye!&#39;</span><span class="p">,</span><span class="s1">&#39;utf8&#39;</span><span class="p">);</span>
+        <span class="nx">stream</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="nx">server</span><span class="p">.</span><span class="nx">maxConnections</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// Максимальное кол-во подключений</span>
+<span class="nx">server</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8124</span><span class="p">,</span> <span class="s1">&#39;10.32.3.23&#39;</span><span class="p">);</span> <span class="c1">// Задайте свой внешний ip или localhost</span>
+</pre></div>
+
+
+<p>Сохраните код в файле, например server.js. Теперь можно запустить сервер
+и проверить его в действии. Для запуска выполните:</p>
+<div class="highlight"><pre><span></span>node server.js
+</pre></div>
+
+
+<p>Для того что-бы подключится воспользуемся telnet:</p>
+<div class="highlight"><pre><span></span>telnet <span class="m">10</span>.32.3.23 <span class="m">8124</span>
+</pre></div>
+
+
+<p>Не забудьте поменять ip и порт на тот, который вы использовали при
+вызове метода listen.</p>
+<p>При желании можете расширить пример, дописать назначение псевдонимов
+клиентам или добавить специальные команды(такие как .down) для бана или
+выкидывания пользователей из чата.</p>
+<p>Как вы смогли убедится Node.JS предоставляет весь необходимый функционал
+для создания сетевых приложений. В скором времени постараюсь продолжить
+тему разработки приложений на Node.JS новыми и интересными примерами.
+Спасибо за внимание :)</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>
