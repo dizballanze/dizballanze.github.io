@@ -5,6 +5,27 @@ body {
   color: #111;
   margin: 0;
   padding: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+body, html {
+  -ms-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  -o-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+}
+
+@media only screen and (max-device-width: 414px) {
+  body, p, ul {
+    font-size: 28px;
+  }
+
+  pre, code {
+      white-space: normal;
+      white-space: normal !important;
+      word-break: break-all;
+  }
 }
 
 a:link    { color: blue; text-decoration: none;      }
@@ -31,7 +52,7 @@ pre {
 
 #content p, #content h2, #content h3, #content h4, #content h5, #content div, 
 #content ul, #content h1, footer, header, nav {
-    width: 950px;
+    max-width: 950px;
     margin-left: auto;
     margin-right: auto;
 }
