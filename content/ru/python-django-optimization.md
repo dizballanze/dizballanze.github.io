@@ -1,4 +1,5 @@
 Title: Оптимизация производительности Django проектов (часть 1)
+Slug: django-project-optimization-part-1
 Date: 2017-6-14 16:47
 Author: Admin
 Category: Python
