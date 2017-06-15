@@ -58,7 +58,7 @@ pre {
 }
 
 #content p, #content h2, #content h3, #content h4, #content h5,
-#content ul, #content h1, footer, header, nav {
+#content ul, #content h1, #content table, footer, header, nav {
     max-width: 950px;
     margin-left: auto;
     margin-right: auto;
