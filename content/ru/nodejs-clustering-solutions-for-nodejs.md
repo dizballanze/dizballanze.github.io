@@ -169,7 +169,3 @@ Nginx позволяет описывать группы серверов в к�
 
 [postlogo]: /media/2013/02/node-cluster.png
 [loadbalancing]: /media/2013/02/load-balancing.png
-
-<style type="text/css">
-img[alt=loadbalancing] {margin-left: 130px;}
-</style>

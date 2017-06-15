@@ -5,9 +5,9 @@ Category: Node.js
 Tags: npm, package.json
 Lang: ru
 
-npm - пакетный менеджер для [node.js](/tag/nodejs/ "Node.js"). Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.
+npm - пакетный менеджер для node.js. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.
 
-![npm package management](media/2013/01/npm.png "node packaged modules")
+![npm package management](/media/2013/01/npm.png "node packaged modules")
 
 Установка npm
 =============
