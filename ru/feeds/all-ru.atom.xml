@@ -58,6 +58,38 @@
 в удобном web-интерфейсе. Для включения панели добавьте &lt;code&gt;debug_toolbar.panels.profiling.ProfilingPanel&lt;/code&gt; в
 список &lt;code&gt;DEBUG_TOOLBAR_PANELS&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"&gt;&lt;/p&gt;
+&lt;h3&gt;Silk&lt;/h3&gt;
+&lt;p&gt;Еще один отличный пакет, который особенно пригодится если у вас API и соответственно DDT нельзя использовать.
+Как установить и настроить пакет можно посмотреть на &lt;a href="https://github.com/django-silk/silk#installation"&gt;github проекта&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;После установки и настройки перезагрузите сервер и перейдите по URL: &lt;code&gt;/silk/&lt;/code&gt;. По этому адресу должен быть доступен
+web-интерфейс, который показывает:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Статистику по запросам (в разрезе метод/URL с возможностью просмотра отдельных запросов),&lt;/li&gt;
+&lt;li&gt;просмотр SQL запросов,&lt;/li&gt;
+&lt;li&gt;просмотр результатов профилирования.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Профайлер можно включить для всего проекта установив &lt;code&gt;SILKY_PYTHON_PROFILER = True&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;. Или использовать
+только в определенных местах, заключив профилируемый код в декоратор или контекст процессор:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;silk.profiling.profiler&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;silk_profile&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@silk_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;View Blog Post&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Post&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;render_to_response&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;post.html&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s1"&gt;&amp;#39;post&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;silk_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;View Blog Post #&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pk&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Post&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;render_to_response&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;post.html&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="s1"&gt;&amp;#39;post&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;
+        &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
 &lt;h3&gt;Тестовые данные&lt;/h3&gt;
 &lt;p&gt;Очень важно использовать для профилирования данные похожие на те, что используются в production. В идеале нужно взять бекап
 с production сервера, развернуть его на локальной машине и использовать эти данные для профилирования проекта. Если вы

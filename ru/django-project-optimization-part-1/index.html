@@ -109,6 +109,38 @@
 в удобном web-интерфейсе. Для включения панели добавьте <code>debug_toolbar.panels.profiling.ProfilingPanel</code> в
 список <code>DEBUG_TOOLBAR_PANELS</code> в <code>settings.py</code>.</p>
 <p><img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"></p>
+<h3>Silk</h3>
+<p>Еще один отличный пакет, который особенно пригодится если у вас API и соответственно DDT нельзя использовать.
+Как установить и настроить пакет можно посмотреть на <a href="https://github.com/django-silk/silk#installation">github проекта</a>.</p>
+<p><img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"></p>
+<p>После установки и настройки перезагрузите сервер и перейдите по URL: <code>/silk/</code>. По этому адресу должен быть доступен
+web-интерфейс, который показывает:</p>
+<ul>
+<li>Статистику по запросам (в разрезе метод/URL с возможностью просмотра отдельных запросов),</li>
+<li>просмотр SQL запросов,</li>
+<li>просмотр результатов профилирования.</li>
+</ul>
+<p>Профайлер можно включить для всего проекта установив <code>SILKY_PYTHON_PROFILER = True</code> в <code>settings.py</code>. Или использовать
+только в определенных местах, заключив профилируемый код в декоратор или контекст процессор:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">silk.profiling.profiler</span> <span class="kn">import</span> <span class="n">silk_profile</span>
+
+
+<span class="nd">@silk_profile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;View Blog Post&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">post_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">p</span>
+    <span class="p">})</span>
+
+<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">silk_profile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;View Blog Post #</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">post_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">p</span>
+        <span class="p">})</span>
+</pre></div>
+
+
 <h3>Тестовые данные</h3>
 <p>Очень важно использовать для профилирования данные похожие на те, что используются в production. В идеале нужно взять бекап
 с production сервера, развернуть его на локальной машине и использовать эти данные для профилирования проекта. Если вы

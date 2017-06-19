@@ -106,6 +106,37 @@ with additional features, like time chart, traceback, a result of <code>EXPLAIN<
 <p>Also, DDT has non-default built-in profiling panel. It provides a web interface to profiling results of the current request.
 To enable it, you should add <code>debug_toolbar.panels.profiling.ProfilingPanel</code> to <code>DEBUG_TOOLBAR_PANELS</code> list in `settings.py.</p>
 <p><img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"></p>
+<h3>Silk</h3>
+<p>Another great package for profiling is Silk. It's especially useful if you have an API and therefore you can't use DDT.
+Installation instructions can be found on <a href="https://github.com/django-silk/silk#installation">GitHub</a>.</p>
+<p><img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"></p>
+<p>After set up you should reboot the server and open <code>/silk/</code> in a browser. The web interface of Silk provides:</p>
+<ul>
+<li>Requests statistic,</li>
+<li>SQL queries,</li>
+<li>profiling results.</li>
+</ul>
+<p>You can enable profiler for the whole project by setting <code>SILKY_PYTHON_PROFILER = True</code> in <code>settings.py</code>. Or you
+can profile only certain functions/blocks of code with help of decorator and context processor:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">silk.profiling.profiler</span> <span class="kn">import</span> <span class="n">silk_profile</span>
+
+
+<span class="nd">@silk_profile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;View Blog Post&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">post_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">p</span>
+    <span class="p">})</span>
+
+<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">silk_profile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;View Blog Post #</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">post_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">p</span>
+        <span class="p">})</span>
+</pre></div>
+
+
 <h3>Profiling data</h3>
 <p>It's very important to use production-like data for profiling. Ideally, you should grab a dump from the production database and use it
 on your local machine. If you try to measure performance on an empty/small database you can receive wrong results, that don't
