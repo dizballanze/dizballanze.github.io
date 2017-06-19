@@ -76,6 +76,40 @@ To enable it, you should add `debug_toolbar.panels.profiling.ProfilingPanel` to 
 
 ![DDT profiling panel](/media/2017/6/ddt-profiling-panel.png)
 
+### Silk
+
+Another great package for profiling is Silk. It's especially useful if you have an API and therefore you can't use DDT.
+Installation instructions can be found on [GitHub](https://github.com/django-silk/silk#installation).
+
+![silky-screenshot.png](/media/2017/6/silky-screenshot.png)
+
+After set up you should reboot the server and open `/silk/` in a browser. The web interface of Silk provides:
+
+-  Requests statistic,
+-  SQL queries,
+-  profiling results.
+
+You can enable profiler for the whole project by setting `SILKY_PYTHON_PROFILER = True` in `settings.py`. Or you
+can profile only certain functions/blocks of code with help of decorator and context processor:
+
+```python
+from silk.profiling.profiler import silk_profile
+
+
+@silk_profile(name='View Blog Post')
+def post(request, post_id):
+    p = Post.objects.get(pk=post_id)
+    return render_to_response('post.html', {
+        'post': p
+    })
+
+def post(request, post_id):
+    with silk_profile(name='View Blog Post #%d' % self.pk):
+        p = Post.objects.get(pk=post_id)
+        return render_to_response('post.html', {
+            'post': p
+        })
+```
 
 ### Profiling data
 
