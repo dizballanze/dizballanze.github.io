@@ -3,8 +3,8 @@ body, html {
 }
 
 body {
-  font-family: 'PT Mono', monospace;
-  font-size: 15px;
+  font-family: 'PT serif', serif;
+  font-size: 19px;
   background-color: white;
   color: #111;
   margin: 0;
