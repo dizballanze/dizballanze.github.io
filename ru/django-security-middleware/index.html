@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Middleware для обеспечения безопасности в Django</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/django-security-middleware/" rel="bookmark"
+         title="Permalink to Middleware для обеспечения безопасности в Django">Middleware для обеспечения безопасности в Django</a></h2>
+    <time class="published" datetime="2017-06-21T15:08:00+03:00">21 июн 2017</time>
+  </header>
+  <div class="entry-content">
+    <p>Django предоставляет защитные механизмы от различных атак, но не все они включены по-умолчанию. В этом посте
+я хочу рассмотреть какие возможности по защите предоставляет Django и как их использовать.</p>
+<h1>django.middleware.security.SecurityMiddleware</h1>
+<p>Этот middleware включен по-умолчанию и должен быть самым первым в списке, для того чтобы злонамеренные запросы
+блокировались до обработки другими middleware.</p>
+<p>Он защищает сразу от многих атак и каждую из этих защит можно включить/отключить отдельно используя переменные в
+<code>settings.py</code>:</p>
+<ul>
+<li><code>SECURE_BROWSER_XSS_FILTER</code> - по-умолчанию отключен, при включении добавляет заголовок <code>x-xss-protection:1; mode=block</code>,
+заставляющий, поддерживающие этот заголовок браузеры, блокировать потенциально опасные запросы содержащие javascript 
+код в POST или GET параметрах.</li>
+<li><code>SECURE_CONTENT_TYPE_NOSNIFF</code> - по-умолчанию отключен, при включении добавляет заголовок
+<code>x-content-type-options:nosniff</code>, запрещающий браузерам угадывать Content-Type ответа сервера, что блокирует возможность
+неправильно интерпретировать загруженные пользователем файлы. Если у вас загруженные файлы отдаются напрямую
+web-сервером (например, Nginx, см. ниже), то также нужно настроить чтобы сервер отдавал этот заголовок.</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">server</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+    <span class="kn">location</span> <span class="s">/media/</span> <span class="p">{</span>
+        <span class="c1"># ...</span>
+        <span class="kn">add_header</span> <span class="s">X-Content-Type-Options</span> <span class="s">nosniff</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<ul>
+<li><code>SECURE_HSTS_SECONDS</code> по-умолчанию отключен, добавляет заголовок <code>Strict-Transport-Security</code>, который запрещает браузерам открывать сайт по
+нешифрованному HTTP на заданное количество секунд. Заголовок действует на весь домен, по-этому его можно включать, только если весь контент
+отдается по HTTPS. Этот заголовок позволяется защититься от некоторых man-in-the-middle атак.</li>
+<li><code>SECURE_HSTS_PRELOAD</code> - по-умолчанию отключен, нужно включить при добавлении сайта в
+<a href="https://hstspreload.org/">захардкоженный список</a> <code>HTTPS-only</code> сайтов, который поставляется вместе с Google Chrome.
+Будет работать только если задан параметр <code>SECURE_HSTS_SECONDS</code> &gt; 0.</li>
+<li><code>SECURE_HSTS_INCLUDE_SUBDOMAINS</code> - по-умолчанию отключен, при включении запрещает браузерам открывать по нешифрованному
+HTTP также и все поддомены сайта.</li>
+<li><code>SECURE_SSL_REDIRECT</code> - по-умолчанию отключен, при включении редиректит все HTTP запросы на HTTPS. Вероятно вам
+захочется делать этот редирект средствами web-сервера (например, Nginx):</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">server</span> <span class="p">{</span>
+    <span class="kn">listen</span> <span class="mi">80</span><span class="p">;</span>
+    <span class="kn">server_name</span>  <span class="s">example.org</span><span class="p">;</span>
+    <span class="kn">rewrite</span> <span class="s">^</span> <span class="s">http://example.org</span><span class="nv">$request_uri?</span> <span class="s">permanent</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<ul>
+<li><code>SECURE_REDIRECT_EXEMPT</code> - по-умолчанию пустой список. URL адреса, соответствующие заданным в списке регулярным
+выражениям, не будут перенаправляться с HTTP на HTTPS, при включении <code>SECURE_SSL_REDIRECT</code>.</li>
+<li><code>SECURE_SSL_HOST</code> - по-умолчанию не задан. Если задать строку (домен), то при включенном <code>SECURE_SSL_REDIRECT</code> все
+запросы будут перенаправляться на этот домен.</li>
+</ul>
+<blockquote>
+<p>Если при включении HSTS настроек заголовки не добавляются, возможно Django не распознает, что запросы зашифрованные
+из-за того, что располагается за реверс-прокси. Для того, чтобы Django понимал какие запросы были зашифрованными нужно
+добавить параметр <code>SECURE_PROXY_SSL_HEADER</code> в <code>settings.py</code>, который содержит кортеж <code>("header-name", "header-value")</code>.
+Получив такой заголовок от прокси сервера Django будет считать что запрос был получен по протоколу HTTPS.</p>
+</blockquote>
+<h2>django.middleware.csrf.CsrfViewMiddleware</h2>
+<p>Middleware защищает от <a href="https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%B6%D1%81%D0%B0%D0%B9%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D0%BB%D0%BA%D0%B0_%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%B0">межсайтовой подделки запроса</a>.
+При отправке любых небезопасных (POST, PUT, DELETE) запросов middleware будет проверять наличие csrf токена и если
+этот токен не найден или не корректен запрос будет фильтроваться. Для отправки токена существуют разные способы.
+Для обычных форм можно добавлять скрытое поле используя тег <code>{% csrf_token %}</code> в форме. Для ajax запросов можно
+добавлять заголовок <code>X-CSRFToken</code> со значением <a href="https://docs.djangoproject.com/en/1.11/ref/csrf/#ajax">полученным из cookie</a>.</p>
+<p>Если у вас SPA и вы не используете <code>{% csrf_token %}</code>, то вам нужно заставить Django выдать клиенту cookie с токеном.
+Для этого можно использовать view decorator <a href="https://docs.djangoproject.com/en/1.11/ref/csrf/#django.views.decorators.csrf.ensure_csrf_cookie">ensure_csrf_cookie</a>.</p>
+<h2>django.middleware.clickjacking.XFrameOptionsMiddleware</h2>
+<p>При включении данный middleware добавляет заголовок <code>X-Frame-Options: SAMEORIGIN</code>, который запрещает современным браузерам
+загружать сайт в (i)frame на сайтах с другим доменом. Также можно запретить подключение сайта со всех доменов используя
+переменную <code>X_FRAME_OPTIONS = 'DENY'</code>.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

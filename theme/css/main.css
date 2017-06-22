@@ -115,3 +115,12 @@ code::before, code::after {
     latter-spacing: -0.1em;
     content: "\00a0";
 }
+
+blockquote {
+    background-color: #EEE;
+    padding-left: 1em;
+    padding-right: 1em;
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+    border-left: 1px dashed black;
+}
