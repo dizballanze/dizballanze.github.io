@@ -209,3 +209,89 @@ class Command(BaseCommand):
 пару строк кода.
 
 ### Массовое изменение
+
+После переноса данных пришла идея, что к старые статьи (раньше 2012 года) нужно запретить комментировать. Для этого
+было добавлено логическое поле `comments_on` к моделе `Article` и нам необходимо проставить его значение:
+
+```python
+from django.db import connection
+from blog.models import Article
+for article in Article.objects.filter(created_at__year__lt=2012):
+    article.comments_on = False
+    article.save()
+print(len(connection.queries))
+```
+
+Запустив этот код я получил 179 запросов следующего вида:
+
+```sql
+(0.000) UPDATE "blog_article" SET "title" = 'Saepe eius facere magni et eligendi minima sint.', "content" = '...', "created_at" = '1992-03-01'::date, "author_id" = 730, "comments_on" = false WHERE "blog_article"."id" = 3507; args=('Saepe eius facere magni et eligendi minima sint.', '...', datetime.date(1992, 3, 1), 730, False, 3507)
+```
+
+Кроме того, что для каждой статьи подходящей по условию происходит отдельный SQL запрос, еще и все поля этих статей
+перезаписываются. А это может привести к перезаписи изменений сделанных в промежутке между SELECT и UPDATE запросами.
+Т.е. кроме проблем с производительностью мы также получаем race condition.
+
+Вместо этого мы можем использовать метод `update` доступный у объектов `QuerySet`:
+
+```python
+Article.objects.filter(created_at__year__lt=2012).update(comments_on=False)
+```
+
+Этот код генерирует всего один SQL запрос:
+
+```sql
+(0.004) UPDATE "blog_article" SET "comments_on" = false WHERE "blog_article"."created_at" < '2012-01-01'::date; args=(False, datetime.date(2012, 1, 1))
+```
+
+Если для изменения полей нужна сложная логика, которую нельзя реализовать полностью в update операторе, можете вычислить
+значение поля в python коде и затем использовать один из следующих вариантов:
+
+```python
+Model.object.filter(id=instance.id).update(field=computed_value)`
+# or
+instance.field = computed_value
+instance.save(update_fields=('fields',))
+```
+
+Но оба эти варианта также страдают от race condition, хоть и в меньшей степени.
+
+### Массовое удаление объектов
+
+Допустим, что нам потребовалось удалить все статьи отмеченные тегом `minus`:
+
+```python
+from django.db import connection
+from blog.models import Article
+for article in Article.objects.filter(tags__name='minus'):
+    article.delete()
+print(len(connection.queries))
+```
+
+Код сгенерировал 93 запроса следующего вида:
+
+```sql
+(0.000) DELETE FROM "blog_article_tags" WHERE "blog_article_tags"."article_id" IN (3510); args=(3510,)
+(0.000) DELETE FROM "blog_article" WHERE "blog_article"."id" IN (3510); args=(3510,)
+```
+
+Сначала удаляется связь статьи с тегом в промежуточной таблице, а затем и сама статья. Мы можем сделать это за
+меньшее количество запросов, используя метод `delete` класса `QuerySet`:
+
+```python
+from django.db import connection
+from blog.models import Article
+Article.objects.filter(tags__name='minus').delete()
+print(len(connection.queries))
+```
+
+Этот код выполняет то же самое всего за 3 запроса к БД:
+
+```sql
+(0.004) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on" FROM "blog_article" INNER JOIN "blog_article_tags" ON ("blog_article"."id" = "blog_article_tags"."article_id") INNER JOIN "blog_tag" ON ("blog_article_tags"."tag_id" = "blog_tag"."id") WHERE "blog_tag"."name" = 'minus'; args=('minus',)
+(0.002) DELETE FROM "blog_article_tags" WHERE "blog_article_tags"."article_id" IN (3713, 3717, 3722, ...); args=(3713, 3717, 3722, ...)
+(0.001) DELETE FROM "blog_article" WHERE "blog_article"."id" IN (3713, 3717, ...); args=(3713, 3717, 3722, ...)``sql
+```
+
+Сначала одним запросом получается список идентификаторов всех статей отмеченных тегом `minus`, затем первый запрос
+удаляет связи сразу всех этих статей с тегами и последний запрос удаляет статьи.
