@@ -295,3 +295,55 @@ print(len(connection.queries))
 
 Сначала одним запросом получается список идентификаторов всех статей отмеченных тегом `minus`, затем первый запрос
 удаляет связи сразу всех этих статей с тегами и последний запрос удаляет статьи.
+
+## Iterator
+
+Предположим нам нужно добавить возможность экспорта статей в csv формат. Сделаем для этого простую команду Django:
+
+```python
+class Command(BaseCommand):
+
+    help = 'Export articles to csv'
+
+    EXPORT_FILE_PATH = os.path.join(settings.BASE_DIR, '..', 'data', 'articles_export.csv')
+    COLUMNS = ['title', 'content', 'created_at', 'author', 'comments_on']
+
+    def handle(self, *args, **kwargs):
+        with open(self.EXPORT_FILE_PATH, 'w') as export_file:
+            articles_writer = csv.writer(export_file, delimiter=';')
+            articles_writer.writerow(self.COLUMNS)
+            for article in Article.objects.select_related('author').all():
+                articles_writer.writerow([getattr(article, column) for column in self.COLUMNS])
+```
+
+Для тестирования этой команды я сгенерировал около 100Мb статей и загрузил их в БД. Далее я запустил команду через профайлер
+памяти [memory_profiler](https://pypi.python.org/pypi/memory_profiler).
+
+```
+mprof run python manage.py export_articles
+mprof plot
+```
+
+В результате я получил следующий график по использованию памяти:
+
+![export articles profiling](/media/2017/6/export_articles_without_iterator.png)
+
+Команда использует около 250Mb памяти, потому что при выполнении запроса QuerySet получает из БД сразу все статьи и
+кэширует их в памяти, чтобы при последующем обращении к этому QuerySet дополнительные запросы не выполнялись.
+Мы можем уменьшить объем используемой памяти используя метод `iterator` класса `QuerySet`, который позволяет получать
+результаты по одному используя server-side cursor и при этом он отключает кэширование результатов в QuerySet:
+
+```python
+# ...
+for article in Article.objects.select_related('author').iterator():
+# ...
+```
+
+Запустив обновленный пример в профайлере я получил следующий результат:
+
+![export articles profiling](/media/2017/6/export_articles_with_iterator.png)
+
+Всего лишь 50Mb! Также приятным побочным эффектом является то, что при любом размере данных, при использовании `iterator`,
+команда используем постоянный объем памяти. Вот график для ~200Mb статей (без `iterator` и с ним соответственно):
+
+![huge export articles profiling](/media/2017/6/export_articles_huge_before_and_after.png)
