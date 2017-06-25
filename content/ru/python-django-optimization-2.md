@@ -393,3 +393,106 @@ cloned_article = Article(
 ```
 
 И в логах больше нет запросов на получение информации об авторе.
+
+## Получение связанных объектов
+
+Наконец-то пришло время сделать наши статьи публично доступными и начнем мы со страницы со списком статей. Реализуем
+view используя ListView:
+
+```python
+class ArticlesListView(ListView):
+
+    template_name = 'blog/articles_list.html'
+    model = Article
+    context_object_name = 'articles'
+    paginate_by = 20
+```
+
+В шаблоне мы выводим информацию о статье, авторе и тегах:
+
+```django
+<article>
+    <h2>{{ article.title }}</h2>
+    <time>{{ article.created_at }}</time>
+    <p>Author: {{ article.author.username }}</p>
+    <p>Tags:
+    {% for tag in article.tags.all %}
+        {{ tag }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+</article>
+```
+
+DDT показывает при открытии списка статей 45 SQL запросов следующего вида:
+
+```sql
+(0.002) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on" FROM "blog_article" LIMIT 20; args=()
+(0.001) SELECT "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_author" WHERE "blog_author"."id" = 2043; args=(2043,)
+(0.001) SELECT "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" = 20425; args=(20425,)
+(0.000) SELECT "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_author" WHERE "blog_author"."id" = 2043; args=(2043,)
+(0.001) SELECT "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" = 20426; args=(20426,)
+```
+
+Т.е. мы сначала получаем все статья одним SQL запросом (с учетом пагинации) и затем для каждой из этих статей отдельно
+запрашиваются автор и теги. Нам нужно заставить Django запросить все эти данные меньшим количеством запросов. Начнем с
+получения авторов, для того, чтобы QuerySet получил заранее данные по определенным внешним ключам есть метод `select_related`.
+Обновим QuerySet в нашем view для использования этого метода:
+
+```python
+queryset = Article.objects.select_related('author')
+```
+
+После этого DDT показывает уже 25 SQL запросов, т.к. получение информации об авторах и статьях теперь выполняется одним
+SQL запросом с JOIN:
+
+```sql
+(0.004) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on", "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_article" INNER JOIN "blog_author" ON ("blog_article"."author_id" = "blog_author"."id") LIMIT 21; args=()
+```
+
+Метод `select_related` работает только с внешними ключами, для того, чтобы уменьшить количество запросов при получении
+множества связанных объектов (таких как теги в нашем примере), нужно использовать метод `prefetch_related`. Опять
+обновим атрибут `queryset` у класса `AticlsListView`:
+
+```python
+queryset = Article.objects.select_related('author').prefetch_related('tags')
+```
+
+И теперь DDT показывает всего 7 запросов. Если проигнорировать запросы, которые выполняет пагинатор и запросы связанные
+сессией получаем всего 2 запроса для отображения списка статей:
+
+```sql
+(0.002) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on", "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_article" INNER JOIN "blog_author" ON ("blog_article"."author_id" = "blog_author"."id") LIMIT 20; args=()
+(0.001) SELECT ("blog_article_tags"."article_id") AS "_prefetch_related_val_article_id", "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" IN (16352, 16353, 16354, 16355, 16356, 16357, 16358, 16359, 16360, 16361, 16362, 16363, 16344, 16345, 16346, 16347, 16348, 16349, 16350, 16351); args=(16352, 16353, 16354, 16355, 16356, 16357, 16358, 16359, 16360, 16361, 16362, 16363, 16344, 16345, 16346, 16347, 16348, 16349, 16350, 16351)
+```
+
+## Ограничиваем поля в выборках
+
+Если мы присмотримся получше к SQL запросам в предыдущем примере, мы увидим что мы получаем больше полей чем нам нужно.
+В DDT можно посмотреть результаты запроса и убедится в этом:
+
+![SQL query result for articles list](/media/2017/6/sql-queries-results.png)
+
+Как вы видите мы получаем все поля автора и статьи, включая текст статьи огромного размера. Мы можем значительно
+уменьшить объем передаываемых данных используя метод defer, который позволяет отложить получение определенных полей.
+В случае если в коде все же произойдет обращение к такому полю, то Django сделает дополнительный запрос для его получения.
+Добавим вызов метода `defer` в `queryset`:
+
+```python
+queryset = Article.objects.select_related('author').prefetch_related('tags').defer('content', 'comments_on')
+```
+
+Теперь некоторые ненужные поля не запрашиваются и это уменьшило время обработки запроса, как нам показывает DDT
+(до и после defer соответственно):
+
+![DDT - SQL speedup after defer](/media/2017/6/sql-speedup-defer.png)
+
+Мы все еще получаем множество полей автора, которые мы не используем. Наверное проще было бы указать только те поля,
+которые нам действительно нужны, Для этого есть метод `only`, передав которому названия полей, остальные поля будут отложены:
+
+```python
+queryset = Article.objects.select_related('author').prefetch_related('tags').only(
+    'title', 'created_at', 'author__username', 'tags__name')
+```
+
+В результате мы получаем только нужные данные, что можно посмотреть в DDT:
+
+![DDT - SQL after only](/media/2017/6/sql-after-only.png)
