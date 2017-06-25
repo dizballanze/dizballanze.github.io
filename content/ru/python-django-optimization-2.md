@@ -347,3 +347,49 @@ for article in Article.objects.select_related('author').iterator():
 команда используем постоянный объем памяти. Вот график для ~200Mb статей (без `iterator` и с ним соответственно):
 
 ![huge export articles profiling](/media/2017/6/export_articles_huge_before_and_after.png)
+
+## Использование внешних ключей
+
+Теперь нам потребовалось добавить действие в админку статей для создания копии статьи:
+
+```python
+def clone_article(modeladmin, request, queryset):
+    if queryset.count() != 1:
+        modeladmin.message_user(request, "You could clone only one article at a time.", level=messages.ERROR)
+        return
+    origin_article = queryset.first()
+    cloned_article = Article(
+        title="{} (COPY)".format(origin_article.title),
+        content=origin_article.content,
+        created_at=origin_article.created_at,
+        author=origin_article.author,
+        comments_on=origin_article.comments_on)
+    cloned_article.save()
+    cloned_article.tags = origin_article.tags.all()
+    modeladmin.message_user(request, "Article successfully cloned", level=messages.SUCCESS)
+clone_article.short_description = 'Clone article'
+```
+
+В логах можно увидеть следующие запросы к БД:
+
+```sql
+(0.001) SELECT COUNT(*) AS "__count" FROM "blog_article" WHERE "blog_article"."id" IN (31582); args=(31582,)
+(0.001) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on" FROM "blog_article" WHERE "blog_article"."id" IN (31582) ORDER BY "blog_article"."created_at" DESC, "blog_article"."id" DESC LIMIT 1; args=(31582,)
+(0.000) SELECT "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_author" WHERE "blog_author"."id" = 2156; args=(2156,)
+(0.001) INSERT INTO "blog_article" ("title", "content", "created_at", "author_id", "comments_on") VALUES ('Explicabo maiores nobis cum vel fugit. (COPY)', ...
+```
+
+У нас почему-то запрашивается автор, хотя нам не нужны какие-либо данные об авторе, кроме его ID. Чтобы исправить это,
+нужно обращаться к внешнему ключу напрямую, для получения id автора нужно использовать `origin_article.author_id`.
+Теперь код клонирования статьи будет выглядить следующим образом:
+
+```python
+cloned_article = Article(
+    title="{} (COPY)".format(origin_article.title),
+    content=origin_article.content,
+    created_at=origin_article.created_at,
+    author_id=origin_article.author_id,
+    comments_on=origin_article.comments_on)
+```
+
+И в логах больше нет запросов на получение информации об авторе.
