@@ -248,7 +248,7 @@ Article.objects.filter(created_at__year__lt=2012).update(comments_on=False)
 значение поля в python коде и затем использовать один из следующих вариантов:
 
 ```python
-Model.object.filter(id=instance.id).update(field=computed_value)`
+Model.object.filter(id=instance.id).update(field=computed_value)
 # or
 instance.field = computed_value
 instance.save(update_fields=('fields',))
@@ -534,3 +534,32 @@ class Author(models.Model):
 Запрос выполнился быстрее в 16 раз! Стоит отметить, что индексы полезны не только при фильтрации данных, но и при
 сортировке. Также многие СУБД позволяют делать индексы по нескольким полям, что полезно, если вы фильтруете данные
 по набору полей. Советую изучить документацию к вашей СУБД чтобы узнать подробности.
+
+## count vs exists
+
+На странице автора нужно вывести ссылку на каталог статей этого автора, если у него есть статьи. Одно из решений будет
+получить количество статей и сравнить равно ли количество 0, например так:
+
+```python
+def author_page_view(request, username):
+    author = get_object_or_404(Author, username=username)
+    show_articles_link = (author.articles.count() > 0)
+    return render(
+        request, 'blog/author.html',
+        context=dict(author=author, show_articles_link=show_articles_link))
+```
+
+Но при большом количестве статей этот код будет работать все медленнее. Т.к. нам не нужно знать точное количество статей
+у пользователя, то мы можем использовать метод `exists`, который работает значительно быстрее:
+
+```python
+    # ...
+    show_articles_link = author.articles.exists()
+    # ...
+```
+
+Сравниваем производительность при большом количестве статей (~10K):
+
+![DDT - exists vs count](/media/2017/6/ddt-exists-vs-count.png)
+
+Мы достигли цели запросом, который выполняется в 10 раз быстрее.
