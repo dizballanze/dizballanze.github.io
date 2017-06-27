@@ -44,8 +44,8 @@ h6 a { color: inherit !important }
 }
 
 pre {
-    /*margin: 2em 1em 2em 4em;*/
-    /*margin: 2em 1em 2em 0em;*/
+    font-family: 'PT Mono', monospace;
+    font-size: 14px;
     padding: 0em 0em 0em 1em;
     white-space: pre;
 }
@@ -123,4 +123,5 @@ blockquote {
     padding-top: 0.1em;
     padding-bottom: 0.1em;
     border-left: 1px dashed black;
+    margin: 0;
 }

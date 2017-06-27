@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Оптимизация производительности Django проектов (часть 2)</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/drafts/django-project-optimization-part-2.html" rel="bookmark"
+         title="Permalink to Оптимизация производительности Django проектов (часть 2)">Оптимизация производительности Django проектов (часть 2)</a></h2>
+    <time class="published" datetime="2017-06-24T10:50:00+03:00">24 июн 2017</time>
+  </header>
+  <div class="entry-content">
+    <p>Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
+<a href="/ru/django-project-optimization-part-1/">здесь</a> и рассказывает о профилировании и настройках Django. В этой части
+мы рассмотрим оптимизацию работы с БД (модели Django).</p>
+<p>В этой части часто будет использоваться логирование SQL запросов и DDT, настройка которых описана в первом посте.
+В качестве БД во всех примерах будет использоваться PostgreSQL, но для пользователей других СУБД большая часть статьи
+также будет актуальна.</p>
+<p>Примеры в этой части будут основаны на простом приложении блога, которое мы будем разрабатывать и оптимизировать по
+ходу статьи. Начнем с следующих моделей:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">models</span>
+
+
+<span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+    <span class="n">bio</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
+
+
+<span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="n">title</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateField</span><span class="p">()</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Author</span><span class="p">)</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ManyToManyField</span><span class="p">(</span><span class="n">Tag</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+</pre></div>
+
+
+<p>Весь код доступен на <a href="https://github.com/dizballanze/django-optimization-guide-2-sample/tree/initial">github</a>
+с разбивкой по тегам.</p>
+<h2>Массовые изменения</h2>
+<h3>Массовая вставка</h3>
+<p>Предположим, что наше новое приложение блога заменяет старое приложение и нам нужно перенести данные в новые модели.
+Также предположим, что мы экспортировали данные из старого приложения в огромные JSON файлы. Файл с авторами имеет
+следующий вид:</p>
+<div class="highlight"><pre><span></span><span class="p">[</span>
+  <span class="p">{</span>
+    <span class="nt">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;mackchristopher&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;email&quot;</span><span class="p">:</span> <span class="s2">&quot;dcortez@yahoo.com&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;bio&quot;</span><span class="p">:</span> <span class="s2">&quot;Vitae mollitia in modi suscipit similique. Tempore sunt aliquid porro. Molestias tempora quos corporis quam.&quot;</span>
+  <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+
+
+<p>Сделаем команду Django для импортирования авторов из JSON файла:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+
+    <span class="n">help</span> <span class="o">=</span> <span class="s1">&#39;Load authors from `data/old_authors.json`&#39;</span>
+
+    <span class="n">DATA_FILE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;old_data.json&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DATA_FILE_PATH</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">author</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_import_author</span><span class="p">(</span><span class="n">author</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_import_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">author_data</span><span class="p">):</span>
+        <span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">author_data</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">],</span>
+            <span class="n">email</span><span class="o">=</span><span class="n">author_data</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">],</span>
+            <span class="n">bio</span><span class="o">=</span><span class="n">author_data</span><span class="p">[</span><span class="s1">&#39;bio&#39;</span><span class="p">])</span>
+        <span class="n">author</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Проверим сколько SQL запросов выполняется при загрузке 200 авторов. Используем <code>python manage.py shell</code>:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.management</span> <span class="kn">import</span> <span class="n">call_command</span>
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connection</span>
+<span class="n">call_command</span><span class="p">(</span><span class="s1">&#39;load_data&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">queries</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Этот код выведет множество SQL запросов (т.к. у нас включено их логирование), а в последней строке будет число <code>200</code>.
+Это означает, что для каждого автора выполняется отдельный <code>INSERT</code> SQL запрос. Если у вас большое количество данных,
+то такой подход может быть очень медленным. Воспользуемся методом <code>bulk_create</code> менеджера модели <code>Author</code>:</p>
+<div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DATA_FILE_PATH</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">author_instances</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">author</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">author_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_import_author</span><span class="p">(</span><span class="n">author</span><span class="p">))</span>
+        <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">bulk_create</span><span class="p">(</span><span class="n">author_instances</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_import_author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">author_data</span><span class="p">):</span>
+        <span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">author_data</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">],</span>
+            <span class="n">email</span><span class="o">=</span><span class="n">author_data</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">],</span>
+            <span class="n">bio</span><span class="o">=</span><span class="n">author_data</span><span class="p">[</span><span class="s1">&#39;bio&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">author</span>
+</pre></div>
+
+
+<p>Запустив команду, описанным выше способом, мы увидим, что был выполнен один огромный запрос к БД!</p>
+<blockquote>
+<p>Если вам действительно нужно вставить большой объем данных, возможно, придется разбить вставку на несколько запросов.
+Для этого существует параметр <code>batch_size</code> у метода <code>bulk_create</code>, который задает максимальное количество объектов,
+которые будут вставлены за один запрос. Т.е. если у нас 200 объектов, задав <code>bulk_size = 50</code> мы получим 4 запроса.</p>
+<p>У метода <code>bulk_size</code> есть ряд ограничений с которыми вы можете ознакомиться в <a href="https://docs.djangoproject.com/en/1.11/ref/models/querysets/#bulk-create">документации</a>.</p>
+</blockquote>
+<h3>Массовая вставка M2M</h3>
+<p>Теперь нам нужно вставить статьи и теги, которые находятся в отдельном JSON файле с следующей структурой:</p>
+<div class="highlight"><pre><span></span><span class="p">[</span>
+  <span class="p">{</span>
+    <span class="nt">&quot;created_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2016-06-11&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;author&quot;</span><span class="p">:</span> <span class="s2">&quot;nichole52&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;tags&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;ab&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;iure&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;iusto&quot;</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span>
+  <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+
+
+<p>Напишем для этого еще одну команду Django:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+
+    <span class="n">help</span> <span class="o">=</span> <span class="s1">&#39;Load articles from `data/old_articles.json`&#39;</span>
+
+    <span class="n">DATA_FILE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;old_articles.json&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DATA_FILE_PATH</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_import_article</span><span class="p">(</span><span class="n">article</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_import_article</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">article_data</span><span class="p">):</span>
+        <span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">article_data</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">])</span>
+        <span class="n">article</span> <span class="o">=</span> <span class="n">Article</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">article_data</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+            <span class="n">content</span><span class="o">=</span><span class="n">article_data</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">],</span>
+            <span class="n">created_at</span><span class="o">=</span><span class="n">article_data</span><span class="p">[</span><span class="s1">&#39;created_at&#39;</span><span class="p">],</span>
+            <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">)</span>
+        <span class="n">article</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">article_data</span><span class="p">[</span><span class="s1">&#39;tags&#39;</span><span class="p">]:</span>
+            <span class="n">tag_instance</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Tag</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
+            <span class="n">article</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tag_instance</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Запустив ее я получил 3349 SQL запросов! Многие из которых имели следующий вид:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">WHERE</span> <span class="p">(</span><span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="o">=</span> <span class="mi">2319</span> <span class="k">AND</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">67</span><span class="p">));</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">67</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">INSERT</span> <span class="k">INTO</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="p">(</span><span class="ss">&quot;article_id&quot;</span><span class="p">,</span> <span class="ss">&quot;tag_id&quot;</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">67</span><span class="p">)</span> <span class="n">RETURNING</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">67</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_tag&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="o">=</span> <span class="s1">&#39;fugiat&#39;</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;fugiat&#39;</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">WHERE</span> <span class="p">(</span><span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="o">=</span> <span class="mi">2319</span> <span class="k">AND</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">68</span><span class="p">));</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">68</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">INSERT</span> <span class="k">INTO</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="p">(</span><span class="ss">&quot;article_id&quot;</span><span class="p">,</span> <span class="ss">&quot;tag_id&quot;</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">68</span><span class="p">)</span> <span class="n">RETURNING</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">68</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_tag&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="o">=</span> <span class="s1">&#39;repellat&#39;</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;repellat&#39;</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">WHERE</span> <span class="p">(</span><span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="o">=</span> <span class="mi">2319</span> <span class="k">AND</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">58</span><span class="p">));</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">58</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">INSERT</span> <span class="k">INTO</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="p">(</span><span class="ss">&quot;article_id&quot;</span><span class="p">,</span> <span class="ss">&quot;tag_id&quot;</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">58</span><span class="p">)</span> <span class="n">RETURNING</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2319</span><span class="p">,</span> <span class="mi">58</span>
+</pre></div>
+
+
+<p>Добавление каждого тега к статье выполняется отдельным запросом. Это можно улучшить передавая методу <code>article.tags.add</code>
+сразу список тегов:</p>
+<div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">_import_article</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">article_data</span><span class="p">):</span>
+        <span class="c1"># ...</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">article_data</span><span class="p">[</span><span class="s1">&#39;tags&#39;</span><span class="p">]:</span>
+            <span class="n">tag_instance</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Tag</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
+            <span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tag_instance</span><span class="p">)</span>
+        <span class="n">article</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="o">*</span><span class="n">tags</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Этот вариант отправляет 1834 запроса, почти в 2 раза меньше, неплохой результат, учитывая что мы изменили всего лишь
+пару строк кода.</p>
+<h3>Массовое изменение</h3>
+<p>После переноса данных пришла идея, что к старым статьям (раньше 2012 года) нужно запретить комментирование. Для этого
+было добавлено логическое поле <code>comments_on</code> к модели <code>Article</code> и нам необходимо проставить его значение:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connection</span>
+<span class="kn">from</span> <span class="nn">blog.models</span> <span class="kn">import</span> <span class="n">Article</span>
+<span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at__year__lt</span><span class="o">=</span><span class="mi">2012</span><span class="p">):</span>
+    <span class="n">article</span><span class="o">.</span><span class="n">comments_on</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">article</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">queries</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Запустив этот код я получил 179 запросов следующего вида:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">UPDATE</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">SET</span> <span class="ss">&quot;title&quot;</span> <span class="o">=</span> <span class="s1">&#39;Saepe eius facere magni et eligendi minima sint.&#39;</span><span class="p">,</span> <span class="ss">&quot;content&quot;</span> <span class="o">=</span> <span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="ss">&quot;created_at&quot;</span> <span class="o">=</span> <span class="s1">&#39;1992-03-01&#39;</span><span class="p">::</span><span class="nb">date</span><span class="p">,</span> <span class="ss">&quot;author_id&quot;</span> <span class="o">=</span> <span class="mi">730</span><span class="p">,</span> <span class="ss">&quot;comments_on&quot;</span> <span class="o">=</span> <span class="k">false</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="mi">3507</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Saepe eius facere magni et eligendi minima sint.&#39;</span><span class="p">,</span> <span class="s1">&#39;...&#39;</span><span class="p">,</span> <span class="n">datetime</span><span class="p">.</span><span class="nb">date</span><span class="p">(</span><span class="mi">1992</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">730</span><span class="p">,</span> <span class="k">False</span><span class="p">,</span> <span class="mi">3507</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Кроме того, что для каждой статьи подходящей по условию происходит отдельный SQL запрос, еще и все поля этих статей
+перезаписываются. А это может привести к перезаписи изменений сделанных в промежутке между <code>SELECT</code> и <code>UPDATE</code> запросами.
+Т.е. кроме проблем с производительностью мы также получаем race condition.</p>
+<p>Вместо этого мы можем использовать метод <code>update</code> доступный у объектов <code>QuerySet</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">created_at__year__lt</span><span class="o">=</span><span class="mi">2012</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">comments_on</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Этот код генерирует всего один SQL запрос:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">004</span><span class="p">)</span> <span class="k">UPDATE</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">SET</span> <span class="ss">&quot;comments_on&quot;</span> <span class="o">=</span> <span class="k">false</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span> <span class="o">&lt;</span> <span class="s1">&#39;2012-01-01&#39;</span><span class="p">::</span><span class="nb">date</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="k">False</span><span class="p">,</span> <span class="n">datetime</span><span class="p">.</span><span class="nb">date</span><span class="p">(</span><span class="mi">2012</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Если для изменения полей нужна сложная логика, которую нельзя реализовать полностью в update операторе, можете вычислить
+значение поля в Python коде и затем использовать один из следующих вариантов:</p>
+<div class="highlight"><pre><span></span><span class="n">Model</span><span class="o">.</span><span class="n">object</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">instance</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">computed_value</span><span class="p">)</span>
+<span class="c1"># or</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">field</span> <span class="o">=</span> <span class="n">computed_value</span>
+<span class="n">instance</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;fields&#39;</span><span class="p">,))</span>
+</pre></div>
+
+
+<p>Но оба эти варианта также страдают от race condition, хоть и в меньшей степени.</p>
+<h3>Массовое удаление объектов</h3>
+<p>Допустим, что нам потребовалось удалить все статьи отмеченные тегом <code>minus</code>:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connection</span>
+<span class="kn">from</span> <span class="nn">blog.models</span> <span class="kn">import</span> <span class="n">Article</span>
+<span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__name</span><span class="o">=</span><span class="s1">&#39;minus&#39;</span><span class="p">):</span>
+    <span class="n">article</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">queries</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Код сгенерировал 93 запроса следующего вида:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">DELETE</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">3510</span><span class="p">);</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">3510</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">DELETE</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">3510</span><span class="p">);</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">3510</span><span class="p">,)</span>
+</pre></div>
+
+
+<p>Сначала удаляется связь статьи с тегом в промежуточной таблице, а затем и сама статья. Мы можем сделать это за
+меньшее количество запросов, используя метод <code>delete</code> класса <code>QuerySet</code>:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connection</span>
+<span class="kn">from</span> <span class="nn">blog.models</span> <span class="kn">import</span> <span class="n">Article</span>
+<span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__name</span><span class="o">=</span><span class="s1">&#39;minus&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">queries</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Этот код выполняет то же самое всего за 3 запроса к БД:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">004</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;title&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;content&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;comments_on&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span><span class="p">)</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_tag&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="o">=</span> <span class="s1">&#39;minus&#39;</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;minus&#39;</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span><span class="p">)</span> <span class="k">DELETE</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">3713</span><span class="p">,</span> <span class="mi">3717</span><span class="p">,</span> <span class="mi">3722</span><span class="p">,</span> <span class="p">...);</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">3713</span><span class="p">,</span> <span class="mi">3717</span><span class="p">,</span> <span class="mi">3722</span><span class="p">,</span> <span class="p">...)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">DELETE</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">3713</span><span class="p">,</span> <span class="mi">3717</span><span class="p">,</span> <span class="p">...);</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">3713</span><span class="p">,</span> <span class="mi">3717</span><span class="p">,</span> <span class="mi">3722</span><span class="p">,</span> <span class="p">...)</span><span class="o">``</span><span class="k">sql</span>
+</pre></div>
+
+
+<p>Сначала одним запросом получается список идентификаторов всех статей отмеченных тегом <code>minus</code>, затем первый запрос
+удаляет связи сразу всех этих статей с тегами и последний запрос удаляет статьи.</p>
+<h2>Iterator</h2>
+<p>Предположим нам нужно добавить возможность экспорта статей в CSV формат. Сделаем для этого простую команду Django:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
+
+    <span class="n">help</span> <span class="o">=</span> <span class="s1">&#39;Export articles to csv&#39;</span>
+
+    <span class="n">EXPORT_FILE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;articles_export.csv&#39;</span><span class="p">)</span>
+    <span class="n">COLUMNS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="s1">&#39;comments_on&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">EXPORT_FILE_PATH</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">export_file</span><span class="p">:</span>
+            <span class="n">articles_writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">export_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+            <span class="n">articles_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">COLUMNS</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="n">articles_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">COLUMNS</span><span class="p">])</span>
+</pre></div>
+
+
+<p>Для тестирования этой команды я сгенерировал около 100Мb статей и загрузил их в БД. Далее я запустил команду через профайлер
+памяти <a href="https://pypi.python.org/pypi/memory_profiler">memory_profiler</a>.</p>
+<div class="highlight"><pre><span></span>mprof run python manage.py export_articles
+mprof plot
+</pre></div>
+
+
+<p>В результате я получил следующий график по использованию памяти:</p>
+<p><img alt="export articles profiling" src="/media/2017/6/export_articles_without_iterator.png"></p>
+<p>Команда использует около 250Mb памяти, потому что при выполнении запроса QuerySet получает из БД сразу все статьи и
+кэширует их в памяти, чтобы при последующем обращении к этому QuerySet дополнительные запросы не выполнялись.
+Мы можем уменьшить объем используемой памяти используя метод <code>iterator</code> класса <code>QuerySet</code>, который позволяет получать
+результаты по одному используя server-side cursor и при этом он отключает кэширование результатов в <code>QuerySet</code>:</p>
+<div class="highlight"><pre><span></span><span class="c1"># ...</span>
+<span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterator</span><span class="p">():</span>
+<span class="c1"># ...</span>
+</pre></div>
+
+
+<p>Запустив обновленный пример в профайлере я получил следующий результат:</p>
+<p><img alt="export articles profiling" src="/media/2017/6/export_articles_with_iterator.png"></p>
+<p>Всего лишь 50Mb! Также приятным побочным эффектом является то, что при любом размере данных, при использовании <code>iterator</code>,
+команда используем постоянный объем памяти. Вот графики для ~200Mb статей (без <code>iterator</code> и с ним соответственно):</p>
+<p><img alt="huge export articles profiling" src="/media/2017/6/export_articles_huge_before_and_after.png"></p>
+<h2>Использование внешних ключей</h2>
+<p>Теперь нам потребовалось добавить действие в админку статей для создания копии статьи:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">clone_article</span><span class="p">(</span><span class="n">modeladmin</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">queryset</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">modeladmin</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;You could clone only one article at a time.&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">messages</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">origin_article</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">cloned_article</span> <span class="o">=</span> <span class="n">Article</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;{} (COPY)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">origin_article</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">author</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
+        <span class="n">comments_on</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">comments_on</span><span class="p">)</span>
+    <span class="n">cloned_article</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">cloned_article</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">origin_article</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">modeladmin</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Article successfully cloned&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">messages</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">)</span>
+<span class="n">clone_article</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s1">&#39;Clone article&#39;</span>
+</pre></div>
+
+
+<p>В логах можно увидеть следующие запросы к БД:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">AS</span> <span class="ss">&quot;__count&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">31582</span><span class="p">);</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">31582</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;title&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;content&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;comments_on&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">31582</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span> <span class="k">DESC</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="mi">1</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">31582</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;username&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;email&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;bio&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_author&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="mi">2156</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2156</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">INSERT</span> <span class="k">INTO</span> <span class="ss">&quot;blog_article&quot;</span> <span class="p">(</span><span class="ss">&quot;title&quot;</span><span class="p">,</span> <span class="ss">&quot;content&quot;</span><span class="p">,</span> <span class="ss">&quot;created_at&quot;</span><span class="p">,</span> <span class="ss">&quot;author_id&quot;</span><span class="p">,</span> <span class="ss">&quot;comments_on&quot;</span><span class="p">)</span> <span class="k">VALUES</span> <span class="p">(</span><span class="s1">&#39;Explicabo maiores nobis cum vel fugit. (COPY)&#39;</span><span class="p">,</span> <span class="p">...</span>
+</pre></div>
+
+
+<p>У нас почему-то запрашивается автор, хотя нам не нужны какие-либо данные об авторе, кроме его ID. Чтобы исправить это,
+нужно обращаться к внешнему ключу напрямую, для получения id автора нужно использовать <code>origin_article.author_id</code>.
+Теперь код клонирования статьи будет выглядеть следующим образом:</p>
+<div class="highlight"><pre><span></span><span class="n">cloned_article</span> <span class="o">=</span> <span class="n">Article</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;{} (COPY)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">origin_article</span><span class="o">.</span><span class="n">title</span><span class="p">),</span>
+    <span class="n">content</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+    <span class="n">created_at</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+    <span class="n">author_id</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">author_id</span><span class="p">,</span>
+    <span class="n">comments_on</span><span class="o">=</span><span class="n">origin_article</span><span class="o">.</span><span class="n">comments_on</span><span class="p">)</span>
+</pre></div>
+
+
+<p>И в логах больше нет запросов на получение информации об авторе.</p>
+<h2>Получение связанных объектов</h2>
+<p>Наконец-то пришло время сделать наши статьи публично доступными и начнем мы со страницы со списком статей. Реализуем
+view используя <code>ListView</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s1">&#39;blog/articles_list.html&#39;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Article</span>
+    <span class="n">context_object_name</span> <span class="o">=</span> <span class="s1">&#39;articles&#39;</span>
+    <span class="n">paginate_by</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></div>
+
+
+<p>В шаблоне мы выводим информацию о статье, авторе и тегах:</p>
+<div class="highlight"><pre><span></span><span class="x">&lt;article&gt;</span>
+<span class="x">    &lt;h2&gt;</span><span class="cp">{{</span> <span class="nv">article.title</span> <span class="cp">}}</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">    &lt;time&gt;</span><span class="cp">{{</span> <span class="nv">article.created_at</span> <span class="cp">}}</span><span class="x">&lt;/time&gt;</span>
+<span class="x">    &lt;p&gt;Author: </span><span class="cp">{{</span> <span class="nv">article.author.username</span> <span class="cp">}}</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    &lt;p&gt;Tags:</span>
+<span class="x">    </span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">tag</span> <span class="k">in</span> <span class="nv">article.tags.all</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">        </span><span class="cp">{{</span> <span class="nv">tag</span> <span class="cp">}}{%</span> <span class="k">if</span> <span class="k">not</span> <span class="nb">forloop</span><span class="nv">.last</span> <span class="cp">%}</span><span class="x">, </span><span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">    </span><span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">&lt;/article&gt;</span>
+</pre></div>
+
+
+<p>DDT показывает при открытии списка статей 45 SQL запросов следующего вида:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;title&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;content&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;comments_on&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">LIMIT</span> <span class="mi">20</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;username&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;email&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;bio&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_author&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="mi">2043</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2043</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_tag&quot;</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="o">=</span> <span class="mi">20425</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">20425</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;username&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;email&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;bio&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_author&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="mi">2043</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">2043</span><span class="p">,)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_tag&quot;</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="o">=</span> <span class="mi">20426</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">20426</span><span class="p">,)</span>
+</pre></div>
+
+
+<p>Т.е. мы сначала получаем все статья одним SQL запросом (с учетом пагинации) и затем для каждой из этих статей отдельно
+запрашиваются автор и теги. Нам нужно заставить Django запросить все эти данные меньшим количеством запросов. Начнем с
+получения авторов, для того, чтобы <code>QuerySet</code> получил заранее данные по определенным внешним ключам есть метод <code>select_related</code>.
+Обновим <code>QuerySet</code> в нашем view для использования этого метода:</p>
+<div class="highlight"><pre><span></span><span class="n">queryset</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>После этого DDT показывает уже 25 SQL запросов, т.к. получение информации об авторах и статьях теперь выполняется одним
+SQL запросом с <code>JOIN</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">004</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;title&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;content&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;comments_on&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;username&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;email&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;bio&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_author&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">)</span> <span class="k">LIMIT</span> <span class="mi">21</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Метод <code>select_related</code> работает только с внешними ключами в текущей модели, для того, чтобы уменьшить количество запросов
+при получении множества связанных объектов (таких как теги в нашем примере), нужно использовать метод <code>prefetch_related</code>.
+Опять обновим атрибут <code>queryset</code> у класса <code>AticlsListView</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">queryset</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>И теперь DDT показывает всего 7 запросов. Если проигнорировать запросы, которые выполняет пагинатор и запросы связанные
+с сессией получаем всего 2 запроса для отображения списка статей:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span><span class="p">)</span> <span class="k">SELECT</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;title&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;content&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;created_at&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;comments_on&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;username&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;email&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;bio&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_article&quot;</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_author&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_article&quot;</span><span class="p">.</span><span class="ss">&quot;author_id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_author&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">)</span> <span class="k">LIMIT</span> <span class="mi">20</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="p">(</span><span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span><span class="p">)</span> <span class="k">AS</span> <span class="ss">&quot;_prefetch_related_val_article_id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;name&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;blog_tag&quot;</span> <span class="k">INNER</span> <span class="k">JOIN</span> <span class="ss">&quot;blog_article_tags&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;blog_tag&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="o">=</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;tag_id&quot;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="ss">&quot;blog_article_tags&quot;</span><span class="p">.</span><span class="ss">&quot;article_id&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="mi">16352</span><span class="p">,</span> <span class="mi">16353</span><span class="p">,</span> <span class="mi">16354</span><span class="p">,</span> <span class="mi">16355</span><span class="p">,</span> <span class="mi">16356</span><span class="p">,</span> <span class="mi">16357</span><span class="p">,</span> <span class="mi">16358</span><span class="p">,</span> <span class="mi">16359</span><span class="p">,</span> <span class="mi">16360</span><span class="p">,</span> <span class="mi">16361</span><span class="p">,</span> <span class="mi">16362</span><span class="p">,</span> <span class="mi">16363</span><span class="p">,</span> <span class="mi">16344</span><span class="p">,</span> <span class="mi">16345</span><span class="p">,</span> <span class="mi">16346</span><span class="p">,</span> <span class="mi">16347</span><span class="p">,</span> <span class="mi">16348</span><span class="p">,</span> <span class="mi">16349</span><span class="p">,</span> <span class="mi">16350</span><span class="p">,</span> <span class="mi">16351</span><span class="p">);</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">16352</span><span class="p">,</span> <span class="mi">16353</span><span class="p">,</span> <span class="mi">16354</span><span class="p">,</span> <span class="mi">16355</span><span class="p">,</span> <span class="mi">16356</span><span class="p">,</span> <span class="mi">16357</span><span class="p">,</span> <span class="mi">16358</span><span class="p">,</span> <span class="mi">16359</span><span class="p">,</span> <span class="mi">16360</span><span class="p">,</span> <span class="mi">16361</span><span class="p">,</span> <span class="mi">16362</span><span class="p">,</span> <span class="mi">16363</span><span class="p">,</span> <span class="mi">16344</span><span class="p">,</span> <span class="mi">16345</span><span class="p">,</span> <span class="mi">16346</span><span class="p">,</span> <span class="mi">16347</span><span class="p">,</span> <span class="mi">16348</span><span class="p">,</span> <span class="mi">16349</span><span class="p">,</span> <span class="mi">16350</span><span class="p">,</span> <span class="mi">16351</span><span class="p">)</span>
+</pre></div>
+
+
+<h2>Ограничиваем поля в выборках</h2>
+<p>Если мы присмотримся получше к SQL запросам в предыдущем примере, мы увидим что мы получаем больше полей чем нам нужно.
+В DDT можно посмотреть результаты запроса и убедится в этом:</p>
+<p><img alt="SQL query result for articles list" src="/media/2017/6/sql-queries-results.png"></p>
+<p>Как вы видите мы получаем все поля автора и статьи, включая текст статьи огромного размера. Мы можем значительно
+уменьшить объем передаваемых данных используя метод defer, который позволяет отложить получение определенных полей.
+В случае если в коде все же произойдет обращение к такому полю, то Django сделает дополнительный запрос для его получения.
+Добавим вызов метода <code>defer</code> в <code>queryset</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">queryset</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">defer</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;comments_on&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Теперь некоторые ненужные поля не запрашиваются и это уменьшило время обработки запроса, как нам показывает DDT
+(до и после <code>defer</code> соответственно):</p>
+<p><img alt="DDT - SQL speedup after defer" src="/media/2017/6/sql-speedup-defer.png"></p>
+<p>Мы все еще получаем множество полей автора, которые мы не используем. Наверное проще было бы указать только те поля,
+которые нам действительно нужны, Для этого есть метод <code>only</code>, передав которому названия полей, остальные поля будут отложены:</p>
+<div class="highlight"><pre><span></span><span class="n">queryset</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">prefetch_related</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">only</span><span class="p">(</span>
+    <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;author__username&#39;</span><span class="p">,</span> <span class="s1">&#39;tags__name&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>В результате мы получаем только нужные данные, что можно посмотреть в DDT:</p>
+<p><img alt="DDT - SQL after only" src="/media/2017/6/sql-after-only.png"></p>
+<h2>Индексы БД</h2>
+<p>Допустим нам нужно сделать страницу автора, которая будет доступна по такому URL: <code>/authors/&lt;username&gt;</code>. Сделаем view
+для этого:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Author</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;blog/author.html&#39;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Этот код работает достаточно быстро при небольшом объеме данных, но если объем значительный и продолжает расти, то
+производительность будет только падать. Все дело в том, что для поиска по полю <code>username</code> СУБД приходится сканировать
+всю таблицу до тех пор пока не найдет нужное значение. Есть вариант лучше - добавить на данное поле индекс, что позволит
+СУБД искать значительно более эффективно. Для добавления индекса нужно добавить аргумент <code>db_index=True</code> в объявление
+поля <code>username</code>, а затем создать и применить миграции:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">db_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+
+
+<p>Сравним производительность до и после добавления индекса на БД авторов размером в 100К.</p>
+<p>Без индекса:</p>
+<p><img alt="select by username without index" src="/media/2017/6/ddt-select-by-username-without-index.png"></p>
+<p>С индексом:</p>
+<p><img alt="select by username with index" src="/media/2017/6/ddt-select-by-username-with-index.png"></p>
+<p>Запрос выполнился быстрее в 16 раз! Стоит отметить, что индексы полезны не только при фильтрации данных, но и при
+сортировке. Также многие СУБД позволяют делать индексы по нескольким полям, что полезно, если вы фильтруете данные
+по набору полей. Советую изучить документацию к вашей СУБД чтобы узнать подробности.</p>
+<h2>len(qs) vs qs.count</h2>
+<p>Теперь нам потребовалось, по какой-то причине, вывести на главной странице счетчик с общим количеством авторов в блоге. Обновим view:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+
+    <span class="c1"># ...</span>
+
+    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s1">&#39;authors_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">context</span>
+</pre></div>
+
+
+<p>Посмотрим какие SQL запросы генерирует этот код:</p>
+<p><img alt="DDT - len(qs)" src="/media/2017/6/ddt-authors-len-queryset.png"></p>
+<p>На скриншоте мы видим, что запрашиваются все значения из таблицы авторов, соответственно подсчет количества происходит
+уже в самом view. Конечно это не самый оптимальный вариант и нам было бы достаточно получить из БД одно число -
+количество авторов. Для этого можно использовать метод <code>count</code>:</p>
+<div class="highlight"><pre><span></span>        <span class="n">context</span><span class="p">[</span><span class="s1">&#39;authors_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Посмотрим результат в DDT:</p>
+<p><img alt="DDT - len(qs)" src="/media/2017/6/ddt-authors-count.png"></p>
+<p>Теперь Django сгенерировал намного более оптимальный запрос для нашей задачи.</p>
+<h2>count vs exists</h2>
+<p>На странице автора нужно вывести ссылку на каталог статей этого автора, если у него есть статьи. Одно из решений будет
+получить количество статей и сравнить равно ли количество 0, например так:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Author</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+    <span class="n">show_articles_link</span> <span class="o">=</span> <span class="p">(</span><span class="n">author</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span>
+        <span class="n">request</span><span class="p">,</span> <span class="s1">&#39;blog/author.html&#39;</span><span class="p">,</span>
+        <span class="n">context</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span> <span class="n">show_articles_link</span><span class="o">=</span><span class="n">show_articles_link</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Но при большом количестве статей этот код будет работать все медленнее. Т.к. нам не нужно знать точное количество статей
+у пользователя, то мы можем использовать метод <code>exists</code>, который работает значительно быстрее:</p>
+<div class="highlight"><pre><span></span>    <span class="c1"># ...</span>
+    <span class="n">show_articles_link</span> <span class="o">=</span> <span class="n">author</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="c1"># ...</span>
+</pre></div>
+
+
+<p>Сравниваем производительность при большом количестве статей (~10K):</p>
+<p><img alt="DDT - exists vs count" src="/media/2017/6/ddt-exists-vs-count.png"></p>
+<p>Мы достигли цели запросом, который выполняется в 10 раз быстрее.</p>
+<h1>QuerySet lazyness</h1>
+<p>Теперь нам захотелось, чтобы авторы конкурировали между собой, для этого мы добавим рейтинг топ-20 авторов по количеству
+статей. Пусть этот рейтинг выводится на страницу со списком статей. Для этого добавим в контекст шаблона еще одну переменную:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+    <span class="c1"># ...</span>
+    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># ...</span>
+        <span class="n">context</span><span class="p">[</span><span class="s1">&#39;top_authors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-articles_count&#39;</span><span class="p">))[:</span><span class="mi">20</span><span class="p">]</span>
+        <span class="c1"># ...</span>
+</pre></div>
+
+
+<p>Здесь мы получаем список всех авторов отсортированный по количеству статей и берем первые 20 элементов этого списка.
+<code>articles_count</code>, в нашем примере, это денормализованное поле, которое содержит количество статей у данного автора.
+На реальном проекте возможно вы захотели бы настроить сигналы, для актуализации этого поля.</p>
+<p>Думаю уже сейчас понятно, что это не самый оптимальный вариант, это подтверждает и DDT:</p>
+<p><img alt="DDT - get top authors slice" src="/media/2017/6/ddt-top-authors-list.png"></p>
+<p>Конечно нам нужно чтобы ограничение выборки первыми 20-ю авторами происходило на стороне БД. Для этого нужно понять,
+что <code>QuerySet</code> старается максимально отсрочить выполнение запроса к БД. Непосредственно запрос к БД осуществляется в
+следующих случаях:</p>
+<ul>
+<li>итерация по QuerySet (например, <code>for obj in Model.objects.all():</code>),</li>
+<li>slicing, если вы используете "нарезку" с определенным шагом (например, <code>Model.objects.all()[::2]</code>),</li>
+<li>применение метода <code>len</code> (например, <code>len(Model.objects.all())</code>,</li>
+<li>применение метода <code>list</code> (например, <code>list(Model.objects.all())</code>,</li>
+<li>применение метода <code>bool</code> (например, <code>bool(Model.objects.all())</code>,</li>
+<li>сериализация при помощи <a href="https://docs.python.org/3/library/pickle.html">pickle</a>.</li>
+</ul>
+<p>Для того, чтобы ограничение выборки происходило в SQL запросе, нужно применить slicing к самому <code>QuerySet</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;top_authors&#39;</span><span class="p">]</span> <span class="o">=</span>\
+    <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-articles_count&#39;</span><span class="p">)[:</span><span class="mi">20</span><span class="p">]</span>
+</pre></div>
+
+
+<p><img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"></p>
+<p>Как вы видите теперь размер выборки ограничивается в запросе: <code>...LIMIT 20</code>. Также показано, что отправка запроса
+к БД была отложена до итерации по циклу в шаблоне.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>
