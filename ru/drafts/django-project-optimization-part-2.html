@@ -51,13 +51,13 @@
     <h2 class="entry-title">
       <a href="/ru/drafts/django-project-optimization-part-2.html" rel="bookmark"
          title="Permalink to Оптимизация производительности Django проектов (часть 2)">Оптимизация производительности Django проектов (часть 2)</a></h2>
-    <time class="published" datetime="2017-06-24T10:50:00+03:00"><nobr>24 июн 2017</nobr></time>
+    <time class="published" datetime="2017-06-27T16:00:00+03:00"><nobr>27 июн 2017</nobr></time>
   </header>
   <div class="entry-content">
     <p>Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
 <a href="/ru/django-project-optimization-part-1/">здесь</a> и рассказывает о профилировании и настройках Django. В этой части
 мы рассмотрим оптимизацию работы с БД (модели Django).</p>
-<p>В этой части часто будет использоваться логирование SQL запросов и DDT, настройка которых описана в первом посте.
+<p>В этой части часто будет использоваться логирование SQL запросов и DDT, про которые написано в первом посте.
 В качестве БД во всех примерах будет использоваться PostgreSQL, но для пользователей других СУБД большая часть статьи
 также будет актуальна.</p>
 <p>Примеры в этой части будут основаны на простом приложении блога, которое мы будем разрабатывать и оптимизировать по
@@ -96,13 +96,12 @@
 </pre></div>
 
 
-<p>Весь код доступен на <a href="https://github.com/dizballanze/django-optimization-guide-2-sample/tree/initial">github</a>
-с разбивкой по тегам.</p>
+<p>Весь код доступен на <a href="https://github.com/dizballanze/django-optimization-guide-2-sample/tree/initial">GitHub</a>
+с разбивкой по <a href="https://github.com/dizballanze/django-optimization-guide-2-sample/tags">тегам</a>.</p>
 <h2>Массовые изменения</h2>
 <h3>Массовая вставка</h3>
 <p>Предположим, что наше новое приложение блога заменяет старое приложение и нам нужно перенести данные в новые модели.
-Также предположим, что мы экспортировали данные из старого приложения в огромные JSON файлы. Файл с авторами имеет
-следующий вид:</p>
+Мы экспортировали данные из старого приложения в огромные JSON файлы. Файл с авторами имеет следующий вид:</p>
 <div class="highlight"><pre><span></span><span class="p">[</span>
   <span class="p">{</span>
     <span class="nt">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;mackchristopher&quot;</span><span class="p">,</span>
@@ -163,7 +162,7 @@
 </pre></div>
 
 
-<p>Запустив команду, описанным выше способом, мы увидим, что был выполнен один огромный запрос к БД!</p>
+<p>Запустив команду, описанным выше способом, мы увидим, что был выполнен один огромный запрос к БД, для всех авторов.</p>
 <blockquote>
 <p>Если вам действительно нужно вставить большой объем данных, возможно, придется разбить вставку на несколько запросов.
 Для этого существует параметр <code>batch_size</code> у метода <code>bulk_create</code>, который задает максимальное количество объектов,
@@ -282,7 +281,7 @@
 
 <p>Но оба эти варианта также страдают от race condition, хоть и в меньшей степени.</p>
 <h3>Массовое удаление объектов</h3>
-<p>Допустим, что нам потребовалось удалить все статьи отмеченные тегом <code>minus</code>:</p>
+<p>Сейчас нам потребовалось удалить все статьи отмеченные тегом <code>minus</code>:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> <span class="n">connection</span>
 <span class="kn">from</span> <span class="nn">blog.models</span> <span class="kn">import</span> <span class="n">Article</span>
 <span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">tags__name</span><span class="o">=</span><span class="s1">&#39;minus&#39;</span><span class="p">):</span>
@@ -313,7 +312,7 @@
 </pre></div>
 
 
-<p>Сначала одним запросом получается список идентификаторов всех статей, отмеченных тегом <code>minus</code>, затем первый запрос
+<p>Сначала одним запросом получается список идентификаторов всех статей, отмеченных тегом <code>minus</code>, затем второй запрос
 удаляет связи сразу всех этих статей с тегами, и последний запрос удаляет статьи.</p>
 <h2>Iterator</h2>
 <p>Предположим, нам нужно добавить возможность экспорта статей в CSV формат. Сделаем для этого простую команду Django:</p>
@@ -342,10 +341,11 @@ mprof plot
 
 <p>В результате я получил следующий график по использованию памяти:</p>
 <p><img alt="export articles profiling" src="/media/2017/6/export_articles_without_iterator.png"></p>
-<p>Команда использует около 250Mb памяти, потому что при выполнении запроса QuerySet получает из БД сразу все статьи и
-кэширует их в памяти, чтобы при последующем обращении к этому QuerySet дополнительные запросы не выполнялись.
+<p>Команда использует около 250Mb памяти, потому что при выполнении запроса <code>QuerySet</code> получает из БД сразу все статьи и
+кэширует их в памяти, чтобы при последующем обращении к этому <code>QuerySet</code> дополнительные запросы не выполнялись.
 Мы можем уменьшить объем используемой памяти, используя метод <code>iterator</code> класса <code>QuerySet</code>, который позволяет получать
-результаты по одному, используя server-side cursor, и при этом он отключает кэширование результатов в <code>QuerySet</code>:</p>
+результаты по одному, используя <a href="http://initd.org/psycopg/docs/cursor.html">server-side cursor</a>, и при этом он отключает
+кэширование результатов в <code>QuerySet</code>:</p>
 <div class="highlight"><pre><span></span><span class="c1"># ...</span>
 <span class="k">for</span> <span class="n">article</span> <span class="ow">in</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterator</span><span class="p">():</span>
 <span class="c1"># ...</span>
@@ -354,8 +354,9 @@ mprof plot
 
 <p>Запустив обновленный пример в профайлере я получил следующий результат:</p>
 <p><img alt="export articles profiling" src="/media/2017/6/export_articles_with_iterator.png"></p>
-<p>Всего лишь 50Mb! Также приятным побочным эффектом является то, что при любом размере данных, при использовании <code>iterator</code>,
-команда использует постоянный объем памяти. Вот графики для ~200Mb статей (без <code>iterator</code> и с ним соответственно):</p>
+<p>Теперь команда использует всего 50Mb. Также приятным побочным эффектом является то, что при любом размере данных,
+при использовании <code>iterator</code>, команда использует постоянный объем памяти. Вот графики для ~200Mb статей
+(без <code>iterator</code> и с ним соответственно):</p>
 <p><img alt="huge export articles profiling" src="/media/2017/6/export_articles_huge_before_and_after.png"></p>
 <h2>Использование внешних ключей</h2>
 <p>Теперь нам потребовалось добавить действие в админку статей для создания копии статьи:</p>
@@ -435,7 +436,7 @@ view, используя <code>ListView</code>:</p>
 <p>Т.е. мы сначала получаем все статьи одним SQL запросом (с учетом пагинации) и затем для каждой из этих статей отдельно
 запрашиваются автор и теги. Нам нужно заставить Django запросить все эти данные меньшим количеством запросов. Начнем с
 получения авторов, для того, чтобы <code>QuerySet</code> получил заранее данные по определенным внешним ключам есть метод <code>select_related</code>.
-Обновим <code>QuerySet</code> в нашем view для использования этого метода:</p>
+Обновим <code>queryset</code> в нашем view для использования этого метода:</p>
 <div class="highlight"><pre><span></span><span class="n">queryset</span> <span class="o">=</span> <span class="n">Article</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">select_related</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span>
 </pre></div>
 
@@ -460,7 +461,14 @@ SQL запросом с <code>JOIN</code>:</p>
 </pre></div>
 
 
-<h2>Ограничиваем поля в выборках</h2>
+<blockquote>
+<p>Используйте <code>select_related</code> для внешних ключах в текущей модели. Для получения M2M объектов и объектов из моделей
+ссылающихся на текущую, используйте <code>prefetch_related</code>.</p>
+<p>Также <code>prefetch_related</code> можно использовать для получения связанных объектов большей вложенности: </p>
+<p><code>Tag.objects.all().prefetch_related('article_set__author')</code></p>
+<p>Этот код запросит вместе с тегом также все статьи отмеченные тегом и всех авторов этих статей.</p>
+</blockquote>
+<h2>Ограничение полей в выборках</h2>
 <p>Если мы присмотримся получше к SQL запросам в предыдущем примере, мы увидим, что мы получаем больше полей, чем нам нужно.
 В DDT можно посмотреть результаты запроса и убедиться в этом:</p>
 <p><img alt="SQL query result for articles list" src="/media/2017/6/sql-queries-results.png"></p>
@@ -490,7 +498,7 @@ SQL запросом с <code>JOIN</code>:</p>
 <li><code>only</code> откладывает получение всех полей, кроме переданных.</li>
 </ul>
 <h2>Индексы БД</h2>
-<p>Допустим, нам нужно сделать страницу автора, которая будет доступна по такому URL: <code>/authors/&lt;username&gt;</code>. Сделаем view
+<p>Нам нужно сделать страницу автора, которая будет доступна по такому URL: <code>/authors/&lt;username&gt;</code>. Сделаем view
 для этого:</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
     <span class="n">author</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Author</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
@@ -515,11 +523,14 @@ SQL запросом с <code>JOIN</code>:</p>
 <p><img alt="select by username without index" src="/media/2017/6/ddt-select-by-username-without-index.png"></p>
 <p>С индексом:</p>
 <p><img alt="select by username with index" src="/media/2017/6/ddt-select-by-username-with-index.png"></p>
-<p>Запрос выполнился быстрее в 16 раз! Стоит отметить, что индексы полезны не только при фильтрации данных, но и при
-сортировке. Также многие СУБД позволяют делать индексы по нескольким полям, что полезно, если вы фильтруете данные
-по набору полей. Советую изучить документацию к вашей СУБД, чтобы узнать подробности.</p>
+<p>Запрос выполнился быстрее в 16 раз!</p>
+<blockquote>
+<p>Индексы полезны не только при фильтрации данных, но и при сортировке. Также многие СУБД позволяют делать индексы по
+нескольким полям, что полезно, если вы фильтруете данные по набору полей. Советую изучить документацию к вашей СУБД,
+чтобы узнать подробности.</p>
+</blockquote>
 <h2>len(qs) vs qs.count</h2>
-<p>Теперь нам потребовалось, по какой-то причине, вывести на главной странице счетчик с общим количеством авторов в блоге. Обновим view:</p>
+<p>По какой-то причине, нам потребовалось вывести на странице со списком статей счетчик с количеством авторов. Обновим view:</p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
 
     <span class="c1"># ...</span>
@@ -555,8 +566,8 @@ SQL запросом с <code>JOIN</code>:</p>
 </pre></div>
 
 
-<p>Но при большом количестве статей этот код будет работать все медленнее. Т.к. нам не нужно знать точное количество статей
-у пользователя, то мы можем использовать метод <code>exists</code>, который работает значительно быстрее:</p>
+<p>Но при большом количестве статей этот код будет работать медленно. Т.к. нам не нужно знать точное количество статей
+у пользователя, то мы можем использовать метод <code>exists</code>, который проверяет, что в <code>QuertSet</code> есть хотя бы один результат:</p>
 <div class="highlight"><pre><span></span>    <span class="c1"># ...</span>
     <span class="n">show_articles_link</span> <span class="o">=</span> <span class="n">author</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
     <span class="c1"># ...</span>
@@ -566,9 +577,9 @@ SQL запросом с <code>JOIN</code>:</p>
 <p>Сравниваем производительность при большом количестве статей (~10K):</p>
 <p><img alt="DDT - exists vs count" src="/media/2017/6/ddt-exists-vs-count.png"></p>
 <p>Мы достигли цели запросом, который выполняется в 10 раз быстрее.</p>
-<h1>QuerySet lazyness</h1>
+<h2>Ленивый QuerySet</h2>
 <p>Теперь нам захотелось, чтобы авторы конкурировали между собой, для этого мы добавим рейтинг топ-20 авторов по количеству
-статей. Пусть этот рейтинг выводится на страницу со списком статей. Для этого добавим в контекст шаблона еще одну переменную:</p>
+статей.</p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
     <span class="c1"># ...</span>
     <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -595,14 +606,16 @@ SQL запросом с <code>JOIN</code>:</p>
 <li>применение метода <code>bool</code> (например, <code>bool(Model.objects.all())</code>,</li>
 <li>сериализация при помощи <a href="https://docs.python.org/3/library/pickle.html">pickle</a>.</li>
 </ul>
-<p>Для того, чтобы ограничение выборки происходило в SQL запросе, нужно применить slicing к самому <code>QuerySet</code>:</p>
+<p>Т.е. вызваз <code>list</code> мы заставили <code>QuerySet</code> выполнить запрос к БД и вернуть нам список объектов, после чего уже к нему была
+применена операция обрезки. Для того, чтобы ограничение выборки происходило в SQL запросе, нужно применить slicing
+к самому <code>QuerySet</code>:</p>
 <div class="highlight"><pre><span></span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;top_authors&#39;</span><span class="p">]</span> <span class="o">=</span>\
     <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-articles_count&#39;</span><span class="p">)[:</span><span class="mi">20</span><span class="p">]</span>
 </pre></div>
 
 
 <p><img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"></p>
-<p>Теперь размер выборки ограничивается в запросе: <code>...LIMIT 20</code>. Также показано, что отправка запроса
+<p>Теперь размер выборки ограничивается в запросе: <code>...LIMIT 20</code>. Также видно, что отправка запроса
 к БД была отложена до итерации по циклу в шаблоне.</p>
   </div>
 </section>
