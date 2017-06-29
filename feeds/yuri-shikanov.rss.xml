@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"><channel><title>Tech blog by @dizballanze - Yuri Shikanov</title><link>/</link><description></description><lastBuildDate>Thu, 29 Jun 2017 17:02:00 +0300</lastBuildDate><item><title>Django project optimization guide (part 2)</title><link>/django-project-optimization-part-2/</link><description>&lt;p&gt;Table of Contents:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#mass-edit"&gt;Mass edit&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#mass-insertion"&gt;Mass insertion&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mass-m2m-insertion"&gt;Mass M2M insertion&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mass-update"&gt;Mass update&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mass-delete"&gt;Mass delete&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#iterator_1"&gt;Iterator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#foreign-keys"&gt;Foreign keys&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#retrieving-of-related-objects"&gt;Retrieving of related objects&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#defer-fields-retrieving"&gt;Defer fields retrieving&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#database-indexes"&gt;Database indexes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#count vs exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#Lazy QuerySet"&gt;Lazy QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is the second part of Django project optimization series. The first part was …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Thu, 29 Jun 2017 17:02:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-29:/django-project-optimization-part-2/</guid><category>python</category><category>django</category></item></channel></rss>

@@ -57,7 +57,7 @@
     <p>Сегодня мы обсудим паттерн Special Case. Данный паттерн представляет
 собой гибкий способ обхода ограничений возникающих при появлении, т.н.
 специальных случаев.</p>
-<h2>Описание</h2>
+<h2 id="opisanie">Описание</h2>
 <p>При проектировании объектно-ориентированной системы часто возникают
 ситуации, когда нужно обработать какой-либо особый случай, который
 выбивается из обычного цикла работы. При этом возникает необходимость
@@ -78,82 +78,80 @@
 специализированный объект мы значительно улучшаем архитектуру
 приложения, т.к. вызывающий код не будет заботится о том каким образом
 создаётся объект и от чего зависит его нормальная инициализация.</p>
-<h2>Пример</h2>
+<h2 id="primer">Пример</h2>
 <p>Самый очевидным примером данного шаблона проектирования может служить
 иерархия классов пользователей. В данном случае особым случаем будет
 пользователь гость, т.к. он не представлен в БД, т.к. другие
 пользователи. Рассмотрим следующий упрощенный пример:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="k">class</span> <span class="nc">User</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$user_info</span><span class="p">;</span>
+<pre><code>:::php
+&lt;?php
+// ...
+class User{
+    protected $user_info;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$id_user</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// Вытягиваем информацию о пользователе из БД</span>
-    <span class="p">}</span>
+    public function __construct($id_user) {
+        // Вытягиваем информацию о пользователе из БД
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getName</span><span class="p">(){</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">];</span>
-    <span class="p">}</span>
+    public function getName(){
+        return $this-&gt;user_info['name'];
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getEmail</span><span class="p">(){</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">];</span>
-    <span class="p">}</span>
+    public function getEmail(){
+        return $this-&gt;user_info['name'];
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getStatus</span><span class="p">(){</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">];</span>
-    <span class="p">}</span>
+    public function getStatus(){
+        return $this-&gt;user_info['status'];
+    }
 
-    <span class="sd">/**</span>
-<span class="sd">     * Проверка прав доступа пользователя</span>
-<span class="sd">     * @param string $action</span>
-<span class="sd">     * @return bool </span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">checkAccessRights</span><span class="p">(</span><span class="nv">$action</span><span class="p">){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$action</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;access_rights&#39;</span><span class="p">]))</span>
-            <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="nx">bool</span><span class="p">)</span>  <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;access_rights&#39;</span><span class="p">][</span><span class="nv">$action</span><span class="p">];</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    /**
+     * Проверка прав доступа пользователя
+     * @param string $action
+     * @return bool 
+     */
+    public function checkAccessRights($action){
+        if (!array_key_exists($action, $this-&gt;user_info['access_rights']))
+            return false;
+        return (bool)  $this-&gt;user_info['access_rights'][$action];
+    }
+}
 
-<span class="k">class</span> <span class="nc">Guest_User</span> <span class="k">extends</span> <span class="nx">User</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// Стандартные значения для гостя</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Uknown user&#39;</span><span class="p">;</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">user_info</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;guest&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
+class Guest_User extends User {
+    public function __construct() {
+        // Стандартные значения для гостя
+        $this-&gt;user_info['name'] = 'Uknown user';
+        $this-&gt;user_info['email'] = '';
+        $this-&gt;user_info['status'] = 'guest';
+    }
 
-    <span class="sd">/**</span>
-<span class="sd">     * Гость может только читать</span>
-<span class="sd">     * @param string $action</span>
-<span class="sd">     * @return bool </span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">checkAccessRights</span><span class="p">(</span><span class="nv">$action</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;read&#39;</span> <span class="o">==</span> <span class="nv">$action</span><span class="p">)</span>
-            <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
-        <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    /**
+     * Гость может только читать
+     * @param string $action
+     * @return bool 
+     */
+    public function checkAccessRights($action) {
+        if ('read' == $action)
+            return true;
+        return false;
+    }
+}
+</code></pre>
 <p>У нас есть два класса: User и Guest_User. Класс Guest_User является
 реализацией шаблона особый случай. Если нет возможности идентифицировать
 пользователя, то мы просто возвращаем экземпляр класса Guest_User,
 который имеет такой же интерфейс, как и класс User. Вызывающий код
 спокойно продолжает работать не замечая подмены объекта. Далее приведу
 пример использования данных классов:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="k">function</span> <span class="nf">get_user_object</span><span class="p">(){</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">isset</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">])</span> <span class="o">||</span> <span class="o">!</span><span class="p">(</span><span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="nx">instanceof</span> <span class="nx">User</span><span class="p">))</span>
-        <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Guest_User</span><span class="p">();</span>
-    <span class="k">return</span> <span class="nv">$_SESSION</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">];</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+// ...
+function get_user_object(){
+    if (!isset($_SESSION['user']) || !($_SESSION['user'] instanceof User))
+        $_SESSION['user'] = new Guest_User();
+    return $_SESSION['user'];
+}
+</code></pre>
 <p>Эта простая функция проверяет наличие объекта в сессии и если он не
 найден или не корректен, то создает нашу реализацию Special Case, иначе
 - значение из сессии.</p>

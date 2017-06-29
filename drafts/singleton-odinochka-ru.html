@@ -61,7 +61,7 @@
 сразу же ощутил всю его мощь. Относится данный шаблон к шаблонам
 порождающим объекты или к шаблонам генерации объектов. Итак, перейдём к
 делу...</p>
-<h2>Описание</h2>
+<h2 id="opisanie">Описание</h2>
 <p>Шаблон singleton позволяет создавать лишь один экземпляр класса в
 течении работы приложения. Это даёт ряд преимуществ:</p>
 <ul>
@@ -83,58 +83,55 @@
 так просто, злоупотреблять использованием данного шаблона нельзя, т.к.
 это приводит к сильной зависимости других классов и может привести к
 появлению непонятных, скрытых каналов данных.</p>
-<h2>Реализация</h2>
+<h2 id="realizatsiia">Реализация</h2>
 <p>Реализация данного шаблона очень простая и сводится к созданию закрытого
 конструктора, хранения экземпляра класса в статической переменной класса
 и организации доступа к объекту через статический метод класса. Пример
 шаблона одиночка:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="k">class</span> <span class="nc">Singleton</span><span class="p">{</span>
-    <span class="c1">//Экземпляр объекта Singleton</span>
-    <span class="k">static</span> <span class="k">protected</span> <span class="nv">$instance</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
-    <span class="c1">//Метод предоставляет доступ к объекту</span>
-    <span class="k">static</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">getInstance</span><span class="p">(){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">is_null</span><span class="p">(</span><span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">))</span>
-            <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Singleton</span><span class="p">();</span>
-        <span class="k">return</span> <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="c1">//Закрытый конструктор</span>
-    <span class="k">private</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(){</span>
-    <span class="k">echo</span> <span class="s1">&#39;New instance!&#39;</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
+<pre><code>:::php
+&lt;?php
+// ...
+class Singleton{
+    //Экземпляр объекта Singleton
+    static protected $instance = null;
+    //Метод предоставляет доступ к объекту
+    static public function getInstance(){
+        if (is_null(self::$instance))
+            self::$instance = new Singleton();
+        return self::$instance;
+    }
+    //Закрытый конструктор
+    private function __construct(){
+    echo 'New instance!' . "\n";
+    }
 
-    <span class="k">private</span> <span class="k">function</span> <span class="fm">__clone</span><span class="p">(){}</span>
+    private function __clone(){}
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">someAction</span><span class="p">(){</span>
-    <span class="k">echo</span> <span class="s1">&#39;Some action!&#39;</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    public function someAction(){
+    echo 'Some action!' . "\n";
+    }
+}
+</code></pre>
 <p>Как Вы видите здесь всё очень просто, конструктор объявлен как private
 метод, для того чтобы создавать экземпляр можно было только из методов
 класса. Экземпляр класса хранится в приватной статической переменной
 $instance и доступ к нему осуществляется через открытый статический
 метод getInstance. Теперь рассмотрим, как применять данный класс:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="nx">Singleton</span><span class="o">::</span><span class="na">getInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">someAction</span><span class="p">();</span>
-<span class="nx">Singleton</span><span class="o">::</span><span class="na">getInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">someAction</span><span class="p">();</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+// ...
+Singleton::getInstance()-&gt;someAction();
+Singleton::getInstance()-&gt;someAction();
+</code></pre>
 <p>В результате получаем следующий вывод:</p>
-<div class="highlight"><pre><span></span>New instance!
+<pre><code>:::text
+New instance!
 Some action!
 Some action!
-</pre></div>
-
-
+</code></pre>
 <p>Как Вы видите конструктор вызывается только 1 раз для 2х вызовов метода
 getInstance.</p>
-<h2>Применение</h2>
+<h2 id="primenenie">Применение</h2>
 <p>Применять данный шаблон можно для многих задач. Наиболее часто он
 применяется для следующих целей:</p>
 <ul>

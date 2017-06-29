@@ -54,21 +54,20 @@
     <time class="published" datetime="2012-01-01T21:39:00+04:00"><nobr>01 янв 2012</nobr></time>
   </header>
   <div class="entry-content">
-    <p><img alt="php logo" src="/media/2012/01/wordpress-e-gli-script-segreti-per-evitare-lu-L-1-300x182.jpg" title="php logo"></p>
+    <p><img alt="php logo" src="/media/2012/01/wordpress-e-gli-script-segreti-per-evitare-lu-L-1-300x182.jpg" title="php logo"/></p>
 <p>Всех с новым годом! Сегодня решил сделать краткую заметку по работе с
 multiple select в php. Думаю кому-нибудь пригодится.</p>
 <p>Для примера возьмем форму содержащую multiple select:</p>
-<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;post&quot;</span> <span class="na">action</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">select</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;fruits&quot;</span> <span class="na">multiple</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;1&quot;</span><span class="p">&gt;</span>apples<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;2&quot;</span><span class="p">&gt;</span>oranges<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">&quot;3&quot;</span><span class="p">&gt;</span>bananas<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">select</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
-</pre></div>
-
-
+<pre><code>:::html
+&lt;form type="post" action=""&gt;
+&lt;select name="fruits" multiple&gt;
+    &lt;option value="1"&gt;apples&lt;/option&gt;
+    &lt;option value="2"&gt;oranges&lt;/option&gt;
+    &lt;option value="3"&gt;bananas&lt;/option&gt;
+&lt;/select&gt;
+&lt;input type="submit"&gt;
+&lt;/form&gt;
+</code></pre>
 <p>В таком случае при множественном выделении элементов в обрабатывающий
 скрипт будет передаваться только один (последний выделенный) элемент.
 Для того чтобы получить все элементы достаточно заменить значение

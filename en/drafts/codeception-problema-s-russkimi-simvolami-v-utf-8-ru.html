@@ -56,22 +56,20 @@
   <div class="entry-content">
     <p>Разбираюсь с <a href="http://codeception.com/">codeception</a>. В acceptance тестах возникла проблема с
 распознаванием русских символов в utf-8:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="nv">$I</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebGuy</span><span class="p">(</span><span class="nv">$scenario</span><span class="p">);</span>
+<pre><code>:::php
+&lt;?php
+$I = new WebGuy($scenario);
 
-<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">wantTo</span><span class="p">(</span><span class="s1">&#39;see right title&#39;</span><span class="p">);</span>
-<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">amOnPage</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">);</span>
-<span class="nv">$I</span><span class="o">-&gt;</span><span class="na">see</span><span class="p">(</span><span class="s1">&#39;Заголовок на русском&#39;</span><span class="p">);</span>
-</pre></div>
-
-
+$I-&gt;wantTo('see right title');
+$I-&gt;amOnPage('/');
+$I-&gt;see('Заголовок на русском');
+</code></pre>
 <p>При этом тест фейлится, хотя логах можно увидеть, что заголовок
 установлен правильно. Для решения этой проблемы необходимо установить
 следующий meta-тэг:</p>
-<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">meta</span> <span class="na">http-equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=utf-8&quot;</span> <span class="p">&gt;</span>
-</pre></div>
-
-
+<pre><code>:::html
+&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" &gt;
+</code></pre>
 <p>Только после этого у меня получилось заставить тест показать зелёный
 цвет. Другие способы установки кодировки не сработали (ни через php, ни
 через apache), хотя при просмотре заголовков кодировка была установлена

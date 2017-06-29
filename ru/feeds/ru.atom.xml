@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - ru</title><link href="/ru/" rel="alternate"></link><link href="http://dizballanze.com/feeds/ru.atom.xml" rel="self"></link><id>/ru/</id><updated>2017-06-21T15:08:00+03:00</updated><entry><title>Middleware для обеспечения безопасности в Django</title><link href="/ru/django-security-middleware/" rel="alternate"></link><published>2017-06-21T15:08:00+03:00</published><updated>2017-06-21T15:08:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-21:/ru/django-security-middleware/</id><summary type="html">&lt;p&gt;Django предоставляет защитные механизмы от различных атак, но не все они включены по-умолчанию. В этом посте
 я хочу рассмотреть какие возможности по защите предоставляет Django и как их использовать.&lt;/p&gt;
-&lt;h1&gt;django.middleware.security.SecurityMiddleware&lt;/h1&gt;
+&lt;h1 id="djangomiddlewaresecuritysecuritymiddleware"&gt;django.middleware.security.SecurityMiddleware&lt;/h1&gt;
 &lt;p&gt;Этот middleware включен по-умолчанию и должен быть самым первым в списке, для того чтобы злонамеренные запросы
 блокировались …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django предоставляет защитные механизмы от различных атак, но не все они включены по-умолчанию. В этом посте
 я хочу рассмотреть какие возможности по защите предоставляет Django и как их использовать.&lt;/p&gt;
-&lt;h1&gt;django.middleware.security.SecurityMiddleware&lt;/h1&gt;
+&lt;h1 id="djangomiddlewaresecuritysecuritymiddleware"&gt;django.middleware.security.SecurityMiddleware&lt;/h1&gt;
 &lt;p&gt;Этот middleware включен по-умолчанию и должен быть самым первым в списке, для того чтобы злонамеренные запросы
 блокировались до обработки другими middleware.&lt;/p&gt;
 &lt;p&gt;Он защищает сразу от многих атак и каждую из этих защит можно включить/отключить отдельно используя переменные в
@@ -19,16 +19,14 @@
 неправильно интерпретировать загруженные пользователем файлы. Если у вас загруженные файлы отдаются напрямую
 web-сервером (например, Nginx, см. ниже), то также нужно настроить чтобы сервер отдавал этот заголовок.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="c1"&gt;# ...&lt;/span&gt;
-    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/media/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="c1"&gt;# ...&lt;/span&gt;
-        &lt;span class="kn"&gt;add_header&lt;/span&gt; &lt;span class="s"&gt;X-Content-Type-Options&lt;/span&gt; &lt;span class="s"&gt;nosniff&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;&lt;code&gt;nginx
+server {
+    # ...
+    location /media/ {
+        # ...
+        add_header X-Content-Type-Options nosniff;
+    }
+}&lt;/code&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;SECURE_HSTS_SECONDS&lt;/code&gt; по-умолчанию отключен, добавляет заголовок &lt;code&gt;Strict-Transport-Security&lt;/code&gt;, который запрещает браузерам открывать сайт по
 нешифрованному HTTP на заданное количество секунд. Заголовок действует на весь домен, по-этому его можно включать, только если весь контент
@@ -41,14 +39,12 @@ HTTP также и все поддомены сайта.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;SECURE_SSL_REDIRECT&lt;/code&gt; - по-умолчанию отключен, при включении редиректит все HTTP запросы на HTTPS. Вероятно вам
 захочется делать этот редирект средствами web-сервера (например, Nginx):&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;listen&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;server_name&lt;/span&gt;  &lt;span class="s"&gt;example.org&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;rewrite&lt;/span&gt; &lt;span class="s"&gt;^&lt;/span&gt; &lt;span class="s"&gt;http://example.org&lt;/span&gt;&lt;span class="nv"&gt;$request_uri?&lt;/span&gt; &lt;span class="s"&gt;permanent&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;&lt;code&gt;nginx
+server {
+    listen 80;
+    server_name  example.org;
+    rewrite ^ http://example.org$request_uri? permanent;
+}&lt;/code&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;SECURE_REDIRECT_EXEMPT&lt;/code&gt; - по-умолчанию пустой список. URL адреса, соответствующие заданным в списке регулярным
 выражениям, не будут перенаправляться с HTTP на HTTPS, при включении &lt;code&gt;SECURE_SSL_REDIRECT&lt;/code&gt;.&lt;/li&gt;
@@ -61,7 +57,7 @@ HTTP также и все поддомены сайта.&lt;/li&gt;
 добавить параметр &lt;code&gt;SECURE_PROXY_SSL_HEADER&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;, который содержит кортеж &lt;code&gt;("header-name", "header-value")&lt;/code&gt;.
 Получив такой заголовок от прокси сервера Django будет считать что запрос был получен по протоколу HTTPS.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2&gt;django.middleware.csrf.CsrfViewMiddleware&lt;/h2&gt;
+&lt;h2 id="djangomiddlewarecsrfcsrfviewmiddleware"&gt;django.middleware.csrf.CsrfViewMiddleware&lt;/h2&gt;
 &lt;p&gt;Middleware защищает от &lt;a href="https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%B6%D1%81%D0%B0%D0%B9%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D0%BB%D0%BA%D0%B0_%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%B0"&gt;межсайтовой подделки запроса&lt;/a&gt;.
 При отправке любых небезопасных (POST, PUT, DELETE) запросов middleware будет проверять наличие csrf токена и если
 этот токен не найден или не корректен запрос будет фильтроваться. Для отправки токена существуют разные способы.
@@ -69,7 +65,7 @@ HTTP также и все поддомены сайта.&lt;/li&gt;
 добавлять заголовок &lt;code&gt;X-CSRFToken&lt;/code&gt; со значением &lt;a href="https://docs.djangoproject.com/en/1.11/ref/csrf/#ajax"&gt;полученным из cookie&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Если у вас SPA и вы не используете &lt;code&gt;{% csrf_token %}&lt;/code&gt;, то вам нужно заставить Django выдать клиенту cookie с токеном.
 Для этого можно использовать view decorator &lt;a href="https://docs.djangoproject.com/en/1.11/ref/csrf/#django.views.decorators.csrf.ensure_csrf_cookie"&gt;ensure_csrf_cookie&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;django.middleware.clickjacking.XFrameOptionsMiddleware&lt;/h2&gt;
+&lt;h2 id="djangomiddlewareclickjackingxframeoptionsmiddleware"&gt;django.middleware.clickjacking.XFrameOptionsMiddleware&lt;/h2&gt;
 &lt;p&gt;При включении данный middleware добавляет заголовок &lt;code&gt;X-Frame-Options: SAMEORIGIN&lt;/code&gt;, который запрещает современным браузерам
 загружать сайт в (i)frame на сайтах с другим доменом. Также можно запретить подключение сайта со всех доменов используя
 переменную &lt;code&gt;X_FRAME_OPTIONS = 'DENY'&lt;/code&gt;.&lt;/p&gt;</content></entry></feed>

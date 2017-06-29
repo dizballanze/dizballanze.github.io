@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0"><channel><title>Tech blog by @dizballanze - Yuri Shikanov</title><link>/ru/</link><description></description><lastBuildDate>Tue, 27 Jun 2017 16:00:00 +0300</lastBuildDate><item><title>Оптимизация производительности Django проектов (часть 2)</title><link>/ru/django-project-optimization-part-2/</link><description>&lt;p&gt;Содержание:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#massovye-izmeneniia"&gt;Массовые изменения&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#massovaia-vstavka"&gt;Массовая вставка&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovaia-vstavka-m2m"&gt;Массовая вставка M2M&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovoe-izmenenie"&gt;Массовое изменение&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovoe-udalenie-obektov"&gt;Массовое удаление объектов&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#iterator_1"&gt;Iterator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ispolzovanie-vneshnikh-kliuchei"&gt;Использование внешних ключей&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#poluchenie-sviazannykh-obektov"&gt;Получение связанных объектов&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ogranichenie-polei-v-vyborkakh"&gt;Ограничение полей в выборках&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#indeksy-bd"&gt;Индексы БД&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenivyi-queryset"&gt;Ленивый QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
+&lt;a href="/ru/django-project-optimization-part-1/"&gt;здесь&lt;/a&gt; и рассказывает …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Tue, 27 Jun 2017 16:00:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-27:/ru/django-project-optimization-part-2/</guid><category>python</category><category>django</category></item></channel></rss>

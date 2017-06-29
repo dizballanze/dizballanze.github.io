@@ -57,7 +57,7 @@
     <p>Всех с прошедшим Новым Годом! Сегодня я покажу как наследовать свойства
 моделей в <a href="http://mongoosejs.com/" title="Mongoose ODM">ODM Mongoose</a>. Для тех, кто не знает mongoose - это 
 ODM (object document mapper) для node.js и <a href="http://www.mongodb.org/" title="MongoDB">MongoDB</a>. </p>
-<h2>Применение</h2>
+<h2 id="primenenie">Применение</h2>
 <p>Часто бывает необходимо в рамках одной коллекции объектов выделить несколько
 типов с некоторыми различиями в наборе свойств. Т.к. MongoDB реализует schema-less дизайн, 
 мы не ограничены базой данных и не обязаны следовать какому-то строгому набору
@@ -69,67 +69,63 @@ ODM (object document mapper) для node.js и <a href="http://www.mongodb.org/"
 <p>Рассмотрим простой пример. У нас есть два типа пользователей: юридическое лицо и физическое
 лицо. Каждый тип имеет общие и специфические поля. Чтобы выделить общие поля создадим объект
 с набором полей, которые встречаются в каждом из типов:</p>
-<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">BaseUser</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">inn</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> 
-        <span class="nx">validate</span><span class="o">:</span> <span class="nx">inn_validator</span><span class="p">,</span>
-        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
-    <span class="nx">email</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">unique</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">validate</span><span class="o">:</span> <span class="nx">email_validator</span><span class="p">},</span>
-    <span class="nx">phone</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">validate</span><span class="o">:</span> <span class="nx">phone_validator</span><span class="p">,</span>
-        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
-    <span class="nx">username</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">unique</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">validate</span><span class="o">:</span> <span class="nx">username_validator</span><span class="p">},</span>
-    <span class="nx">password</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> 
-        <span class="nx">validate</span><span class="o">:</span> <span class="nx">password_validator</span><span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-
-
+<pre><code>:::javascript
+var BaseUser = {
+    inn: {type: String, 
+        validate: inn_validator,
+        required: true},
+    email: {type: String, required: true, unique: true,
+        validate: email_validator},
+    phone: {type: String, validate: phone_validator,
+        required: true},
+    username: {type: String, unique: true,
+        required: true, validate: username_validator},
+    password: {type: String, required: true, 
+        validate: password_validator}
+};
+</code></pre>
 <p>Далее для каждого из типов пользователей создаём объект со специфическими полями:</p>
-<div class="highlight"><pre><span></span><span class="c1">// Физическое лицо</span>
-<span class="kd">var</span> <span class="nx">IndividualPerson</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">first_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">validate</span><span class="o">:</span> <span class="nx">first_name_validator</span><span class="p">},</span>
-    <span class="nx">last_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="nx">valdiate</span><span class="o">:</span> <span class="nx">last_name_validator</span><span class="p">},</span>
-    <span class="nx">patronymic</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> 
-        <span class="nx">validate</span><span class="o">:</span> <span class="nx">patronymic_validator</span><span class="p">},</span>
-    <span class="nx">type</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="k">default</span><span class="o">:</span> <span class="s1">&#39;individual&#39;</span><span class="p">}</span>
-<span class="p">};</span>
+<pre><code>:::javascript
+// Физическое лицо
+var IndividualPerson = {
+    first_name: {type: String, required: true,
+        validate: first_name_validator},
+    last_name: {type: String, required: true,
+        valdiate: last_name_validator},
+    patronymic: {type: String, 
+        validate: patronymic_validator},
+    type: {type: String, default: 'individual'}
+};
 
-<span class="c1">// Юридическое лицо</span>
-<span class="kd">var</span> <span class="nx">LegalPerson</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">full_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">validate</span><span class="o">:</span> <span class="nx">full_name_validator</span><span class="p">,</span> 
-        <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
-    <span class="nx">short_name</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="nx">required</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> 
-        <span class="nx">validate</span><span class="o">:</span> <span class="nx">short_name_validator</span><span class="p">},</span>
-    <span class="nx">type</span><span class="o">:</span> <span class="p">{</span><span class="nx">type</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span> <span class="k">default</span><span class="o">:</span> <span class="s1">&#39;legal&#39;</span><span class="p">}</span>
-<span class="p">};</span>
-</pre></div>
-
-
+// Юридическое лицо
+var LegalPerson = {
+    full_name: {type: String, validate: full_name_validator, 
+        required: true},
+    short_name: {type: String, required: true, 
+        validate: short_name_validator},
+    type: {type: String, default: 'legal'}
+};
+</code></pre>
 <p>Также мы добавили поле <code>type</code> для дифференциации записей, т.к. они будут храниться в одной коллекции.
 Далее необходимо просто при создании схемы модели выполнять слияние (merge) значений из <code>BaseUser</code> и
 соответствующего объекта типа:</p>
-<div class="highlight"><pre><span></span><span class="nx">IndividualUserSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">extended</span><span class="p">(</span><span class="nx">BaseUser</span><span class="p">).</span><span class="nx">merge</span><span class="p">(</span><span class="nx">IndividualPerson</span><span class="p">));</span>
-<span class="nx">LegalUserSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Schema</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">extended</span><span class="p">(</span><span class="nx">BaseUser</span><span class="p">).</span><span class="nx">merge</span><span class="p">(</span><span class="nx">LegalPerson</span><span class="p">));</span>
-</pre></div>
-
-
+<pre><code>:::javascript
+IndividualUserSchema = new Schema(Object.extended(BaseUser).merge(IndividualPerson));
+LegalUserSchema = new Schema(Object.extended(BaseUser).merge(LegalPerson));
+</code></pre>
 <p>Здесь я использую <a href="http://sugarjs.com/" title="Sugar.js">sugar.js</a>, но при необходимости это можно реализовать
 и вручную.</p>
 <p>Затем модели необходимо создавать таким образом, чтобы они использовали одну и ту же коллекцию в базе данных:</p>
-<div class="highlight"><pre><span></span><span class="nx">exports</span><span class="p">.</span><span class="nx">LegalUser</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;LegalUser&#39;</span><span class="p">,</span> <span class="nx">LegalUserSchema</span><span class="p">,</span> <span class="s1">&#39;users&#39;</span><span class="p">);</span>
-<span class="p">};</span>
+<pre><code>:::javascript
+exports.LegalUser = function(db) {
+    return db.model('LegalUser', LegalUserSchema, 'users');
+};
 
-<span class="nx">exports</span><span class="p">.</span><span class="nx">IndividualUser</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">db</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;IndividualUser&#39;</span><span class="p">,</span> <span class="nx">IndividualUserSchema</span><span class="p">,</span> <span class="s1">&#39;users&#39;</span><span class="p">);</span>
-<span class="p">};</span>
-</pre></div>
-
-
-<h2>Заключение</h2>
+exports.IndividualUser = function(db) {
+    return db.model('IndividualUser', IndividualUserSchema, 'users');
+};
+</code></pre>
+<h2 id="zakliuchenie">Заключение</h2>
 <p>В итоге мы получили две модели со своими наборами полей/валидаторов и при этом остались
 преимущества использования одной коллекции - поиск записей по одной коллекции, уникальные
 значения <code>username</code> и <code>email</code> через индексы и т.д.

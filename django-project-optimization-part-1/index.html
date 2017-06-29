@@ -58,59 +58,55 @@
 therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
 into performance problems. In this guide, I will try define potential problems and how to fix them.</p>
 <p>This is the first part of a series about Django performance optimization. It will cover profiling and Django settings.</p>
-<h2>Profiling</h2>
+<h2 id="profiling">Profiling</h2>
 <p>Before starting to make any optimizations you should measure current performance to be able to compare results of 
 optimizations. And you should be able to measure performance regularly after each change, so this process should be
 automatized.</p>
 <p>Profiling is a process of measurement metrics of your project. Such as server response time, CPU usage, memory usage, etc.
 Python has its own <a href="https://docs.python.org/3/library/profile.html">profiler</a> in the standard library. It works pretty
 good in profiling code chunks, but for profiling a whole Django project more convenient solutions exist.</p>
-<h3>Django logging</h3>
+<h3 id="django-logging">Django logging</h3>
 <p>One of the most common optimization issues are needles and/or inefficient SQL queries. You could set up Django
 logging to display all SQL queries into the console. Add to <code>settings.py</code> file:</p>
-<div class="highlight"><pre><span></span><span class="n">LOGGING</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s1">&#39;disable_existing_loggers&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
-    <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;console&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;logging.StreamHandler&#39;</span><span class="p">,</span>
-        <span class="p">},</span>
-    <span class="p">},</span>
-    <span class="s1">&#39;loggers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;django.db.backends&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;console&#39;</span><span class="p">],</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<p><code>python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    },
+}</code></p>
 <p>also, make sure that <code>DEBUG = True</code>. After reloading server, you should see SQL queries and corresponding time
 in the console for every request you make:</p>
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="ss">&quot;handbooks_size&quot;</span><span class="p">.</span><span class="ss">&quot;size_type_id&quot;</span><span class="p">,</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;size_id&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">LEFT</span> <span class="k">OUTER</span> <span class="k">JOIN</span> <span class="ss">&quot;handbooks_size&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;size_id&quot;</span> <span class="o">=</span> <span class="ss">&quot;handbooks_size&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;size_id&quot;</span> <span class="k">ASC</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;color_id&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;color_id&quot;</span> <span class="k">ASC</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="ss">&quot;handbooks_size&quot;</span><span class="p">.</span><span class="ss">&quot;row&quot;</span><span class="p">,</span> <span class="ss">&quot;handbooks_size&quot;</span><span class="p">.</span><span class="ss">&quot;size_type_id&quot;</span><span class="p">,</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;size_id&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">LEFT</span> <span class="k">OUTER</span> <span class="k">JOIN</span> <span class="ss">&quot;handbooks_size&quot;</span> <span class="k">ON</span> <span class="p">(</span><span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;size_id&quot;</span> <span class="o">=</span> <span class="ss">&quot;handbooks_size&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">)</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;size_id&quot;</span> <span class="k">ASC</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;season&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;season&quot;</span> <span class="k">ASC</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">000</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">DISTINCT</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;state&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">ORDER</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;state&quot;</span> <span class="k">ASC</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">002</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">MAX</span><span class="p">(</span><span class="ss">&quot;__col1&quot;</span><span class="p">),</span> <span class="k">MIN</span><span class="p">(</span><span class="ss">&quot;__col2&quot;</span><span class="p">)</span> <span class="k">FROM</span> <span class="p">(</span><span class="k">SELECT</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">AS</span> <span class="n">Col1</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="o">=</span> <span class="s1">&#39;sold&#39;</span> <span class="k">THEN</span> <span class="mi">1</span> <span class="k">ELSE</span> <span class="mi">0</span> <span class="k">END</span> <span class="k">AS</span> <span class="ss">&quot;x_order&quot;</span><span class="p">,</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;price_sell&quot;</span> <span class="k">AS</span> <span class="ss">&quot;__col1&quot;</span><span class="p">,</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;price_sell&quot;</span> <span class="k">AS</span> <span class="ss">&quot;__col2&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="o">=</span> <span class="s1">&#39;sold&#39;</span> <span class="k">THEN</span> <span class="mi">1</span> <span class="k">ELSE</span> <span class="mi">0</span> <span class="k">END</span><span class="p">)</span> <span class="n">subquery</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">001</span><span class="p">)</span> <span class="k">SELECT</span> <span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">FROM</span> <span class="p">(</span><span class="k">SELECT</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span> <span class="k">AS</span> <span class="n">Col1</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="o">=</span> <span class="s1">&#39;sold&#39;</span> <span class="k">THEN</span> <span class="mi">1</span> <span class="k">ELSE</span> <span class="mi">0</span> <span class="k">END</span> <span class="k">AS</span> <span class="ss">&quot;x_order&quot;</span> <span class="k">FROM</span> <span class="ss">&quot;goods_goods&quot;</span> <span class="k">WHERE</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="k">IN</span> <span class="p">(</span><span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">)</span> <span class="k">GROUP</span> <span class="k">BY</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;id&quot;</span><span class="p">,</span> <span class="k">CASE</span> <span class="k">WHEN</span> <span class="ss">&quot;goods_goods&quot;</span><span class="p">.</span><span class="ss">&quot;status&quot;</span> <span class="o">=</span> <span class="s1">&#39;sold&#39;</span> <span class="k">THEN</span> <span class="mi">1</span> <span class="k">ELSE</span> <span class="mi">0</span> <span class="k">END</span><span class="p">)</span> <span class="n">subquery</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;reserved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="s1">&#39;approved&#39;</span><span class="p">,</span> <span class="s1">&#39;sold&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">15</span><span class="o">/</span><span class="n">Jun</span><span class="o">/</span><span class="mi">2017</span> <span class="mi">11</span><span class="p">:</span><span class="mi">03</span><span class="p">:</span><span class="mi">49</span><span class="p">]</span> <span class="ss">&quot;GET /goods HTTP/1.0&quot;</span> <span class="mi">200</span> <span class="mi">32583</span>
-</pre></div>
-
-
-<h3>Django Debug Toolbar</h3>
+<p><code>sql
+(0.002) SELECT DISTINCT "handbooks_size"."size_type_id", "goods_goods"."size_id" FROM "goods_goods" LEFT OUTER JOIN "handbooks_size" ON ("goods_goods"."size_id" = "handbooks_size"."id") WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."size_id" ASC; args=('reserved', 'sold', 'approved')
+(0.001) SELECT DISTINCT "goods_goods"."color_id" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."color_id" ASC; args=('reserved', 'sold', 'approved')
+(0.001) SELECT DISTINCT "handbooks_size"."row", "handbooks_size"."size_type_id", "goods_goods"."size_id" FROM "goods_goods" LEFT OUTER JOIN "handbooks_size" ON ("goods_goods"."size_id" = "handbooks_size"."id") WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."size_id" ASC; args=('reserved', 'sold', 'approved')
+(0.000) SELECT DISTINCT "goods_goods"."season" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."season" ASC; args=('reserved', 'sold', 'approved')
+(0.000) SELECT DISTINCT "goods_goods"."state" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."state" ASC; args=('reserved', 'sold', 'approved')
+(0.002) SELECT MAX("__col1"), MIN("__col2") FROM (SELECT "goods_goods"."id" AS Col1, CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END AS "x_order", "goods_goods"."price_sell" AS "__col1", "goods_goods"."price_sell" AS "__col2" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') GROUP BY "goods_goods"."id", CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END) subquery; args=('sold', 1, 0, 'reserved', 'sold', 'approved', 'sold', 1, 0)
+(0.001) SELECT COUNT(*) FROM (SELECT "goods_goods"."id" AS Col1, CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END AS "x_order" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') GROUP BY "goods_goods"."id", CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END) subquery; args=('sold', 1, 0, 'reserved', 'sold', 'approved', 'sold', 1, 0)
+[15/Jun/2017 11:03:49] "GET /goods HTTP/1.0" 200 32583</code></p>
+<h3 id="django-debug-toolbar">Django Debug Toolbar</h3>
 <p><a href="http://django-debug-toolbar.readthedocs.io/en/stable/">This</a> Django application provides a set of toolbars, some of
 them are great for profiling. Actually, it has built-in SQL panel, that has even more informative log of SQL queries
 with additional features, like time chart, traceback, a result of <code>EXPLAIN</code> command, etc.</p>
-<p><img alt="DDT" src="/media/2017/6/ddt.png"></p>
+<p><img alt="DDT" src="/media/2017/6/ddt.png"/></p>
 <p>Also, DDT has non-default built-in profiling panel. It provides a web interface to profiling results of the current request.
 To enable it, you should add <code>debug_toolbar.panels.profiling.ProfilingPanel</code> to <code>DEBUG_TOOLBAR_PANELS</code> list in `settings.py.</p>
-<p><img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"></p>
-<h3>Silk</h3>
+<p><img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"/></p>
+<h3 id="silk">Silk</h3>
 <p>Another great package for profiling is Silk. It's especially useful if you have an API and therefore you can't use DDT.
 Installation instructions can be found on <a href="https://github.com/django-silk/silk#installation">GitHub</a>.</p>
-<p><img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"></p>
+<p><img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"/></p>
 <p>After set up you should reboot the server and open <code>/silk/</code> in a browser. The web interface of Silk provides:</p>
 <ul>
 <li>Requests statistic,</li>
@@ -119,70 +115,61 @@ Installation instructions can be found on <a href="https://github.com/django-sil
 </ul>
 <p>You can enable profiler for the whole project by setting <code>SILKY_PYTHON_PROFILER = True</code> in <code>settings.py</code>. Or you
 can profile only certain functions/blocks of code with help of decorator and context processor:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">silk.profiling.profiler</span> <span class="kn">import</span> <span class="n">silk_profile</span>
-
-
-<span class="nd">@silk_profile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;View Blog Post&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">post_id</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span>
-        <span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">p</span>
-    <span class="p">})</span>
-
-<span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
-    <span class="k">with</span> <span class="n">silk_profile</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;View Blog Post #</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">):</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">Post</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">post_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">render_to_response</span><span class="p">(</span><span class="s1">&#39;post.html&#39;</span><span class="p">,</span> <span class="p">{</span>
-            <span class="s1">&#39;post&#39;</span><span class="p">:</span> <span class="n">p</span>
-        <span class="p">})</span>
-</pre></div>
-
-
-<h3>Profiling data</h3>
+<p>```python
+from silk.profiling.profiler import silk_profile</p>
+<p>@silk_profile(name='View Blog Post')
+def post(request, post_id):
+    p = Post.objects.get(pk=post_id)
+    return render_to_response('post.html', {
+        'post': p
+    })</p>
+<p>def post(request, post_id):
+    with silk_profile(name='View Blog Post #%d' % self.pk):
+        p = Post.objects.get(pk=post_id)
+        return render_to_response('post.html', {
+            'post': p
+        })
+```</p>
+<h3 id="profiling-data">Profiling data</h3>
 <p>It's very important to use production-like data for profiling. Ideally, you should grab a dump from the production database and use it
 on your local machine. If you try to measure performance on an empty/small database you can receive wrong results, that don't
 help you to optimize project correctly.</p>
-<h2>Load testing</h2>
+<h2 id="load-testing_1">Load testing</h2>
 <p>After optimizations, you should perform load testing to make sure that performance is on sufficient level to work on production
 load. For this type of testing, you need to setup copy of your production environment. Fortunately, cloud services and
 deploy automation allow us to make such setup in a minute.</p>
 <p>I recommend using <a href="http://locust.io/">Locust</a> for load testing. Its main feature is that you can describe all your
 tests in plain Python code. You can set up sophisticated load scenarios that would be close to real users behavior.
 The example of <code>locustfile.py</code>:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">locust</span> <span class="kn">import</span> <span class="n">HttpLocust</span><span class="p">,</span> <span class="n">TaskSet</span><span class="p">,</span> <span class="n">task</span>
+<p>```python
+from locust import HttpLocust, TaskSet, task</p>
+<p>class UserBehavior(TaskSet):
+    def on_start(self):
+        """ on_start is called when a Locust start before any task is scheduled """
+        self.login()</p>
+<pre><code>def login(self):
+    self.client.post("/login", {"username":"ellen_key", "password":"education"})
 
+@task(2)
+def index(self):
+    self.client.get("/")
 
-<span class="k">class</span> <span class="nc">UserBehavior</span><span class="p">(</span><span class="n">TaskSet</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">on_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; on_start is called when a Locust start before any task is scheduled &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/login&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;username&quot;</span><span class="p">:</span><span class="s2">&quot;ellen_key&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span><span class="s2">&quot;education&quot;</span><span class="p">})</span>
-
-    <span class="nd">@task</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-
-    <span class="nd">@task</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/profile&quot;</span><span class="p">)</span>
-
-
-<span class="k">class</span> <span class="nc">WebsiteUser</span><span class="p">(</span><span class="n">HttpLocust</span><span class="p">):</span>
-    <span class="n">task_set</span> <span class="o">=</span> <span class="n">UserBehavior</span>
-    <span class="n">min_wait</span> <span class="o">=</span> <span class="mi">5000</span>
-    <span class="n">max_wait</span> <span class="o">=</span> <span class="mi">9000</span>
-</pre></div>
-
-
+@task(1)
+def profile(self):
+    self.client.get("/profile")
+</code></pre>
+<p>class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000
+```</p>
 <p>Also, Locust provide web-interface to run tests and see results:</p>
-<p><img alt="Locust web interface" src="/media/2017/6/locust-screenshot.png"></p>
+<p><img alt="Locust web interface" src="/media/2017/6/locust-screenshot.png"/></p>
 <p>Best thing, that you can setup Locust once and use it to verify project performance after every change. Maybe you could even
 add it to your CI/CD pipeline!</p>
-<h2>Django settings</h2>
+<h2 id="django-settings">Django settings</h2>
 <p>In this section I will describe Django settings, that may affect the performance.</p>
-<h3>Database connection lifetime</h3>
+<h3 id="database-connection-lifetime">Database connection lifetime</h3>
 <p>By default, Django closes the database connection at the end of each request. You could setup TTL of a database
 connection by changing <a href="https://docs.djangoproject.com/en/1.11/ref/settings/#conn-max-age"><code>CONN_MAX_AGE</code></a> value:</p>
 <ul>
@@ -190,73 +177,62 @@ connection by changing <a href="https://docs.djangoproject.com/en/1.11/ref/setti
 <li><code>&gt; 0</code> - TTL in seconds,</li>
 <li><code>None</code> - unlimited TTL.</li>
 </ul>
-<div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;ENGINE&#39;</span><span class="p">:</span> <span class="s1">&#39;django.db.backends.postgresql&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;NAME&#39;</span><span class="p">:</span> <span class="s1">&#39;mydatabase&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;mydatabaseuser&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;mypassword&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;5432&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;CONN_MAX_AGE&#39;</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>  <span class="c1"># 10 minutes</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<h3>Templates caching</h3>
+<p><code>python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydatabase',
+        'USER': 'mydatabaseuser',
+        'PASSWORD': 'mypassword',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+        'CONN_MAX_AGE': 60 * 10,  # 10 minutes
+    }
+}</code></p>
+<h3 id="templates-caching">Templates caching</h3>
 <p>If you use Django version less than 1.11, you should consider enabling templates caching. By default Django (&lt;1.11) reads
 from the file system and compiles templates every time they're rendered. You could use <code>django.template.loaders.cached.Loader</code>
 to enable templates caching in memory. Add to <code>settings.py</code>:</p>
-<div class="highlight"><pre><span></span><span class="n">TEMPLATES</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span>
-        <span class="s1">&#39;BACKEND&#39;</span><span class="p">:</span> <span class="s1">&#39;django.template.backends.django.DjangoTemplates&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;DIRS&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">),</span> <span class="p">],</span>
-        <span class="s1">&#39;OPTIONS&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="c1"># ...</span>
-            <span class="s1">&#39;loaders&#39;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="p">(</span><span class="s1">&#39;django.template.loaders.cached.Loader&#39;</span><span class="p">,</span> <span class="p">[</span>
-                    <span class="s1">&#39;django.template.loaders.filesystem.Loader&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;django.template.loaders.app_directories.Loader&#39;</span><span class="p">,</span>
-                <span class="p">]),</span>
-            <span class="p">],</span>
-        <span class="p">},</span>
-    <span class="p">},</span>
-<span class="p">]</span>
-</pre></div>
-
-
-<h3>Redis cache backend</h3>
+<p><code>python
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'foo', 'bar'), ],
+        'OPTIONS': {
+            # ...
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ]),
+            ],
+        },
+    },
+]</code></p>
+<h3 id="redis-cache-backend">Redis cache backend</h3>
 <p>Django provides several built-in cache backends, such as database backend, file based backend, etc. I recommend to store
 your cache in Redis. Redis is a popular in-memory data structure store, probably you already use it in your project.
 To set up Redis as cache backend you need to use third-party package, e.g. <code>django-redis</code>.</p>
 <p>Install django-redis with pip:</p>
-<div class="highlight"><pre><span></span>pip install django-redis
-</pre></div>
-
-
+<p><code>pip install django-redis</code></p>
 <p>Add cache settings to <code>settings.py</code>:</p>
-<div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;BACKEND&quot;</span><span class="p">:</span> <span class="s2">&quot;django_redis.cache.RedisCache&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;LOCATION&quot;</span><span class="p">:</span> <span class="s2">&quot;redis://127.0.0.1:6379/1&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;OPTIONS&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;CLIENT_CLASS&quot;</span><span class="p">:</span> <span class="s2">&quot;django_redis.client.DefaultClient&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<p><code>python
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}</code></p>
 <p>Read full documentation <a href="http://niwinz.github.io/django-redis/latest/">here</a>.</p>
-<h3>Sessions backend</h3>
+<h3 id="sessions-backend">Sessions backend</h3>
 <p>By default Django stores sessions in a database. To speed up this we can store sessions in a cache. Add to <code>settings.py</code>:</p>
-<div class="highlight"><pre><span></span><span class="n">SESSION_ENGINE</span> <span class="o">=</span> <span class="s2">&quot;django.contrib.sessions.backends.cache&quot;</span>
-<span class="n">SESSION_CACHE_ALIAS</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
-</pre></div>
-
-
-<h3>Remove unneeded middlewares</h3>
+<p><code>python
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"</code></p>
+<h3 id="remove-unneeded-middlewares">Remove unneeded middlewares</h3>
 <p>Check the list of middlewares (<code>MIDDLEWARE</code> in <code>settings.py</code>). Make sure you need all of them and remove unneeded.
 Django calls each middleware for each processed request, so there can be significant overhead.</p>
 <p>If you have custom middleware, that is used only in the segment of requests, you could try to move this functionality

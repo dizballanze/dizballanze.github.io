@@ -55,14 +55,13 @@
   </header>
   <div class="entry-content">
     <p>npm - пакетный менеджер для node.js. Сегодня мы рассмотрим как использовать npm для управления зависимостями и автоматизации деплоймента.</p>
-<p><img alt="npm package management" src="/media/2013/01/npm.png" title="node packaged modules"></p>
-<h1>Установка npm</h1>
+<p><img alt="npm package management" src="/media/2013/01/npm.png" title="node packaged modules"/></p>
+<h1 id="ustanovka-npm">Установка npm</h1>
 <p>Если у вас не установлен <code>npm</code>, то сделать это можно выполнив следующую команду:</p>
-<div class="highlight"><pre><span></span>curl https://npmjs.org/install.sh <span class="p">|</span> sh
-</pre></div>
-
-
-<h1>Установка пакетов</h1>
+<pre><code>:::bash
+curl https://npmjs.org/install.sh | sh
+</code></pre>
+<h1 id="ustanovka-paketov">Установка пакетов</h1>
 <p>Для того чтобы установить пакет при помощи <code>npm</code> нужно использовать команду <code>npm install &lt;package&gt;</code>.
 Где <code>package</code> может быть:</p>
 <ul>
@@ -74,7 +73,7 @@
 </ul>
 <p>По-умолчания, установка будет произведена локально, в текущую директорию. Для того чтобы выполнить установку глобально
 необходимо вызывать <code>npm</code> с флагом <code>-g</code>.</p>
-<h1>Управление зависимостями</h1>
+<h1 id="upravlenie-zavisimostiami">Управление зависимостями</h1>
 <p>При разработке приложений на <a href="/tag/nodejs/" title="Node.js">node.js</a> я использую множество различных модулей. Соответственно,
 при разворачивании приложения необходимо быть уверенным, что в системе установлены все требуемые пакеты. Рассмотрим, как npm
 помогает нам решить эту проблему.</p>

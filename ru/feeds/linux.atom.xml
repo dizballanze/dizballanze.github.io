@@ -2,13 +2,13 @@
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Linux</title><link href="/ru/" rel="alternate"></link><link href="http://dizballanze.com/feeds/linux.atom.xml" rel="self"></link><id>/ru/</id><updated>2014-04-17T01:15:00+04:00</updated><entry><title>Nginx как SMTP proxy-сервер</title><link href="/ru/nginx-kak-smtp-proxy-server/" rel="alternate"></link><published>2014-04-17T01:15:00+04:00</published><updated>2014-04-17T01:15:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2014-04-17:/ru/nginx-kak-smtp-proxy-server/</id><summary type="html">&lt;blockquote&gt;
 &lt;p&gt;Данный пост прежде всего будет интересен разработчикам, системные администраторы врятле вынесут из него что-то полезное.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;&lt;img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx"&gt;&lt;/p&gt;
-&lt;h2&gt;Зачем нужен proxy для SMTP и почему именно Nginx&lt;/h2&gt;
+&lt;p&gt;&lt;img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx"/&gt;&lt;/p&gt;
+&lt;h2 id="zachem-nuzhen-proxy-dlia-smtp-i-pochemu-imenno-nginx"&gt;Зачем нужен proxy для SMTP и почему именно Nginx&lt;/h2&gt;
 &lt;p&gt;Если в вашем приложении нужно реализовать кастомный SMTP-сервер, (например, наш &lt;a href="http://debugmail.io/"&gt;Debug Mail&lt;/a&gt; или сервисы вроде Mailjet, Mailgun и тд.), то для вас SMTP proxy-сервер будет полезен …&lt;/p&gt;</summary><content type="html">&lt;blockquote&gt;
 &lt;p&gt;Данный пост прежде всего будет интересен разработчикам, системные администраторы врятле вынесут из него что-то полезное.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;&lt;img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx"&gt;&lt;/p&gt;
-&lt;h2&gt;Зачем нужен proxy для SMTP и почему именно Nginx&lt;/h2&gt;
+&lt;p&gt;&lt;img alt="nginx-logo" src="/media/2014/4/nginx.jpg" title="Nginx"/&gt;&lt;/p&gt;
+&lt;h2 id="zachem-nuzhen-proxy-dlia-smtp-i-pochemu-imenno-nginx"&gt;Зачем нужен proxy для SMTP и почему именно Nginx&lt;/h2&gt;
 &lt;p&gt;Если в вашем приложении нужно реализовать кастомный SMTP-сервер, (например, наш &lt;a href="http://debugmail.io/"&gt;Debug Mail&lt;/a&gt; или сервисы вроде Mailjet, Mailgun и тд.), то для вас SMTP proxy-сервер будет полезен для следующих целей:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;отсев несанкционированных попыток отправки писем до попадания писем в кастомный бекенд,&lt;/li&gt;
@@ -17,30 +17,29 @@
 &lt;/ul&gt;
 &lt;p&gt;Nginx из коробки предоставляет полнофункциональный smtp proxy с свойственной для него отличной производительностью. В моем случае в проекте уже использовался Nginx для проксирования запросов к Node.js приложению и для отдачи статики, по-этому выбор в его пользу был очевиден.&lt;/p&gt;
 &lt;p&gt;Далее мы рассмотрим процесс настройки proxy-сервера и способы его взаимодействия с приложением.&lt;/p&gt;
-&lt;h2&gt;Настройка&lt;/h2&gt;
+&lt;h2 id="nastroika"&gt;Настройка&lt;/h2&gt;
 &lt;p&gt;Пример конфигурации SMTP proxy-сервера (должен быть определен или подключен в корне nginx.conf):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;mail&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;auth_http&lt;/span&gt;  &lt;span class="n"&gt;127.0.0.1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;8000&lt;/span&gt;&lt;span class="s"&gt;/auth&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;p&gt;```nginx
+mail {
+    auth_http  127.0.0.1:8000/auth;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;starttls        on;
+ssl_certificate /etc/nginx/cert.pem;
+ssl_certificate_key /etc/nginx/key.pem;
+auth_http_header X-Auth-Key wow_so_secret;
 
-    &lt;span class="kn"&gt;starttls&lt;/span&gt;        &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;ssl_certificate&lt;/span&gt; &lt;span class="s"&gt;/etc/nginx/cert.pem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;ssl_certificate_key&lt;/span&gt; &lt;span class="s"&gt;/etc/nginx/key.pem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;auth_http_header&lt;/span&gt; &lt;span class="s"&gt;X-Auth-Key&lt;/span&gt; &lt;span class="s"&gt;wow_so_secret&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-    &lt;span class="c1"&gt;# Generic port&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="kn"&gt;server_name&lt;/span&gt;     &lt;span class="s"&gt;debugmail&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="kn"&gt;listen&lt;/span&gt;          &lt;span class="mi"&gt;25&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="kn"&gt;protocol&lt;/span&gt;        &lt;span class="s"&gt;smtp&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="kn"&gt;proxy&lt;/span&gt;           &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="kn"&gt;proxy_pass_error_message&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="kn"&gt;smtp_auth&lt;/span&gt;       &lt;span class="s"&gt;login&lt;/span&gt; &lt;span class="s"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="kn"&gt;xclient&lt;/span&gt;         &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+# Generic port
+server {
+    server_name     debugmail;
+    listen          25;
+    protocol        smtp;
+    proxy           on;
+    proxy_pass_error_message on;
+    smtp_auth       login plain;
+    xclient         on;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;}
+```&lt;/p&gt;
 &lt;p&gt;Рассмотрим некоторые параметры:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;server_name&lt;/code&gt; - имя сервера, которое используется в приветствии SMTP-сервера,&lt;/li&gt;
@@ -53,9 +52,9 @@
 &lt;p&gt;Вы наверное заметили, что нигде не задается адрес проксируемого сервера.
 Чтобы узнать откуда Nginx узнает его адрес см. следующий раздел.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h3&gt;Аутентификация&lt;/h3&gt;
+&lt;h3 id="autentifikatsiia"&gt;Аутентификация&lt;/h3&gt;
 &lt;p&gt;Nginx поддерживает 3 метода аутентификации SMTP: &lt;code&gt;login&lt;/code&gt;, &lt;code&gt;plaint&lt;/code&gt; и &lt;code&gt;cram-md5&lt;/code&gt;. Для задания активных методов необходимо использовать параметр &lt;code&gt;smtp_auth&lt;/code&gt; значением которого является список методов через пробел. Также можно полностью отключить аутентификацию задав значение &lt;code&gt;none&lt;/code&gt;.&lt;/p&gt;
-&lt;h4&gt;HTTP Auth сервер&lt;/h4&gt;
+&lt;h4 id="http-auth-server"&gt;HTTP Auth сервер&lt;/h4&gt;
 &lt;p&gt;Для проверки аутентификации необходимо реализовать сервер, который будет принимать по HTTP запросы от proxy сервера и возвращать результат проверки. Адрес такого сервера задается при помощи параметра &lt;code&gt;auth_http&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Логин и пароль для проверки отправляются на сервер аутентификации через заголовки &lt;code&gt;Auth-User&lt;/code&gt; и &lt;code&gt;Auth-Pass&lt;/code&gt; соответственно. В заголовке &lt;code&gt;Auth-Login-Attempt&lt;/code&gt; proxy сервер передает номер попытки аутентификации. После проверки в зависимости от результата сервер должен вернуть в ответе следующие заголовки:&lt;/p&gt;
 &lt;ul&gt;
@@ -73,53 +72,47 @@
 &lt;/ul&gt;
 &lt;p&gt;Независимо от результата proxy сервер ждет ответ со статусом &lt;code&gt;HTTP/1.0 200 OK&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Как вы видите адрес проксируемого сервера возвращает сервер аутентификации, что дает широкие возможности в плане балансировки нагрузки/логгирования/фильтрации и тд. Например, в зависимости от ip-адреса клиента (который передается в заголовке &lt;code&gt;Client-IP&lt;/code&gt;), можно направить письмо на сервер, который географически ближе к данному клиенту (GeoIP). Или можно использовать другой способ балансировки, например, в зависимости от домена пользователя, даты его регистрации или любых других данных которые предаставляет proxy сервер или которые хранятся в БД.&lt;/p&gt;
-&lt;h4&gt;auth_http_header&lt;/h4&gt;
+&lt;h4 id="auth_http_header"&gt;auth_http_header&lt;/h4&gt;
 &lt;p&gt;Я не рекомендую делать ваш сервер аутентификации доступным из вне, но если у вас есть веские причины для этого, то Nginx предоставляет возможность простой способ проверки запроса при помощи &lt;code&gt;shared secret&lt;/code&gt;. Для настройки используется параметр &lt;code&gt;auth_http_header &amp;lt;header-name&amp;gt; &amp;lt;shared-secret-key&amp;gt;&lt;/code&gt;. При отправки запроса на аутентификацию proxy также будет отправлять заголовок с именем &lt;code&gt;&amp;lt;header-name&amp;gt;&lt;/code&gt; и значением &lt;code&gt;&amp;lt;shared-secret-key&amp;gt;&lt;/code&gt;. На сервере аутентификации соответственно нужно выполнять проверку данного значения.&lt;/p&gt;
 &lt;p&gt;Как альтернативный или дополнительный вариант, можно выполнять проверку по IP-адресу proxy сервера, который вероятно является фиксированным.&lt;/p&gt;
-&lt;h4&gt;XCLIENT&lt;/h4&gt;
+&lt;h4 id="xclient"&gt;XCLIENT&lt;/h4&gt;
 &lt;p&gt;Nginx поддерживает &lt;a href="http://www.postfix.org/XCLIENT_README.html"&gt;расширение XCLIENT&lt;/a&gt;. Для активации данной возможности используется параметр &lt;code&gt;xclient: on&lt;/code&gt;. &lt;/p&gt;
 &lt;p&gt;После активации xclient на бекенд (SMTP-сервер) будет приходить команда примерно следующего вида: &lt;code&gt;XCLIENT &amp;lt;attr1=value1&amp;gt; &amp;lt;attr2=value2&amp;gt;&lt;/code&gt;. Среди атрибутов команды можно выделить &lt;code&gt;LOGIN&lt;/code&gt;, который (как вы наверное догадались) передает логин при помощи которого пользователь аутентифицировался.&lt;/p&gt;
 &lt;p&gt;В &lt;a href="http://debugmail.io/"&gt;Debug Mail&lt;/a&gt; у нас пароль является идентификатором проекта, к которому нужно в итоге прикрепить письмо. Соответственно одного логина нам было недостаточно, для того, чтобы понять куда сохранять email. К счастью Nginx позволяет переопределить значение атрибута &lt;code&gt;LOGIN&lt;/code&gt; передаваемого на бекенд. Для этого необходимо (в случае успешной проверки) возвращать дополнительный заголовок &lt;code&gt;Auth-User&lt;/code&gt; от сервера аутентификации, например так:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Auth-Status&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;OK&amp;quot;&lt;/span&gt;
-&lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Auth-Server&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;settings&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;smtp_host&lt;/span&gt;
-&lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Auth-Port&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;settings&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;smtp_port&lt;/span&gt;
-&lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;Auth-User&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;#{&lt;/span&gt;&lt;span class="nx"&gt;login&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s"&gt;#&lt;/span&gt;&lt;span class="si"&gt;#{&lt;/span&gt;&lt;span class="nx"&gt;password&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
-&lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;SSL / TLS&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;coffeescript
+res.set "Auth-Status", "OK"
+res.set "Auth-Server", settings.smtp_host
+res.set "Auth-Port", settings.smtp_port
+res.set "Auth-User", "#{login}##{password}"
+res.send 200&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id="ssl-tls_1"&gt;SSL / TLS&lt;/h3&gt;
 &lt;p&gt;Если вам нужно добавить поддержку ssl или tls, то в Nginx есть всё для этого. Для включения ssl необходимо задать параметр &lt;code&gt;ssl: on&lt;/code&gt;. Если же вы предпочитаете TLS, то необходимо использовать параметр &lt;code&gt;starttls: on&lt;/code&gt;, при этом использование TLS будет опциональным и будет зависеть от клиента. Чтобы сделать использование TLS обязательным нужно вместо &lt;code&gt;on&lt;/code&gt; задать значение &lt;code&gt;only&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Для дальнейшей настройки нам потребуется сертификат и секретный ключ в формате PEM. Для примера сгенерируем self-signed сертификат (для реального проекта вам вероятно потребуется купить сертификат выданный сертификационным центром):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;&lt;code&gt;openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Далее задаем пути к сертификату и ключу в настройках Nginx (параметры &lt;code&gt;ssl_certificate&lt;/code&gt; и &lt;code&gt;ssl_certificate_key&lt;/code&gt; соответственно).&lt;/p&gt;
-&lt;h3&gt;P.S.&lt;/h3&gt;
+&lt;h3 id="ps"&gt;P.S.&lt;/h3&gt;
 &lt;p&gt;Полная документация по всем параметрам смотрите на &lt;a href="http://nginx.org/ru/docs/"&gt;официальном сайте Nginx&lt;/a&gt;.&lt;/p&gt;</content><category term="nginx"></category><category term="smtp"></category><category term="debugmail"></category></entry><entry><title>Используем ab для тестирования производительности web-приложения</title><link href="/ru/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/" rel="alternate"></link><published>2012-03-14T01:27:00+04:00</published><updated>2012-03-14T01:27:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2012-03-14:/ru/ispolzuem-ab-dlia-testirovaniia-proizvoditelnosti-web-prilozheniia/</id><summary type="html">&lt;p&gt;Важной частью разработки web-приложения является тестирование
 производительности. Часто при постановке задачи заказчик требует чтобы
 сервис выдерживал определенную нагрузку. В процессе профилирования и
 оптимизации полезно отслеживать, как изменилась скорость работы
 приложения при новых условиях. Для этой цели можно использовать Apache
 HTTP server benchmarking tool.&lt;/p&gt;
-&lt;h2&gt;Использование ab&lt;/h2&gt;
-&lt;h3&gt;Установка&lt;/h3&gt;
+&lt;h2 id="ispolzovanie-ab"&gt;Использование ab&lt;/h2&gt;
+&lt;h3 id="ustanovka"&gt;Установка&lt;/h3&gt;
 &lt;p&gt;Для того чтобы установить …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Важной частью разработки web-приложения является тестирование
 производительности. Часто при постановке задачи заказчик требует чтобы
 сервис выдерживал определенную нагрузку. В процессе профилирования и
 оптимизации полезно отслеживать, как изменилась скорость работы
 приложения при новых условиях. Для этой цели можно использовать Apache
 HTTP server benchmarking tool.&lt;/p&gt;
-&lt;h2&gt;Использование ab&lt;/h2&gt;
-&lt;h3&gt;Установка&lt;/h3&gt;
+&lt;h2 id="ispolzovanie-ab"&gt;Использование ab&lt;/h2&gt;
+&lt;h3 id="ustanovka"&gt;Установка&lt;/h3&gt;
 &lt;p&gt;Для того чтобы установить ab в debian необходимо установить пакет
 apache2-utils:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install apache2-utils
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Параметры&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+apt-get install apache2-utils
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id="parametry"&gt;Параметры&lt;/h3&gt;
 &lt;p&gt;Утилита запускается с помощью команды ab. Далее рассмотрим основные
 параметры.&lt;/p&gt;
 &lt;ul&gt;
@@ -139,50 +132,49 @@ apache2-utils:&lt;/p&gt;
 &lt;p&gt;Выполнение теста&lt;/p&gt;
 &lt;p&gt;Давайте выполним тестирование какого-либо сайта и рассмотрим содержание
 отчета, который генерирует ab.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ab -c &lt;span class="m"&gt;10&lt;/span&gt; -n &lt;span class="m"&gt;100&lt;/span&gt; http://google.com/
-Benchmarking google.com &lt;span class="o"&gt;(&lt;/span&gt;be patient&lt;span class="o"&gt;)&lt;/span&gt;.....done
+&lt;pre&gt;&lt;code&gt;:::bash
+ab -c 10 -n 100 http://google.com/
+Benchmarking google.com (be patient).....done
 
 
 Server Software:        gws
 Server Hostname:        google.com
-Server Port:            &lt;span class="m"&gt;80&lt;/span&gt;
+Server Port:            80
 
 Document Path:          /
-Document Length:        &lt;span class="m"&gt;219&lt;/span&gt; bytes
+Document Length:        219 bytes
 
-Concurrency Level:      &lt;span class="m"&gt;10&lt;/span&gt;
-Time taken &lt;span class="k"&gt;for&lt;/span&gt; tests:   &lt;span class="m"&gt;1&lt;/span&gt;.290 seconds
-Complete requests:      &lt;span class="m"&gt;100&lt;/span&gt;
-Failed requests:        &lt;span class="m"&gt;0&lt;/span&gt;
-Write errors:           &lt;span class="m"&gt;0&lt;/span&gt;
-Non-2xx responses:      &lt;span class="m"&gt;100&lt;/span&gt;
-Total transferred:      &lt;span class="m"&gt;54000&lt;/span&gt; bytes
-HTML transferred:       &lt;span class="m"&gt;21900&lt;/span&gt; bytes
-Requests per second:    &lt;span class="m"&gt;77&lt;/span&gt;.51 &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="c1"&gt;#/sec] (mean)&lt;/span&gt;
-Time per request:       &lt;span class="m"&gt;129&lt;/span&gt;.018 &lt;span class="o"&gt;[&lt;/span&gt;ms&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;mean&lt;span class="o"&gt;)&lt;/span&gt;
-Time per request:       &lt;span class="m"&gt;12&lt;/span&gt;.902 &lt;span class="o"&gt;[&lt;/span&gt;ms&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;mean, across all concurrent requests&lt;span class="o"&gt;)&lt;/span&gt;
-Transfer rate:          &lt;span class="m"&gt;40&lt;/span&gt;.87 &lt;span class="o"&gt;[&lt;/span&gt;Kbytes/sec&lt;span class="o"&gt;]&lt;/span&gt; received
+Concurrency Level:      10
+Time taken for tests:   1.290 seconds
+Complete requests:      100
+Failed requests:        0
+Write errors:           0
+Non-2xx responses:      100
+Total transferred:      54000 bytes
+HTML transferred:       21900 bytes
+Requests per second:    77.51 [#/sec] (mean)
+Time per request:       129.018 [ms] (mean)
+Time per request:       12.902 [ms] (mean, across all concurrent requests)
+Transfer rate:          40.87 [Kbytes/sec] received
 
-Connection Times &lt;span class="o"&gt;(&lt;/span&gt;ms&lt;span class="o"&gt;)&lt;/span&gt;
-              min  mean&lt;span class="o"&gt;[&lt;/span&gt;+/-sd&lt;span class="o"&gt;]&lt;/span&gt; median   max
-Connect:       &lt;span class="m"&gt;54&lt;/span&gt;   &lt;span class="m"&gt;56&lt;/span&gt;   &lt;span class="m"&gt;2&lt;/span&gt;.0     &lt;span class="m"&gt;55&lt;/span&gt;      &lt;span class="m"&gt;63&lt;/span&gt;
-Processing:    &lt;span class="m"&gt;70&lt;/span&gt;   &lt;span class="m"&gt;72&lt;/span&gt;   &lt;span class="m"&gt;2&lt;/span&gt;.4     &lt;span class="m"&gt;72&lt;/span&gt;      &lt;span class="m"&gt;82&lt;/span&gt;
-Waiting:       &lt;span class="m"&gt;70&lt;/span&gt;   &lt;span class="m"&gt;72&lt;/span&gt;   &lt;span class="m"&gt;2&lt;/span&gt;.3     &lt;span class="m"&gt;72&lt;/span&gt;      &lt;span class="m"&gt;82&lt;/span&gt;
-Total:        &lt;span class="m"&gt;124&lt;/span&gt;  &lt;span class="m"&gt;128&lt;/span&gt;   &lt;span class="m"&gt;3&lt;/span&gt;.4    &lt;span class="m"&gt;127&lt;/span&gt;     &lt;span class="m"&gt;140&lt;/span&gt;
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:       54   56   2.0     55      63
+Processing:    70   72   2.4     72      82
+Waiting:       70   72   2.3     72      82
+Total:        124  128   3.4    127     140
 
-Percentage of the requests served within a certain &lt;span class="nb"&gt;time&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;ms&lt;span class="o"&gt;)&lt;/span&gt;
-  &lt;span class="m"&gt;50&lt;/span&gt;%    &lt;span class="m"&gt;127&lt;/span&gt;
-  &lt;span class="m"&gt;66&lt;/span&gt;%    &lt;span class="m"&gt;128&lt;/span&gt;
-  &lt;span class="m"&gt;75&lt;/span&gt;%    &lt;span class="m"&gt;129&lt;/span&gt;
-  &lt;span class="m"&gt;80&lt;/span&gt;%    &lt;span class="m"&gt;130&lt;/span&gt;
-  &lt;span class="m"&gt;90&lt;/span&gt;%    &lt;span class="m"&gt;133&lt;/span&gt;
-  &lt;span class="m"&gt;95&lt;/span&gt;%    &lt;span class="m"&gt;134&lt;/span&gt;
-  &lt;span class="m"&gt;98&lt;/span&gt;%    &lt;span class="m"&gt;138&lt;/span&gt;
-  &lt;span class="m"&gt;99&lt;/span&gt;%    &lt;span class="m"&gt;140&lt;/span&gt;
- &lt;span class="m"&gt;100&lt;/span&gt;%    &lt;span class="m"&gt;140&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;longest request&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+Percentage of the requests served within a certain time (ms)
+  50%    127
+  66%    128
+  75%    129
+  80%    130
+  90%    133
+  95%    134
+  98%    138
+  99%    140
+ 100%    140 (longest request)
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Сначала выводится различная информация о проводимом тесте, такая как
 типа серверного ПО, хост, порт, путь и тд. Дальше идут более интересные
 характеристики. Рассмотрим наиболее важные из них:&lt;/p&gt;
@@ -202,7 +194,7 @@ Percentage of the requests served within a certain &lt;span class="nb"&gt;time&l
 запроса и ожидание. И после этого таблица которая показывает процент от
 количества запросов, которые успели выполнится за определенный
 промежуток времени.&lt;/p&gt;
-&lt;h2&gt;Практическое применение&lt;/h2&gt;
+&lt;h2 id="prakticheskoe-primenenie_1"&gt;Практическое применение&lt;/h2&gt;
 &lt;p&gt;В зависимости от поставленных перед вами задач необходимо задавать
 различные параметры при запуске теста. Рассмотрим несколько примеров.&lt;/p&gt;
 &lt;ul&gt;
@@ -229,27 +221,24 @@ Percentage of the requests served within a certain &lt;span class="nb"&gt;time&l
     производительность со временем. Данное значение можно получить из
     таблицы Connection Times.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Дополнительно. Пример выполнения POST-запроса в ab&lt;/h2&gt;
+&lt;h2 id="dopolnitelno-primer-vypolneniia-post-zaprosa-v-ab"&gt;Дополнительно. Пример выполнения POST-запроса в ab&lt;/h2&gt;
 &lt;p&gt;Для выполнения POST-запроса необходимо составить тело запроса и
 сохранить его в файл. Для этого напишем небольшой скрипт:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class="nv"&gt;$params&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;test1&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;test2&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Second test&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nv"&gt;$body&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;http_build_query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$params&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nb"&gt;file_put_contents&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/tmp/body&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$body&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::php
+&amp;lt;?php
+$params = array('test1' =&amp;gt; 1, 'test2' =&amp;gt; 'Second test');
+$body = http_build_query($params);
+file_put_contents('/tmp/body', $body);
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;После этого в файле /tmp/body появится следующее содержимое:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;test1=1&amp;amp;test2=Second+test
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+test1=1&amp;amp;test2=Second+test
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь можно запускать тестирование:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ab -T application/x-www-form-urlencoded -p /tmp/body -n &lt;span class="m"&gt;10&lt;/span&gt; http://localhost/test/ab/post-handler.php
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Вывод&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+ab -T application/x-www-form-urlencoded -p /tmp/body -n 10 http://localhost/test/ab/post-handler.php
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="vyvod"&gt;Вывод&lt;/h2&gt;
 &lt;p&gt;Apache HTTP server benchmarking tool - полезный инструмент
 web-разработчика, который позволяет максимально быстро произвести
 тестирование производительности той или иной части приложения. Он
@@ -258,21 +247,21 @@ web-разработчика, который позволяет максимал
 тестирования нескольких функций с учетом различных сценариев и
 моделирования действий пользователя, необходимо использовать более
 сложные системы тестирования.&lt;/p&gt;
-&lt;h3&gt;UPDATE #1&lt;/h3&gt;
+&lt;h3 id="update-1"&gt;UPDATE #1&lt;/h3&gt;
 &lt;p&gt;Полезное дополнение от товарища:&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;ApacheBenchmark выдает много Failed. Сначала было стремно, но все
 оказалось не так страшно :) [#apache][]
-&lt;a href="http://t.co/tZSKksDl" title="http://stackoverflow.com/questions/579450/load-testing-with-ab-fake-failed-requests-length"&gt;stackoverflow.com/questions/5794…&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;— Pugach Vitaliy (@lionasp) &lt;a href="https://twitter.com/lionasp/status/180726351786020865"&gt;March 16, 2012&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;</content><category term="ab"></category><category term="benchmark"></category><category term="оптимизация"></category><category term="профилирование"></category></entry><entry><title>GeoIP средствами Nginx</title><link href="/ru/geoip-sredstvami-nginx/" rel="alternate"></link><published>2011-10-21T22:03:00+04:00</published><updated>2011-10-21T22:03:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2011-10-21:/ru/geoip-sredstvami-nginx/</id><summary type="html">&lt;p&gt;&lt;img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo"&gt;&lt;/p&gt;
+&lt;a href="http://t.co/tZSKksDl" title="http://stackoverflow.com/questions/579450/load-testing-with-ab-fake-failed-requests-length"&gt;stackoverflow.com/questions/5794&amp;hellip;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&amp;mdash; Pugach Vitaliy (@lionasp) &lt;a href="https://twitter.com/lionasp/status/180726351786020865"&gt;March 16, 2012&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;</content><category term="ab"></category><category term="benchmark"></category><category term="оптимизация"></category><category term="профилирование"></category></entry><entry><title>GeoIP средствами Nginx</title><link href="/ru/geoip-sredstvami-nginx/" rel="alternate"></link><published>2011-10-21T22:03:00+04:00</published><updated>2011-10-21T22:03:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2011-10-21:/ru/geoip-sredstvami-nginx/</id><summary type="html">&lt;p&gt;&lt;img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo"/&gt;&lt;/p&gt;
 &lt;p&gt;Часто при разработке сайтов появляется необходимость определения
 местоположения пользователя. Например, таким образом можно выдавать
 различные версии сайта для аудитории из разных стран. Также можно
 использовать данную возможность для балансировки нагрузки и назначать
 пользователю тот сервер, который находится ближе всего. Для реализации
 данной функции можно воспользоваться средствами &lt;a href="http://nginx.org/ru/"&gt;Nginx&lt;/a&gt;, прикрутив к
-нему …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo"&gt;&lt;/p&gt;
+нему …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="nginx logo" src="/media/2011/10/nginx-logo-1.png" title="nginx logo"/&gt;&lt;/p&gt;
 &lt;p&gt;Часто при разработке сайтов появляется необходимость определения
 местоположения пользователя. Например, таким образом можно выдавать
 различные версии сайта для аудитории из разных стран. Также можно
@@ -280,35 +269,33 @@ web-разработчика, который позволяет максимал
 пользователю тот сервер, который находится ближе всего. Для реализации
 данной функции можно воспользоваться средствами &lt;a href="http://nginx.org/ru/"&gt;Nginx&lt;/a&gt;, прикрутив к
 нему одну из доступных в сети баз данных по GeoIP.&lt;/p&gt;
-&lt;h2&gt;Конфигурация Nginx&lt;/h2&gt;
+&lt;h2 id="konfiguratsiia-nginx"&gt;Конфигурация Nginx&lt;/h2&gt;
 &lt;p&gt;В состав Nginx входит модуль Geo, который позволяет выставлять
 переменные в зависимости от попадания ip в определенный диапазон.
 Сконфигурируем данный модуль на определение города и страны пользователя
 добавив следующий код в секцию http:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;geo&lt;/span&gt; &lt;span class="nv"&gt;$country&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;ranges&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; 
-    &lt;span class="kn"&gt;default&lt;/span&gt; &lt;span class="s"&gt;ETC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; 
-    &lt;span class="kn"&gt;include&lt;/span&gt; &lt;span class="s"&gt;geo-country.conf&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="k"&gt;geo&lt;/span&gt; &lt;span class="nv"&gt;$city&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;ranges&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; 
-    &lt;span class="kn"&gt;default&lt;/span&gt; &lt;span class="s"&gt;ETC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; 
-    &lt;span class="kn"&gt;include&lt;/span&gt; &lt;span class="s"&gt;geo-city.conf&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::nginx
+geo $country {
+    ranges; 
+    default ETC; 
+    include geo-country.conf;
+}
+geo $city {
+    ranges; 
+    default ETC; 
+    include geo-city.conf;
+}
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;ETC - значение, которое будет установлено по-умолчанию, если ip на
 попадет не в один диапазон адресов. Теперь у нас в распоряжении 2
 переменные, которые мы можем, например, передать GET-параметром на
 бек-енд:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;proxy_pass&lt;/span&gt; &lt;span class="s"&gt;http://127.0.0.1:8080/?city=&lt;/span&gt;&lt;span class="nv"&gt;$city&amp;amp;country=$country&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;База Данных GeoIP&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;:::nginx
+location / {
+    proxy_pass http://127.0.0.1:8080/?city=$city&amp;amp;country=$country;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="baza-dannykh-geoip"&gt;База Данных GeoIP&lt;/h2&gt;
 &lt;p&gt;В конфигурации выше подключаются файлы geo-country.conf и geo-city.conf.
 Данные файлы содержат наборы диапазонов адресов и некоторые значения им
 соответствующие. Такого рода данные можно получить в одной из Баз Данных
@@ -321,28 +308,28 @@ GeoIP. В данном примере я буду использовать &lt;a
 geo-country.conf и geo-city.conf. Стоит учесть что из БД получаются
 только диапазоны для Москвы и Санкт-Петербурга. Чтобы получить
 конфигурационный файл для других городов необходимо модифицировать
-скрипт.&lt;/p&gt;</content><category term="geoip"></category><category term="nginx"></category></entry><entry><title>Очистка проекта от служебных файлов subversion</title><link href="/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/" rel="alternate"></link><published>2011-06-07T20:32:00+04:00</published><updated>2011-06-07T20:32:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2011-06-07:/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/</id><summary type="html">&lt;p&gt;&lt;img alt="subversion" src="/media/2011/06/subversion_logo_hor-468x64.png" title="subversion"&gt;&lt;/p&gt;
+скрипт.&lt;/p&gt;</content><category term="geoip"></category><category term="nginx"></category></entry><entry><title>Очистка проекта от служебных файлов subversion</title><link href="/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/" rel="alternate"></link><published>2011-06-07T20:32:00+04:00</published><updated>2011-06-07T20:32:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2011-06-07:/ru/ochistka-proekta-ot-sluzhebnykh-failov-subversion/</id><summary type="html">&lt;p&gt;&lt;img alt="subversion" src="/media/2011/06/subversion_logo_hor-468x64.png" title="subversion"/&gt;&lt;/p&gt;
 &lt;p&gt;Если вы используете svn, то при переносе проекта на хостинг вам
 понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
 свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
 удалить все директории .svn нужно выполнить следующие команды:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /var/www/projectfind . -name .svn -exec rm -R &lt;span class="o"&gt;{}&lt;/span&gt; &lt;span class="se"&gt;\;&lt;/span&gt; -print …&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="subversion" src="/media/2011/06/subversion_logo_hor-468x64.png" title="subversion"&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /var/www/projectfind . -name .svn -exec rm -R …&lt;/code&gt;&lt;/pre&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="subversion" src="/media/2011/06/subversion_logo_hor-468x64.png" title="subversion"/&gt;&lt;/p&gt;
 &lt;p&gt;Если вы используете svn, то при переносе проекта на хостинг вам
 понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
 свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
 удалить все директории .svn нужно выполнить следующие команды:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /var/www/projectfind . -name .svn -exec rm -R &lt;span class="o"&gt;{}&lt;/span&gt; &lt;span class="se"&gt;\;&lt;/span&gt; -print
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /var/www/projectfind . -name .svn -exec rm -R {} \; -print
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Я рекомендую выполнять удаление служебных файлов из копии проекта, если
-вы не уверены на 100% что не будете использовать svn в дальнейшем.&lt;/p&gt;</content><category term="Linux"></category><category term="svn"></category></entry><entry><title>Быстрое добавление виртуальных хостов Apache в Ubuntu/Debian</title><link href="/ru/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/" rel="alternate"></link><published>2011-05-31T17:51:00+04:00</published><updated>2011-05-31T17:51:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2011-05-31:/ru/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/</id><summary type="html">&lt;p&gt;&lt;img alt="apache" src="/media/2011/05/feather.gif" title="apache"&gt;&lt;/p&gt;
+вы не уверены на 100% что не будете использовать svn в дальнейшем.&lt;/p&gt;</content><category term="Linux"></category><category term="svn"></category></entry><entry><title>Быстрое добавление виртуальных хостов Apache в Ubuntu/Debian</title><link href="/ru/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/" rel="alternate"></link><published>2011-05-31T17:51:00+04:00</published><updated>2011-05-31T17:51:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2011-05-31:/ru/bystroe-dobavlenie-virtualnykh-khostov-apache-v-ubuntudebian/</id><summary type="html">&lt;p&gt;&lt;img alt="apache" src="/media/2011/05/feather.gif" title="apache"/&gt;&lt;/p&gt;
 &lt;p&gt;Если вы web-разработчик, который работает сразу над несколькими
 проектами, то вам может показаться не удобным использование localhost и
 под-директорий для разграничения проектов. Кроме того такой подход
 иногда не позволяет приблизится к боевому окружению, когда сайт висит на
 отдельном хосте. Поэтому удобно было бы создавать отдельный виртуальный
-хост для каждого разрабатываемого …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="apache" src="/media/2011/05/feather.gif" title="apache"&gt;&lt;/p&gt;
+хост для каждого разрабатываемого …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="apache" src="/media/2011/05/feather.gif" title="apache"/&gt;&lt;/p&gt;
 &lt;p&gt;Если вы web-разработчик, который работает сразу над несколькими
 проектами, то вам может показаться не удобным использование localhost и
 под-директорий для разграничения проектов. Кроме того такой подход
@@ -353,127 +340,119 @@ geo-country.conf и geo-city.conf. Стоит учесть что из БД по
 виртуального хоста в ОС Linux. Я как всегда буду рассматривать настройку
 на примере Debian Linux, но я думаю, что процесс не будет очень сильно
 отличаться для других дистрибутивов.&lt;/p&gt;
-&lt;h2&gt;Создание виртуального хоста&lt;/h2&gt;
+&lt;h2 id="sozdanie-virtualnogo-khosta"&gt;Создание виртуального хоста&lt;/h2&gt;
 &lt;p&gt;Для начала необходимо скопировать стандартный файл конфигурации хоста в
 apache. Мы будем использовать его в качестве основы для настройки новых
 хостов:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /etc/apache2/sites-available/
-cp default &lt;span class="nb"&gt;test&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /etc/apache2/sites-available/
+cp default test
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Откроем файл test в любом текстовом редакторе и уведем приблизительно
 следующее:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;&amp;lt;VirtualHost&lt;/span&gt; &lt;span class="s"&gt;*:80&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nb"&gt;ServerAdmin&lt;/span&gt; webmaster@localhost
-    &lt;span class="nb"&gt;DocumentRoot&lt;/span&gt; &lt;span class="sx"&gt;/var/www&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;Directory&lt;/span&gt; &lt;span class="s"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nb"&gt;Options&lt;/span&gt; FollowSymLinks
-        &lt;span class="nb"&gt;AllowOverride&lt;/span&gt; &lt;span class="k"&gt;All&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/Directory&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;Directory&lt;/span&gt; &lt;span class="s"&gt;/var/www/&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nb"&gt;Options&lt;/span&gt; Indexes FollowSymLinks MultiViews
-        &lt;span class="nb"&gt;AllowOverride&lt;/span&gt; &lt;span class="k"&gt;All&lt;/span&gt;
-        &lt;span class="nb"&gt;Order&lt;/span&gt; allow,deny
-        &lt;span class="nb"&gt;allow&lt;/span&gt; from &lt;span class="k"&gt;all&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/Directory&amp;gt;&lt;/span&gt;
-    &lt;span class="nb"&gt;ErrorLog&lt;/span&gt; ${APACHE_LOG_DIR}/error.log
-    &lt;span class="nb"&gt;LogLevel&lt;/span&gt; &lt;span class="k"&gt;warn&lt;/span&gt;
-    &lt;span class="nb"&gt;CustomLog&lt;/span&gt; ${APACHE_LOG_DIR}/access.log combined
-&lt;span class="nt"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::apache
+&amp;lt;VirtualHost *:80&amp;gt;
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www
+    &amp;lt;Directory /&amp;gt;
+        Options FollowSymLinks
+        AllowOverride All
+    &amp;lt;/Directory&amp;gt;
+    &amp;lt;Directory /var/www/&amp;gt;
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    &amp;lt;/Directory&amp;gt;
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+&amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Итак, допустим нам нужно настроить хост с корнем в директории
 /var/www/test/ в таком случае изменим файл конфигураций следующим
 образом:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;&amp;lt;VirtualHost&lt;/span&gt; &lt;span class="s"&gt;127.0.1.1:80&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nb"&gt;ServerAdmin&lt;/span&gt; webmaster@localhost
-    &lt;span class="nb"&gt;DocumentRoot&lt;/span&gt; &lt;span class="sx"&gt;/var/www/test&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;Directory&lt;/span&gt; &lt;span class="s"&gt;/&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nb"&gt;Options&lt;/span&gt; FollowSymLinks
-        &lt;span class="nb"&gt;AllowOverride&lt;/span&gt; &lt;span class="k"&gt;All&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/Directory&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;Directory&lt;/span&gt; &lt;span class="s"&gt;/var/www/&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nb"&gt;Options&lt;/span&gt; Indexes FollowSymLinks MultiViews
-        &lt;span class="nb"&gt;AllowOverride&lt;/span&gt; &lt;span class="k"&gt;All&lt;/span&gt;
-        &lt;span class="nb"&gt;Order&lt;/span&gt; allow,deny
-        &lt;span class="nb"&gt;allow&lt;/span&gt; from &lt;span class="k"&gt;all&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/Directory&amp;gt;&lt;/span&gt;
-    &lt;span class="nb"&gt;ErrorLog&lt;/span&gt; ${APACHE_LOG_DIR}/error.log
-    &lt;span class="nb"&gt;LogLevel&lt;/span&gt; &lt;span class="k"&gt;warn&lt;/span&gt;
-    &lt;span class="nb"&gt;CustomLog&lt;/span&gt; ${APACHE_LOG_DIR}/access.log combined
-&lt;span class="nt"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::apache
+&amp;lt;VirtualHost 127.0.1.1:80&amp;gt;
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/test
+    &amp;lt;Directory /&amp;gt;
+        Options FollowSymLinks
+        AllowOverride All
+    &amp;lt;/Directory&amp;gt;
+    &amp;lt;Directory /var/www/&amp;gt;
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    &amp;lt;/Directory&amp;gt;
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+&amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;С конфигурацией apache мы закончили, теперь нужно создать символическую
 ссылку на наш файл конфигураций в директории /etc/apache2/sites-enabled/
 для этого выполним следующую команду:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ln -s /etc/apache2/sites-available/test /etc/apache2/sites-enabled/test
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+ln -s /etc/apache2/sites-available/test /etc/apache2/sites-enabled/test
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;или&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;a2ensite &lt;span class="nb"&gt;test&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Создание символического имени&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+a2ensite test
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="sozdanie-simvolicheskogo-imeni"&gt;Создание символического имени&lt;/h2&gt;
 &lt;p&gt;Т.к. в начале мы указали адрес 127.0.1.1 теперь необходимо связать его с
 символическим именем добавив следующую строку в файл /etc/hosts:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;127.0.1.1  test.loc
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+127.0.1.1  test.loc
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;На этом все настройки закончены, можно выполнить перезапуск apache:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/etc/init.d/apache2 restart
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+/etc/init.d/apache2 restart
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь вы можете открыть в браузере http://test.loc или 127.0.1.1 и
 увидеть то что находится в директории /var/www/test. Таким образом вы
 можете настроить столько хостов, сколько вам нужно, главное выбирать для
 каждого из них свой ip-адрес и символическое имя.&lt;/p&gt;
-&lt;h2&gt;Бонус&lt;/h2&gt;
+&lt;h2 id="bonus"&gt;Бонус&lt;/h2&gt;
 &lt;p&gt;Для тех кто работает с Zend Framework полезным будет настройка хоста с
 корнем в директории public. Для этого очевидно нужно просто изменить
 путь после DocumentRoot на путь к проекту включающий /public.&lt;/p&gt;
-&lt;h2&gt;UPD&lt;/h2&gt;
+&lt;h2 id="upd"&gt;UPD&lt;/h2&gt;
 &lt;p&gt;Более простой способ:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;&amp;lt;VirtualHost&lt;/span&gt; &lt;span class="s"&gt;*:80&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-   &lt;span class="nb"&gt;DocumentRoot&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;/var/www/skeleton/public&amp;quot;&lt;/span&gt;
-   &lt;span class="nb"&gt;ServerName&lt;/span&gt; skeleton.local
-   &lt;span class="c"&gt;# This should be omitted in the production environment&lt;/span&gt;
-   &lt;span class="nb"&gt;SetEnv&lt;/span&gt; APPLICATION_ENV development
-   &lt;span class="nt"&gt;&amp;lt;Directory&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;/var/www/skeleton/public&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-       &lt;span class="nb"&gt;Options&lt;/span&gt; Indexes MultiViews FollowSymLinks
-       &lt;span class="nb"&gt;AllowOverride&lt;/span&gt; &lt;span class="k"&gt;All&lt;/span&gt;
-       &lt;span class="nb"&gt;Order&lt;/span&gt; allow,deny
-       &lt;span class="nb"&gt;Allow&lt;/span&gt; from &lt;span class="k"&gt;all&lt;/span&gt;
-   &lt;span class="nt"&gt;&amp;lt;/Directory&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::apache
+&amp;lt;VirtualHost *:80&amp;gt;
+   DocumentRoot "/var/www/skeleton/public"
+   ServerName skeleton.local
+   # This should be omitted in the production environment
+   SetEnv APPLICATION_ENV development
+   &amp;lt;Directory "/var/www/skeleton/public"&amp;gt;
+       Options Indexes MultiViews FollowSymLinks
+       AllowOverride All
+       Order allow,deny
+       Allow from all
+   &amp;lt;/Directory&amp;gt;
+&amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;После этого добавляем в /etc/hosts:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;127.0.0.1 skeleton.local
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+127.0.0.1 skeleton.local
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Включаем хост и рестартим апач:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;a2ensite skeleton# /etc/init.d/apache2 restart
-&lt;/pre&gt;&lt;/div&gt;</content><category term="apache"></category><category term="debian"></category><category term="hosts"></category><category term="Linux"></category><category term="администрирование"></category></entry><entry><title>Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация</title><link href="/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/" rel="alternate"></link><published>2011-02-23T17:50:00+03:00</published><updated>2011-02-23T17:50:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-02-23:/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/</id><summary type="html">&lt;p&gt;&lt;img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet"&gt;Приветствую вас, товарищи линуксоиды! Сегодня мы
+&lt;pre&gt;&lt;code&gt;:::bash
+a2ensite skeleton# /etc/init.d/apache2 restart
+&lt;/code&gt;&lt;/pre&gt;</content><category term="apache"></category><category term="debian"></category><category term="hosts"></category><category term="Linux"></category><category term="администрирование"></category></entry><entry><title>Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS, маршрутизация</title><link href="/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/" rel="alternate"></link><published>2011-02-23T17:50:00+03:00</published><updated>2011-02-23T17:50:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-02-23:/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-2-dhcp-dns-marshrutizatsiia/</id><summary type="html">&lt;p&gt;&lt;img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet"/&gt;Приветствую вас, товарищи линуксоиды! Сегодня мы
 продолжим рассмотрение настройки сети и интернета в linux. В данной
 части статьи я постараюсь раскрыть темы DHCP, DNS и маршрутизация. Перед
 прочтением данной статьи прочитайте &lt;a href="/Linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/"&gt;первую часть&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;Автоматическая настройка сети через DHCP&lt;/h2&gt;
+&lt;h2 id="avtomaticheskaia-nastroika-seti-cherez-dhcp"&gt;Автоматическая настройка сети через DHCP&lt;/h2&gt;
 &lt;p&gt;Часто для настройки компьютеров в сети используется протокол DHCP
-(dynamic host configuration …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet"&gt;Приветствую вас, товарищи линуксоиды! Сегодня мы
+(dynamic host configuration …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="tux internet" src="/media/2011/02/cde9051620f78865f6b159fe03aefa9b_0_500_01-291x300.jpg" title="linux internet"/&gt;Приветствую вас, товарищи линуксоиды! Сегодня мы
 продолжим рассмотрение настройки сети и интернета в linux. В данной
 части статьи я постараюсь раскрыть темы DHCP, DNS и маршрутизация. Перед
 прочтением данной статьи прочитайте &lt;a href="/Linux/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/"&gt;первую часть&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;Автоматическая настройка сети через DHCP&lt;/h2&gt;
+&lt;h2 id="avtomaticheskaia-nastroika-seti-cherez-dhcp"&gt;Автоматическая настройка сети через DHCP&lt;/h2&gt;
 &lt;p&gt;Часто для настройки компьютеров в сети используется протокол DHCP
 (dynamic host configuration protocol). Данный протокол позволяет быстро
 настраивать параметры сети автоматически при помощи запроса к
@@ -486,16 +465,14 @@ DHCP-серверу. Получив запрос DHCP-сервер назнач�
 для этого необходимо отредактировать уже знакомый вам файл
 /etc/network/interfaces. В данном файле необходимо добавить строку на
 подобии следующей:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;iface eth0 inet dhcp
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+iface eth0 inet dhcp
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Итак, для того что-бы вручную осуществить запрос к dhcp серверу на
 получение настроек необходимо выполнить следующую команду:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;dhclient eth0
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+dhclient eth0
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Параметром команде dhclient мы передаем название сетевого интерфейса.
 После этого будет выполнена автоматическая настройка параметров.
 Зачастую параметры сети будут настраиваться автоматически при включении
@@ -505,24 +482,22 @@ DHCP-серверу. Получив запрос DHCP-сервер назнач�
 активации интерфейса.&lt;/p&gt;
 &lt;p&gt;Иногда вам может потребоваться освободить занятый вашим компьютером
 адрес, для этого выполните следующую команду:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;dhclient -r eth0
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Настройка DNS&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+dhclient -r eth0
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="nastroika-dns"&gt;Настройка DNS&lt;/h2&gt;
 &lt;p&gt;DNS (domain name system) - распределенная система отвечающая за
 установление соответствия между символьными и цифровыми адресами
 компьютеров в сети. Т.е. данная система позволяет нам обращаться к
 компьютерам в сети по простому символическому имени, которое намного
 проще запомнить чем ip-адрес. Для того что-бы узнать ip-адрес машины по
 её доменному имени необходимо воспользоваться командой host:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;host www.google.com
-www.google.com is an &lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; www.l.google.com.
-www.l.google.com has address &lt;span class="m"&gt;74&lt;/span&gt;.125.87.99
-www.l.google.com has address &lt;span class="m"&gt;74&lt;/span&gt;.125.87.104
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+host www.google.com
+www.google.com is an alias for www.l.google.com.
+www.l.google.com has address 74.125.87.99
+www.l.google.com has address 74.125.87.104
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Как вы видите 74.125.87.104 ip-адрес всеми известной поисковой системы.
 И если вы наберете его в адресной строке своего браузера, то вы увидите
 что это google. Часто в локальных сетях есть свои dns-сервера, например
@@ -531,120 +506,114 @@ www.l.google.com has address &lt;span class="m"&gt;74&lt;/span&gt;.125.87.104
 ваша система могла корректно обращаться к нему, вам необходимо настроить
 параметры dns, добавив ip-адрес dns-сервера в конфигурационный файл.
 Итак, отредактируйте от пользователя root файл /etc/resolve.conf:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nameserver &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+nameserver 10.32.0.1
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь ваша машина будет знать, что 10.32.0.1 - это сервер имён.&lt;/p&gt;
-&lt;h2&gt;Настройка параметров маршрутизации (шлюза)&lt;/h2&gt;
+&lt;h2 id="nastroika-parametrov-marshrutizatsii-shliuza"&gt;Настройка параметров маршрутизации (шлюза)&lt;/h2&gt;
 &lt;p&gt;Для настройки маршрутизации воспользуемся утилитой route. Стандартной
 задачей является установка шлюза по-умолчанию, часто это бывает
 необходимо для настройки доступа к интернет. Для того чтобы установить
 стандартный шлюз (gateway) воспользуйтесь следующей командой:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;route add default gw &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;::bash
+route add default gw 10.32.0.1
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Данной командой мы устанавливаем стандартный шлюз (10.32.0.1), который
 будет принимать пакеты из сети при отсутствии других доступных
 маршрутов. После настройки всех маршрутов можно проверить правильность
 роутинга при помощи следующей команды:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;route
+&lt;pre&gt;&lt;code&gt;:::bash
+route
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-localnet        *               &lt;span class="m"&gt;255&lt;/span&gt;.255.252.0   U     &lt;span class="m"&gt;0&lt;/span&gt;      &lt;span class="m"&gt;0&lt;/span&gt;        &lt;span class="m"&gt;0&lt;/span&gt; eth0
-default         &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1     &lt;span class="m"&gt;0&lt;/span&gt;.0.0.0         UG    &lt;span class="m"&gt;0&lt;/span&gt;      &lt;span class="m"&gt;0&lt;/span&gt;        &lt;span class="m"&gt;0&lt;/span&gt; eth0
-&lt;/pre&gt;&lt;/div&gt;
-
-
+localnet        *               255.255.252.0   U     0      0        0 eth0
+default         10.32.0.1     0.0.0.0         UG    0      0        0 eth0
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Если вам нужно более детальная настройка маршрутизации, то я рекомендую
 вам прочитать справочное руководство к команде route.&lt;/p&gt;
 &lt;p&gt;Эти настройки действительны только до следующей перезагрузки системы,
 для того, чтобы настройки устанавливались автоматически необходимо
 добавить в файл /etc/network/interface следующие строки(от пользователя
 root):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;gateway 10.32.0.1
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Проверка соединения&lt;/h2&gt;
+&lt;pre&gt;&lt;code&gt;:::text
+gateway 10.32.0.1
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="proverka-soedineniia"&gt;Проверка соединения&lt;/h2&gt;
 &lt;p&gt;После настройки сети полезно поверить работоспособность всех внесенных
 изменений. Для начала лучше перезагрузить сетевые параметры для этого
 выполните от root:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/etc/init.d/networking restart
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+/etc/init.d/networking restart
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь можно проверить доступность какого-либо узла сети, для этого
 воспользуемся утилитой ping:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ping -c &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1
-PING &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;10&lt;/span&gt;.32.0.1&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="m"&gt;56&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;84&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; bytes of data.
-&lt;span class="m"&gt;64&lt;/span&gt; bytes from &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1: &lt;span class="nv"&gt;icmp_req&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="nv"&gt;ttl&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;128&lt;/span&gt; &lt;span class="nv"&gt;time&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;.11 ms
-&lt;span class="m"&gt;64&lt;/span&gt; bytes from &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1: &lt;span class="nv"&gt;icmp_req&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="nv"&gt;ttl&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;128&lt;/span&gt; &lt;span class="nv"&gt;time&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.86 ms
-&lt;span class="m"&gt;64&lt;/span&gt; bytes from &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1: &lt;span class="nv"&gt;icmp_req&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="nv"&gt;ttl&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;128&lt;/span&gt; &lt;span class="nv"&gt;time&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.25 ms
-&lt;span class="m"&gt;64&lt;/span&gt; bytes from &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1: &lt;span class="nv"&gt;icmp_req&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="nv"&gt;ttl&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;128&lt;/span&gt; &lt;span class="nv"&gt;time&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;.00 ms
+&lt;pre&gt;&lt;code&gt;:::bash
+ping -c 4 10.32.0.1
+PING 10.32.0.1 (10.32.0.1) 56(84) bytes of data.
+64 bytes from 10.32.0.1: icmp_req=1 ttl=128 time=2.11 ms
+64 bytes from 10.32.0.1: icmp_req=2 ttl=128 time=1.86 ms
+64 bytes from 10.32.0.1: icmp_req=3 ttl=128 time=1.25 ms
+64 bytes from 10.32.0.1: icmp_req=4 ttl=128 time=2.00 ms
 
---- &lt;span class="m"&gt;10&lt;/span&gt;.32.0.1 ping statistics ---
-&lt;span class="m"&gt;4&lt;/span&gt; packets transmitted, &lt;span class="m"&gt;4&lt;/span&gt; received, &lt;span class="m"&gt;0&lt;/span&gt;% packet loss, &lt;span class="nb"&gt;time&lt;/span&gt; 3003ms
-rtt min/avg/max/mdev &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;.255/1.809/2.110/0.334 ms
-&lt;/pre&gt;&lt;/div&gt;
-
-
+--- 10.32.0.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+rtt min/avg/max/mdev = 1.255/1.809/2.110/0.334 ms
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Данной командой я отправляю 4 эхо-пакета на узел 10.32.0.1. Сервер
 обязан ответить мне обратно, что он и делает. Команда выводит информацию
 по каждому пакету и в конце статистику по всем пакетам указывая время
 передачи, процент потерянных пакетов и тд.&lt;/p&gt;
 &lt;p&gt;Для проверки параметров маршрутизации пакетов часто бывает удобно
 воспользоваться утилитой traceroute:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;traceroute www.google.com
-traceroute to www.google.com &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;74&lt;/span&gt;.125.87.99&lt;span class="o"&gt;)&lt;/span&gt;, &lt;span class="m"&gt;30&lt;/span&gt; hops max, &lt;span class="m"&gt;60&lt;/span&gt; byte packets
- &lt;span class="m"&gt;1&lt;/span&gt;  ti.holl.net &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;10&lt;/span&gt;.32.0.1&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;5&lt;/span&gt;.595 ms * *
- &lt;span class="m"&gt;2&lt;/span&gt;  &lt;span class="m"&gt;192&lt;/span&gt;.168.1.1 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;192&lt;/span&gt;.168.1.1&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;7&lt;/span&gt;.374 ms  &lt;span class="m"&gt;7&lt;/span&gt;.370 ms  &lt;span class="m"&gt;7&lt;/span&gt;.842 ms
- &lt;span class="m"&gt;3&lt;/span&gt;  * * *
- &lt;span class="m"&gt;4&lt;/span&gt;  &lt;span class="m"&gt;10&lt;/span&gt;.50.19.34 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;10&lt;/span&gt;.50.19.34&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;83&lt;/span&gt;.307 ms  &lt;span class="m"&gt;87&lt;/span&gt;.352 ms  &lt;span class="m"&gt;87&lt;/span&gt;.350 ms
- &lt;span class="m"&gt;5&lt;/span&gt;  &lt;span class="m"&gt;82&lt;/span&gt;.207.106.42 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;82&lt;/span&gt;.207.106.42&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;136&lt;/span&gt;.875 ms  &lt;span class="m"&gt;139&lt;/span&gt;.480 ms  &lt;span class="m"&gt;139&lt;/span&gt;.478 ms
- &lt;span class="m"&gt;6&lt;/span&gt;  &lt;span class="m"&gt;209&lt;/span&gt;.85.241.54 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;209&lt;/span&gt;.85.241.54&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;135&lt;/span&gt;.527 ms  &lt;span class="m"&gt;129&lt;/span&gt;.398 ms  &lt;span class="m"&gt;131&lt;/span&gt;.854 ms
- &lt;span class="m"&gt;7&lt;/span&gt;  &lt;span class="m"&gt;72&lt;/span&gt;.14.239.14 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;72&lt;/span&gt;.14.239.14&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;136&lt;/span&gt;.508 ms  &lt;span class="m"&gt;136&lt;/span&gt;.780 ms  &lt;span class="m"&gt;136&lt;/span&gt;.592 ms
- &lt;span class="m"&gt;8&lt;/span&gt;  &lt;span class="m"&gt;209&lt;/span&gt;.85.248.39 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;209&lt;/span&gt;.85.248.39&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;131&lt;/span&gt;.577 ms &lt;span class="m"&gt;209&lt;/span&gt;.85.248.41 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;209&lt;/span&gt;.85.248.41&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;138&lt;/span&gt;.317 ms  &lt;span class="m"&gt;102&lt;/span&gt;.821 ms
- &lt;span class="m"&gt;9&lt;/span&gt;  &lt;span class="m"&gt;72&lt;/span&gt;.14.232.221 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;72&lt;/span&gt;.14.232.221&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;100&lt;/span&gt;.853 ms  &lt;span class="m"&gt;102&lt;/span&gt;.081 ms &lt;span class="m"&gt;72&lt;/span&gt;.14.238.101 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;72&lt;/span&gt;.14.238.101&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;106&lt;/span&gt;.566 ms
-&lt;span class="m"&gt;10&lt;/span&gt;  hb-in-f99.1e100.net &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;74&lt;/span&gt;.125.87.99&lt;span class="o"&gt;)&lt;/span&gt;  &lt;span class="m"&gt;107&lt;/span&gt;.843 ms  &lt;span class="m"&gt;114&lt;/span&gt;.659 ms  &lt;span class="m"&gt;110&lt;/span&gt;.048 ms
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+traceroute www.google.com
+traceroute to www.google.com (74.125.87.99), 30 hops max, 60 byte packets
+ 1  ti.holl.net (10.32.0.1)  5.595 ms * *
+ 2  192.168.1.1 (192.168.1.1)  7.374 ms  7.370 ms  7.842 ms
+ 3  * * *
+ 4  10.50.19.34 (10.50.19.34)  83.307 ms  87.352 ms  87.350 ms
+ 5  82.207.106.42 (82.207.106.42)  136.875 ms  139.480 ms  139.478 ms
+ 6  209.85.241.54 (209.85.241.54)  135.527 ms  129.398 ms  131.854 ms
+ 7  72.14.239.14 (72.14.239.14)  136.508 ms  136.780 ms  136.592 ms
+ 8  209.85.248.39 (209.85.248.39)  131.577 ms 209.85.248.41 (209.85.248.41)  138.317 ms  102.821 ms
+ 9  72.14.232.221 (72.14.232.221)  100.853 ms  102.081 ms 72.14.238.101 (72.14.238.101)  106.566 ms
+10  hb-in-f99.1e100.net (74.125.87.99)  107.843 ms  114.659 ms  110.048 ms
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Данная команда подробно показывает маршрут прохождения пакета, отображая
 каждый узел через который проходит пакет и временные характеристики.
 Изучая отчёты данной команды можно выявлять ошибки маршрутизации,
 которые могут состоять в не оптимальном прохождении пакета по сети.&lt;/p&gt;
-&lt;h2&gt;Заключение&lt;/h2&gt;
+&lt;h2 id="zakliuchenie"&gt;Заключение&lt;/h2&gt;
 &lt;p&gt;Этот топик завершает тему настройки сети/интернета в linux. Если есть,
 какие-то вопросы по данной теме, которые я не рассмотрел, отписывайтесь
 в комментариях. Спасибо за внимание!&lt;/p&gt;</content><category term="debian"></category><category term="dhcp"></category><category term="dns"></category><category term="network"></category><category term="route"></category><category term="ubuntu"></category><category term="администрирование"></category></entry><entry><title>Настройка сети и интернета в Debian/Ubuntu - часть 1 - Настройка сетевых интерфейсов</title><link href="/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/" rel="alternate"></link><published>2011-02-22T13:17:00+03:00</published><updated>2011-02-22T13:17:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-02-22:/ru/nastroika-seti-i-interneta-v-debianubuntu-chast-1-nastroika-setevykh-interfeisov/</id><summary type="html">&lt;p&gt;Здравствуйте, товарищи линуксоиды ;[&lt;/p&gt;
-&lt;p&gt;&lt;img alt="network" src="/media/2011/02/network-300x225.jpg" title="network"&gt;В данном топике я хочу рассказать всё что может
+&lt;p&gt;&lt;img alt="network" src="/media/2011/02/network-300x225.jpg" title="network"/&gt;В данном топике я хочу рассказать всё что может
 потребоваться для настройки сети и подключения к интернету в linux. Я
 буду рассматривать на примере своего любимого дистрибутива - Debian, но
 я думаю это будет действительно и для других дистрибутивов, особенно для
 Ubuntu, т.к. эти дистрибутивы близкие родственники …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Здравствуйте, товарищи линуксоиды ;[&lt;/p&gt;
-&lt;p&gt;&lt;img alt="network" src="/media/2011/02/network-300x225.jpg" title="network"&gt;В данном топике я хочу рассказать всё что может
+&lt;p&gt;&lt;img alt="network" src="/media/2011/02/network-300x225.jpg" title="network"/&gt;В данном топике я хочу рассказать всё что может
 потребоваться для настройки сети и подключения к интернету в linux. Я
 буду рассматривать на примере своего любимого дистрибутива - Debian, но
 я думаю это будет действительно и для других дистрибутивов, особенно для
 Ubuntu, т.к. эти дистрибутивы близкие родственники. Итак, приступим...&lt;/p&gt;
-&lt;h2&gt;Настройка сетевых интерфейсов&lt;/h2&gt;
+&lt;h2 id="nastroika-setevykh-interfeisov"&gt;Настройка сетевых интерфейсов&lt;/h2&gt;
 &lt;p&gt;Первым делом мы рассмотрим конфигурирование самих сетевых интерфейсов.
 Для этих целей в ОС Linux используется команда ifconfig.&lt;/p&gt;
-&lt;h3&gt;Просмотр информации о сетевых интерфейсах&lt;/h3&gt;
+&lt;h3 id="prosmotr-informatsii-o-setevykh-interfeisakh"&gt;Просмотр информации о сетевых интерфейсах&lt;/h3&gt;
 &lt;p&gt;Для того что-бы просмотреть информацию о сетевых интерфейсах выполните
 команду ifconfig -a. В результате вы получите полный перечень всех
 сетевых интерфейсов вашего компьютера в не зависимости от того активны
 они или нет:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ifconfig -a
-eth0      Link encap:Ethernet  HWaddr &lt;span class="m"&gt;00&lt;/span&gt;:b3:65:78:12:a2  
+&lt;pre&gt;&lt;code&gt;:::bash
+ifconfig -a
+eth0      Link encap:Ethernet  HWaddr 00:b3:65:78:12:a2  
           inet addr:10.32.1.40  Bcast:10.32.3.255  Mask:255.255.252.0
           inet6 addr: fe80::2b3:65ff:fe78:12a2/64 Scope:Link
           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
           RX packets:108514 errors:0 dropped:0 overruns:0 frame:0
           TX packets:52791 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:1000 
-          RX bytes:53877045 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;51&lt;/span&gt;.3 MiB&lt;span class="o"&gt;)&lt;/span&gt;  TX bytes:7714438 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;7&lt;/span&gt;.3 MiB&lt;span class="o"&gt;)&lt;/span&gt;
+          RX bytes:53877045 (51.3 MiB)  TX bytes:7714438 (7.3 MiB)
           Interrupt:17
 
 lo        Link encap:Local Loopback  
@@ -654,10 +623,8 @@ lo        Link encap:Local Loopback
           RX packets:1567 errors:0 dropped:0 overruns:0 frame:0
           TX packets:1567 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0 
-          RX bytes:49660 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;48&lt;/span&gt;.4 KiB&lt;span class="o"&gt;)&lt;/span&gt;  TX bytes:49660 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;48&lt;/span&gt;.4 KiB&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+          RX bytes:49660 (48.4 KiB)  TX bytes:49660 (48.4 KiB)
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Как вы видите данная команда выводит такую информацию, как ip-адрес
 (inet addr), mac-адрес (HWaddr), маска подсети (Mask), статистика по
 переданным/принятым пакетам (RX packets - полученные пакеты, TX packets
@@ -672,13 +639,14 @@ local loopback (локальная петля) используется для �
 &lt;p&gt;Команда ifconfig с параметром -a выводит информацию о всех сетевых
 интерфейсах, если же этот параметр опустить, то будет выведена
 информация только о активных (запущенных) сетевых интерфейсах.&lt;/p&gt;
-&lt;h3&gt;Активация/дезактивация интерфейса&lt;/h3&gt;
+&lt;h3 id="aktivatsiiadezaktivatsiia-interfeisa"&gt;Активация/дезактивация интерфейса&lt;/h3&gt;
 &lt;p&gt;Для того что-бы активировать/дезактивировать сетевой интерфейс
 необходимо воспользоваться уже знакомой нам командой ifconfig передав
 первым параметром название, а вторым одно из ключевых слов up или down.
 Также вы можете воспользоваться командами ifup и ifdown которым нужно
 передать название интерфейса. Пример:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ifconfig
+&lt;pre&gt;&lt;code&gt;:::bash
+ifconfig
 lo        Link encap:Local Loopback  
           inet addr:127.0.0.1  Mask:255.0.0.0
           inet6 addr: ::1/128 Scope:Host
@@ -686,17 +654,17 @@ lo        Link encap:Local Loopback
           RX packets:1567 errors:0 dropped:0 overruns:0 frame:0
           TX packets:1567 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0 
-          RX bytes:49660 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;48&lt;/span&gt;.4 KiB&lt;span class="o"&gt;)&lt;/span&gt;  TX bytes:49660 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;48&lt;/span&gt;.4 KiB&lt;span class="o"&gt;)&lt;/span&gt;
+          RX bytes:49660 (48.4 KiB)  TX bytes:49660 (48.4 KiB)
 ifconfig eth0 up
 ifconfig
-eth0      Link encap:Ethernet  HWaddr &lt;span class="m"&gt;00&lt;/span&gt;:b3:65:78:12:a2  
+eth0      Link encap:Ethernet  HWaddr 00:b3:65:78:12:a2  
           inet addr:10.32.1.40  Bcast:10.32.3.255  Mask:255.255.252.0
           inet6 addr: fe80::2b3:65ff:fe78:12a2/64 Scope:Link
           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
           RX packets:108514 errors:0 dropped:0 overruns:0 frame:0
           TX packets:52791 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:1000 
-          RX bytes:53877045 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;51&lt;/span&gt;.3 MiB&lt;span class="o"&gt;)&lt;/span&gt;  TX bytes:7714438 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;7&lt;/span&gt;.3 MiB&lt;span class="o"&gt;)&lt;/span&gt;
+          RX bytes:53877045 (51.3 MiB)  TX bytes:7714438 (7.3 MiB)
           Interrupt:17
 
 lo        Link encap:Local Loopback  
@@ -706,40 +674,36 @@ lo        Link encap:Local Loopback
           RX packets:1567 errors:0 dropped:0 overruns:0 frame:0
           TX packets:1567 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0 
-          RX bytes:49660 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;48&lt;/span&gt;.4 KiB&lt;span class="o"&gt;)&lt;/span&gt;  TX bytes:49660 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;48&lt;/span&gt;.4 KiB&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Настройка параметров сетевого интерфейса&lt;/h3&gt;
+          RX bytes:49660 (48.4 KiB)  TX bytes:49660 (48.4 KiB)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id="nastroika-parametrov-setevogo-interfeisa"&gt;Настройка параметров сетевого интерфейса&lt;/h3&gt;
 &lt;p&gt;Перейдем непосредственно к настройке параметров интерфейсов. Разберем на
 примере. Сначала настроим ip-адрес интерфейса eth0&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ifconfig eth0 &lt;span class="m"&gt;10&lt;/span&gt;.32.1.40
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+ifconfig eth0 10.32.1.40
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Просто указываем название интерфейса и адрес в стандартном формате.
 Далее настроим маску подсети:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ifconfig eth0 netmask &lt;span class="m"&gt;255&lt;/span&gt;.255.252.0
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+ifconfig eth0 netmask 255.255.252.0
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Здесь тоже всё просто, указали название интерфейса, ключевое слово
 netmask и собственно саму маску подсети. Иногда может понадобится
 сменить mac-адрес интерфейса, особенно с этим часто встречаются при
 смене оборудования к адресу которого привязана авторизация у
 интернет-провайдера. В этом нам тоже может помочь утилита ifconfig:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ifconfig eth0 hw ether 00b3657812a2
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Сохранение параметров после перезагрузки&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+ifconfig eth0 hw ether 00b3657812a2
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id="sokhranenie-parametrov-posle-perezagruzki"&gt;Сохранение параметров после перезагрузки&lt;/h3&gt;
 &lt;p&gt;С настройкой интерфейсов вроде разобрались. Но при перезагрузке системы
 вы увидите, что параметры не сохраняются. Для того что-бы интерфейс
 автоматически конфигурировался при каждом старте системы нам нужно
 прописать все параметры в файле /etc/network/interfaces. Ниже я приведу
 пример своего файла interfaces и мы сможем на нём разобраться в
 структуре описания параметров интерфейсов.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;auto lo
+&lt;pre&gt;&lt;code&gt;:::text
+auto lo
 iface lo inet loopback
 
 allow-hotplug eth0
@@ -751,9 +715,7 @@ iface eth0 inet static
     gateway 10.32.0.1
     dns-nameservers 10.32.0.1
     dns-search dizballanze
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;На данном этапе нас не интересуют параметры маршрутизации и серверов
 имён, об этом мы поговорим в следующем топике, поэтому последние 3
 строки мы не рассматриваем. Итак, у нас есть секции iface каждая из
@@ -768,77 +730,68 @@ broadcast - широковещательный адрес. Основные па
 активацией интерфейса. Для этого создадим от пользователя root файл в
 директории /etc/network/if-pre-up.d и назовем его например init. В файле
 будет содержаться уже знакомая нам команда:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#! /bin/sh&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+#! /bin/sh
 ifconfig eth0 hw ether 00b3657812a2
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь перед активацией интерфейсов будет запущена программа ifconfig,
 которая выставит нужный нам аппаратный адрес. На этом первая часть
 статьи окончена. В следующих частях я планирую рассказать про настройку
 маршрутизации и dns. Спасибо за внимание, вопросы в комментах!&lt;/p&gt;
-&lt;p&gt;Настройка сети и интернета в Debian/Ubuntu – часть 2 – DHCP, DNS,
-маршрутизация&lt;/p&gt;</content><category term="debian"></category><category term="ifconfig"></category><category term="ifdown"></category><category term="ifup"></category><category term="interfaces"></category><category term="network"></category><category term="ubuntu"></category><category term="администрирование"></category></entry><entry><title>Ставим FTP-сервер в Debian</title><link href="/ru/stavim-ftp-server-v-debian/" rel="alternate"></link><published>2011-01-03T00:42:00+03:00</published><updated>2011-01-03T00:42:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-01-03:/ru/stavim-ftp-server-v-debian/</id><summary type="html">&lt;p&gt;&lt;img alt="image" src="/media/2011/01/ftp_client.png" title="ftp_client"&gt;&lt;/p&gt;
+&lt;p&gt;Настройка сети и интернета в Debian/Ubuntu &amp;ndash; часть 2 &amp;ndash; DHCP, DNS,
+маршрутизация&lt;/p&gt;</content><category term="debian"></category><category term="ifconfig"></category><category term="ifdown"></category><category term="ifup"></category><category term="interfaces"></category><category term="network"></category><category term="ubuntu"></category><category term="администрирование"></category></entry><entry><title>Ставим FTP-сервер в Debian</title><link href="/ru/stavim-ftp-server-v-debian/" rel="alternate"></link><published>2011-01-03T00:42:00+03:00</published><updated>2011-01-03T00:42:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-01-03:/ru/stavim-ftp-server-v-debian/</id><summary type="html">&lt;p&gt;&lt;img alt="image" src="/media/2011/01/ftp_client.png" title="ftp_client"/&gt;&lt;/p&gt;
 &lt;p&gt;По просьбе моего друга рассматриваю установку ftp-сервера в Linux.&lt;/p&gt;
 &lt;p&gt;Начнем с того что установим демон ftpd. Т.к. я использую Debian, то
 устанавливать будем при помощи apt-get:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install ftpd
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+apt-get install ftpd
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Итак, поставили, теперь проверяем запущен или нет:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps aux &lt;span class="p"&gt;|&lt;/span&gt; grep ftp
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;В моём случае не запущен, значит запускаем:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/etc/init …&lt;/pre&gt;&lt;/div&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="image" src="/media/2011/01/ftp_client.png" title="ftp_client"&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+ps aux | grep ftp
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;В моём случае не запущен, значит запускаем …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="image" src="/media/2011/01/ftp_client.png" title="ftp_client"/&gt;&lt;/p&gt;
 &lt;p&gt;По просьбе моего друга рассматриваю установку ftp-сервера в Linux.&lt;/p&gt;
 &lt;p&gt;Начнем с того что установим демон ftpd. Т.к. я использую Debian, то
 устанавливать будем при помощи apt-get:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install ftpd
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+apt-get install ftpd
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Итак, поставили, теперь проверяем запущен или нет:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ps aux &lt;span class="p"&gt;|&lt;/span&gt; grep ftp
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+ps aux | grep ftp
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;В моём случае не запущен, значит запускаем:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/etc/init.d/ftpd start
+&lt;pre&gt;&lt;code&gt;:::bash
+/etc/init.d/ftpd start
 bash: /etc/init.d/ftpd: Нет такого файла или каталога
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Хмм...&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;whereis ftpd
+&lt;pre&gt;&lt;code&gt;:::bash
+whereis ftpd
 ftpd:
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Так, что-то непонятное. При всём этом man ftpd выдаёт страницу
 руководства. Пробуем перезагрузится...После перезагрузки ps не выдаёт
 никакого результата при поиске слова ftpd также и whereis. Но проверив
 свой хост nmap'ом я увидел следующее:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nmap &lt;span class="m"&gt;127&lt;/span&gt;.0.0.1
+&lt;pre&gt;&lt;code&gt;:::bash
+nmap 127.0.0.1
 
-Starting Nmap &lt;span class="m"&gt;4&lt;/span&gt;.62 &lt;span class="o"&gt;(&lt;/span&gt; http://nmap.org &lt;span class="o"&gt;)&lt;/span&gt; at &lt;span class="m"&gt;2011&lt;/span&gt;-01-02 &lt;span class="m"&gt;23&lt;/span&gt;:37 EET
-Interesting ports on localhost &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1&lt;span class="o"&gt;)&lt;/span&gt;:
-Not shown: &lt;span class="m"&gt;1708&lt;/span&gt; closed ports
+Starting Nmap 4.62 ( http://nmap.org ) at 2011-01-02 23:37 EET
+Interesting ports on localhost (127.0.0.1):
+Not shown: 1708 closed ports
 PORT     STATE SERVICE
-&lt;span class="m"&gt;21&lt;/span&gt;/tcp   open  ftp
-&lt;span class="m"&gt;25&lt;/span&gt;/tcp   open  smtp
-&lt;span class="m"&gt;80&lt;/span&gt;/tcp   open  http
-&lt;span class="m"&gt;111&lt;/span&gt;/tcp  open  rpcbind
-&lt;span class="m"&gt;631&lt;/span&gt;/tcp  open  ipp
-&lt;span class="m"&gt;2049&lt;/span&gt;/tcp open  nfs
-&lt;span class="m"&gt;3306&lt;/span&gt;/tcp open  mysql
+21/tcp   open  ftp
+25/tcp   open  smtp
+80/tcp   open  http
+111/tcp  open  rpcbind
+631/tcp  open  ipp
+2049/tcp open  nfs
+3306/tcp open  mysql
 
-Nmap &lt;span class="k"&gt;done&lt;/span&gt;: &lt;span class="m"&gt;1&lt;/span&gt; IP address &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; host up&lt;span class="o"&gt;)&lt;/span&gt; scanned in &lt;span class="m"&gt;0&lt;/span&gt;.098 seconds
-&lt;/pre&gt;&lt;/div&gt;
-
-
+Nmap done: 1 IP address (1 host up) scanned in 0.098 seconds
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Как мы видим 21 порт открыт и на нём висит ftp-сервер. Бегло просмотрев
 man ftpd разобрался с файлами конфигураций. Итак, смотрим что к чему:&lt;/p&gt;
 &lt;ul&gt;
@@ -853,28 +806,27 @@ man ftpd разобрался с файлами конфигураций. Ита
 &lt;li&gt;&lt;code&gt;/etc/motd&lt;/code&gt; - сообщение после авторизации&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Оказалось всё довольно просто. Пробуем залогинится:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ftp &lt;span class="m"&gt;127&lt;/span&gt;.0.0.1
-Connected to &lt;span class="m"&gt;127&lt;/span&gt;.0.0.1.
-&lt;span class="m"&gt;220&lt;/span&gt; dizballanze-laptop FTP server &lt;span class="o"&gt;(&lt;/span&gt;Version &lt;span class="m"&gt;6&lt;/span&gt;.4/OpenBSD/Linux-ftpd-0.17&lt;span class="o"&gt;)&lt;/span&gt; ready.
-Name &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1:root&lt;span class="o"&gt;)&lt;/span&gt;: dizballanze
-&lt;span class="m"&gt;331&lt;/span&gt; Password required &lt;span class="k"&gt;for&lt;/span&gt; dizballanze.
+&lt;pre&gt;&lt;code&gt;:::bash
+ftp 127.0.0.1
+Connected to 127.0.0.1.
+220 dizballanze-laptop FTP server (Version 6.4/OpenBSD/Linux-ftpd-0.17) ready.
+Name (127.0.0.1:root): dizballanze
+331 Password required for dizballanze.
 Password:
-&lt;span class="m"&gt;230&lt;/span&gt;- Linux dizballanze-laptop &lt;span class="m"&gt;2&lt;/span&gt;.6.26-2-686 &lt;span class="c1"&gt;#1 SMP Sat Dec 26 09:01:51 UTC 2009 i686&lt;/span&gt;
-&lt;span class="m"&gt;230&lt;/span&gt;- 
-&lt;span class="m"&gt;230&lt;/span&gt;- The programs included with the Debian GNU/Linux system are free software&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="m"&gt;230&lt;/span&gt;- the exact distribution terms &lt;span class="k"&gt;for&lt;/span&gt; each program are described in the
-&lt;span class="m"&gt;230&lt;/span&gt;- individual files in /usr/share/doc/*/copyright.
-&lt;span class="m"&gt;230&lt;/span&gt;- 
-&lt;span class="m"&gt;230&lt;/span&gt;- Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-&lt;span class="m"&gt;230&lt;/span&gt;- permitted by applicable law.
-&lt;span class="m"&gt;230&lt;/span&gt; User dizballanze logged in.
-Remote system &lt;span class="nb"&gt;type&lt;/span&gt; is UNIX.
+230- Linux dizballanze-laptop 2.6.26-2-686 #1 SMP Sat Dec 26 09:01:51 UTC 2009 i686
+230- 
+230- The programs included with the Debian GNU/Linux system are free software;
+230- the exact distribution terms for each program are described in the
+230- individual files in /usr/share/doc/*/copyright.
+230- 
+230- Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+230- permitted by applicable law.
+230 User dizballanze logged in.
+Remote system type is UNIX.
 Using binary mode to transfer files.
-ftp&amp;gt; &lt;span class="nb"&gt;pwd&lt;/span&gt;
-&lt;span class="m"&gt;257&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;/home/dizballanze&amp;quot;&lt;/span&gt; is current directory.
-&lt;/pre&gt;&lt;/div&gt;
-
-
+ftp&amp;gt; pwd
+257 "/home/dizballanze" is current directory.
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Авторизация прошла успешно и я сразу получил доступ к файловой системе
 от пользователя dizballanze без каких-либо дополнительных настроек.
 Единственная проблема - это некорректное отображения русских надписей в
@@ -920,37 +872,36 @@ ftp&amp;gt; &lt;span class="nb"&gt;pwd&lt;/span&gt;
 жёсткий диск успешно подключён можно приступать к загрузке системы.&lt;/p&gt;
 &lt;p&gt;Сразу после загрузки необходимо проверить существует ли файл устройств
 для нового диска. В Linux жёсткие диски обозначаются в формате
-/dev/sdXN, где X — буква латинского алфавита, означает диск, а N номер
+/dev/sdXN, где X &amp;mdash; буква латинского алфавита, означает диск, а N номер
 раздела на жёстком диске.&lt;/p&gt;
 &lt;p&gt;Убедившись в том что файл устройства существует можно приступать к
 разбивке диска на разделы. В моём случае файл устройства называется
 /dev/sdb, т.к. это второй диск в системе (первый как вы наверное
 догадались /dev/sda).&lt;/p&gt;
 &lt;p&gt;Итак для создания разделам будем использовать утилиту fdisk.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;fdisk /dev/sdb
+&lt;pre&gt;&lt;code&gt;:::bash
+fdisk /dev/sdb
 
 :::text
 Device contains neither a valid DOS partition table, nor Sun, SGI or OSF disklabel
 Building a new DOS disklabel with disk identifier 0x07611c35.
-Changes will remain in memory only, &lt;span class="k"&gt;until&lt;/span&gt; you decide to write them.
-After that, of course, the previous content won&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;t be recoverable.
-The number of cylinders &lt;span class="k"&gt;for&lt;/span&gt; this disk is &lt;span class="nb"&gt;set&lt;/span&gt; to &lt;span class="m"&gt;60801&lt;/span&gt;.
-There is nothing wrong with that, but this is larger than &lt;span class="m"&gt;1024&lt;/span&gt;,
+Changes will remain in memory only, until you decide to write them.
+After that, of course, the previous content won't be recoverable.
+The number of cylinders for this disk is set to 60801.
+There is nothing wrong with that, but this is larger than 1024,
 and could in certain setups cause problems with:
-&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; software that runs at boot &lt;span class="nb"&gt;time&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;e.g., old versions of LILO&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; booting and partitioning software from other OSs
-&lt;span class="o"&gt;(&lt;/span&gt;e.g., DOS FDISK, OS/2 FDISK&lt;span class="o"&gt;)&lt;/span&gt;
-Warning: invalid flag 0x0000 of partition table &lt;span class="m"&gt;4&lt;/span&gt; will be corrected by w&lt;span class="o"&gt;(&lt;/span&gt;rite&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+1) software that runs at boot time (e.g., old versions of LILO)
+2) booting and partitioning software from other OSs
+(e.g., DOS FDISK, OS/2 FDISK)
+Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Утилита выводит информацию о жёстком диске: идентификатор диска,
 количество цилиндров. Потом она ожидает ввода команды, для вывода
 справочной информации о всех доступных командах введите m. Мы будем
 использовать три инструкции:&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;n (new)&lt;/code&gt; - создать новый раздел.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;p (print)&lt;/code&gt; - вывести информацию о разделах&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;w (write)&lt;/code&gt; — записать таблицу разделов на диск&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;w (write)&lt;/code&gt; &amp;mdash; записать таблицу разделов на диск&lt;/p&gt;
 &lt;p&gt;Я создам только один раздел, который будет занимать весь доступный объём
 диска. Для этого я ввожу команду new, номер раздела 1, первый цилиндр 1
 и последний цилиндр 60801 (значение по умолчанию). Если вы хотите
@@ -958,7 +909,8 @@ Warning: invalid flag 0x0000 of partition table &lt;span class="m"&gt;4&lt;/span
 добавьте необходимое количество разделов. Размер раздела можно задавать
 в цилиндрах, как в показанном примере, или более простым способом, в
 байтах (мегабайтах или гигабайтах) .&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Command (m for help): new
+&lt;pre&gt;&lt;code&gt;:::text
+Command (m for help): new
 Command action
 e extended
 p primary partition (1-4)
@@ -967,11 +919,10 @@ Partition number (1-4): 1
 First cylinder (1-60801, default 1): 1
 Last cylinder or +size or +sizeM or +sizeK (1-60801, default 60801):
 Using default value 60801
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Выводим информацию о разделах при помощи команды print.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Command (m for help): print
+&lt;pre&gt;&lt;code&gt;:::text
+Command (m for help): print
 
 Disk /dev/sdb: 500.1 GB, 500107862016 bytes
 255 heads, 63 sectors/track, 60801 cylinders
@@ -980,74 +931,68 @@ Disk identifier: 0x07611c35
 
 Device Boot Start End Blocks Id System
 /dev/sdb1 1 60801 488384001 83 Linux
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Убедившись что разделы созданы так как вы рассчитывали записываем
 таблицу разделов на диск при помощи команды &lt;code&gt;write&lt;/code&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Command (m for help): write
+&lt;pre&gt;&lt;code&gt;:::text
+Command (m for help): write
 The partition table has been altered!
 Calling ioctl() to re-read partition table.
 Syncing disks.
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь можно приступить к форматировании разделов.&lt;/p&gt;
 &lt;p&gt;Для этого мы будем использовать команду &lt;code&gt;mke2fs -j&lt;/code&gt;, указав в качестве
 аргумента имя раздела.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mke2fs -j /dev/sdb1
-mke2fs &lt;span class="m"&gt;1&lt;/span&gt;.41.3 &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;12&lt;/span&gt;-Oct-2008&lt;span class="o"&gt;)&lt;/span&gt;
-Filesystem &lt;span class="nv"&gt;label&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+mke2fs -j /dev/sdb1
+mke2fs 1.41.3 (12-Oct-2008)
+Filesystem label=
 OS type: Linux
-Block &lt;span class="nv"&gt;size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;log&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-Fragment &lt;span class="nv"&gt;size&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;log&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;span class="m"&gt;30531584&lt;/span&gt; inodes, &lt;span class="m"&gt;122096000&lt;/span&gt; blocks
-&lt;span class="m"&gt;6104800&lt;/span&gt; blocks &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;5&lt;/span&gt;.00%&lt;span class="o"&gt;)&lt;/span&gt; reserved &lt;span class="k"&gt;for&lt;/span&gt; the super user
-First data &lt;span class="nv"&gt;block&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
-Maximum filesystem &lt;span class="nv"&gt;blocks&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
-&lt;span class="m"&gt;3727&lt;/span&gt; block groups
-&lt;span class="m"&gt;32768&lt;/span&gt; blocks per group, &lt;span class="m"&gt;32768&lt;/span&gt; fragments per group
-&lt;span class="m"&gt;8192&lt;/span&gt; inodes per group
+Block size=4096 (log=2)
+Fragment size=4096 (log=2)
+30531584 inodes, 122096000 blocks
+6104800 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=0
+3727 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
 Superblock backups stored on blocks:
-&lt;span class="m"&gt;32768&lt;/span&gt;, &lt;span class="m"&gt;98304&lt;/span&gt;, &lt;span class="m"&gt;163840&lt;/span&gt;, &lt;span class="m"&gt;229376&lt;/span&gt;, &lt;span class="m"&gt;294912&lt;/span&gt;, &lt;span class="m"&gt;819200&lt;/span&gt;, &lt;span class="m"&gt;884736&lt;/span&gt;, &lt;span class="m"&gt;1605632&lt;/span&gt;, &lt;span class="m"&gt;2654208&lt;/span&gt;,
-&lt;span class="m"&gt;4096000&lt;/span&gt;, &lt;span class="m"&gt;7962624&lt;/span&gt;, &lt;span class="m"&gt;11239424&lt;/span&gt;, &lt;span class="m"&gt;20480000&lt;/span&gt;, &lt;span class="m"&gt;23887872&lt;/span&gt;, &lt;span class="m"&gt;71663616&lt;/span&gt;, &lt;span class="m"&gt;78675968&lt;/span&gt;,
-&lt;span class="m"&gt;102400000&lt;/span&gt;
+32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
+102400000
 
-Writing inode tables: &lt;span class="k"&gt;done&lt;/span&gt;
-Creating journal &lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="m"&gt;32768&lt;/span&gt; blocks&lt;span class="o"&gt;)&lt;/span&gt;: &lt;span class="k"&gt;done&lt;/span&gt;
-Writing superblocks and filesystem accounting information: &lt;span class="k"&gt;done&lt;/span&gt;
+Writing inode tables: done
+Creating journal (32768 blocks): done
+Writing superblocks and filesystem accounting information: done
 
-This filesystem will be automatically checked every &lt;span class="m"&gt;34&lt;/span&gt; mounts or
-&lt;span class="m"&gt;180&lt;/span&gt; days, whichever comes first. Use tune2fs -c or -i to override.
-&lt;/pre&gt;&lt;/div&gt;
-
-
+This filesystem will be automatically checked every 34 mounts or
+180 days, whichever comes first. Use tune2fs -c or -i to override.
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь необходимо настроить монтирование новых разделов. Сначала
 создадим каталог, который мы будем использовать как точку монтирования.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mkdir /media/mediahdd
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+mkdir /media/mediahdd
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Пробуем монтировать раздел.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mount /dev/sdb1 /media/mediahdd
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+mount /dev/sdb1 /media/mediahdd
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь необходимо добавить информацию о новом разделе в файл &lt;code&gt;/etc/fstab&lt;/code&gt;
 для, того чтобы раздел автоматически монтировался при каждой загрузке
 системы. Для этого открываем этот файл в любом текстовом редакторе.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nano /etc/fstab
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+nano /etc/fstab
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Добавляем строку формата: &lt;code&gt;имя_раздела&lt;/code&gt; &lt;code&gt;точка_монтирования&lt;/code&gt;
 &lt;code&gt;файловая_система&lt;/code&gt; &lt;code&gt;частота_создания_резервных_копий&lt;/code&gt;
 &lt;code&gt;кол-во_запусков_fsck&lt;/code&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;/dev/sdb1 /media/mediahdd ext3 defaults 0 0
-&lt;/pre&gt;&lt;/div&gt;</content><category term="Linux"></category><category term="администрирование"></category></entry><entry><title>Как настроить подключение к интернет через мобильный телефон в Debian</title><link href="/ru/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/" rel="alternate"></link><published>2010-11-26T20:02:00+03:00</published><updated>2010-11-26T20:02:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2010-11-26:/ru/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/</id><summary type="html">&lt;p&gt;В этой статье я расскажу как использовать ваш мобильный телефон в
+&lt;pre&gt;&lt;code&gt;:::text
+/dev/sdb1 /media/mediahdd ext3 defaults 0 0
+&lt;/code&gt;&lt;/pre&gt;</content><category term="Linux"></category><category term="администрирование"></category></entry><entry><title>Как настроить подключение к интернет через мобильный телефон в Debian</title><link href="/ru/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/" rel="alternate"></link><published>2010-11-26T20:02:00+03:00</published><updated>2010-11-26T20:02:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2010-11-26:/ru/kak-nastroit-podkliuchenie-k-internet-cherez-mobilnyi-telefon-v-debian/</id><summary type="html">&lt;p&gt;В этой статье я расскажу как использовать ваш мобильный телефон в
 качестве 3G/GPRS/EDGE модема в ОС Linux.&lt;/p&gt;
 &lt;p&gt;В качестве тестового примера использовались ПК с установленной Debian
-5.0 «Lenny» и мобильный телефон Nokia N96 соединённые между собой usb
+5.0 &amp;laquo;Lenny&amp;raquo; и мобильный телефон Nokia N96 соединённые между собой usb
 кабелем.&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;
@@ -1055,7 +1000,7 @@ This filesystem will be automatically checked every &lt;span class="m"&gt;34&lt;
     компьютеру …&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;</summary><content type="html">&lt;p&gt;В этой статье я расскажу как использовать ваш мобильный телефон в
 качестве 3G/GPRS/EDGE модема в ОС Linux.&lt;/p&gt;
 &lt;p&gt;В качестве тестового примера использовались ПК с установленной Debian
-5.0 «Lenny» и мобильный телефон Nokia N96 соединённые между собой usb
+5.0 &amp;laquo;Lenny&amp;raquo; и мобильный телефон Nokia N96 соединённые между собой usb
 кабелем.&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;
@@ -1063,12 +1008,12 @@ This filesystem will be automatically checked every &lt;span class="m"&gt;34&lt;
     компьютеру через usb кабель. В появившемся на экране телефона меню
     выбираем режим PC Suite.&lt;/p&gt;
 &lt;p&gt;Посмотрим как на это отреагировала ОС. Для этого введём в консоль:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;cat /var/log/messages
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+cat /var/log/messages
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Видим следующий вывод:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Aug  1 08:30:43 DizballanzePC kernel: [  200.535814] usb 8-1: new high speed USB device using ehci_hcd and address 3
+&lt;pre&gt;&lt;code&gt;:::text
+Aug  1 08:30:43 DizballanzePC kernel: [  200.535814] usb 8-1: new high speed USB device using ehci_hcd and address 3
 Aug  1 08:30:43 DizballanzePC kernel: [  200.673679] usb 8-1: configuration #1 chosen from 1 choice
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678985] usb 8-1: New USB device found, idVendor=0421, idProduct=003a
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678989] usb 8-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
@@ -1076,9 +1021,7 @@ Aug  1 08:30:43 DizballanzePC kernel: [  200.678991] usb 8-1: Product: Nokia N96
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678993] usb 8-1: Manufacturer: Nokia
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678995] usb 8-1: SerialNumber: 356406026032671
 Aug  1 08:30:43 DizballanzePC kernel: [  200.860753] cdc_acm 8-1:1.1: ttyACM0: USB ACM device
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Как вы видите новое устройство определено ОС и доступно по адресу
 &lt;code&gt;/dev/ttyACM0&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Теперь мы знаем что соединение успешно установлено.&lt;/p&gt;
@@ -1087,38 +1030,35 @@ Aug  1 08:30:43 DizballanzePC kernel: [  200.860753] cdc_acm 8-1:1.1: ttyACM0: U
 &lt;p&gt;Настраиваем параметры модема. Для дозвона мы будем использовать
     программу wvdial. Нужно убедится что она установлена в вашей
     системе. Для этого выполните следующую команду в консоль:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;whereis wvdial
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+whereis wvdial
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Если команда сообщит вам месторасположение файлов программы, значит
 она уже установлена в вашей системе. Вот что выводит команда whereis
 на моём компьютере:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;wvdial: /usr/bin/wvdial /etc/wvdial.conf /etc/wvdial.conf~ /usr/share/man/man1/wvdial.1.gz
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+wvdial: /usr/bin/wvdial /etc/wvdial.conf /etc/wvdial.conf~ /usr/share/man/man1/wvdial.1.gz
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;В случае если программа не установлена в вашей системе необходимо
 установить её самостоятельно. Для этого введите в консоль следующее:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;apt-get install wvdial
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+apt-get install wvdial
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;И программа установщик выполнит все необходимые действия.&lt;/p&gt;
 &lt;p&gt;Теперь переходим непосредственно к настройке модема.&lt;/p&gt;
 &lt;p&gt;Для этого открываем файл &lt;code&gt;/etc/wvdial.conf&lt;/code&gt; в любом текстовом
 редакторе, предварительно войдя в систему как пользователь root.&lt;/p&gt;
 &lt;p&gt;Вам необходимо удалить следующие строки кода:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Modem Type = USB ModemModem = /dev/ttyACM0
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+Modem Type = USB ModemModem = /dev/ttyACM0
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;А также вам необходимо добавить следующие строки в конец файла:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;New PPPD = yes
+&lt;pre&gt;&lt;code&gt;:::text
+New PPPD = yes
 Phone = *99***1#
 Username = MOVISTAR
 Password = MOVISTAR
-Init6= AT+CGDCONT=1,&amp;quot;IP&amp;quot;,&amp;quot;acces.point&amp;quot;
+Init6= AT+CGDCONT=1,"IP","acces.point"
 
 [Dialer usb-scb]
 Modem Type = USB Modem
@@ -1126,9 +1066,7 @@ Modem = /dev/ttyACM0
 
 [Dialer blz-scb]
 Modem = /dev/rfcomm0
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Вместо acces.point введите имя точки доступа вашего оператора
 сотовой связи.&lt;/p&gt;
 &lt;p&gt;Все необходимые настройки выполнены, теперь можно приступать
@@ -1138,9 +1076,8 @@ Modem = /dev/rfcomm0
 &lt;p&gt;Подключение к Интернет. Для того чтобы подключится к Интернет вам
     необходимо просто соединить кабелем компьютер и телефон, а потом
     написать от пользователя root:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;wvdial usb-scb&lt;span class="p"&gt;&amp;amp;&lt;/span&gt;﻿
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+wvdial usb-scb&amp;amp;﻿
+&lt;/code&gt;&lt;/pre&gt;
 &lt;/li&gt;
 &lt;/ol&gt;</content><category term="debian"></category><category term="Linux"></category><category term="wvdial"></category></entry></feed>

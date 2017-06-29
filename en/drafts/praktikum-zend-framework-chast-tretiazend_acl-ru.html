@@ -54,7 +54,7 @@
     <time class="published" datetime="2011-06-22T11:04:00+04:00"><nobr>22 июн 2011</nobr></time>
   </header>
   <div class="entry-content">
-    <p><img alt="ZendFramework" src="/media/2011/06/ZendFramework-logo-640x1691.png" title="ZendFramework"></p>
+    <p><img alt="ZendFramework" src="/media/2011/06/ZendFramework-logo-640x1691.png" title="ZendFramework"/></p>
 <p>Сегодня мы рассмотрим пример создания Acl для системы с большим
 количеством ролей и ресурсов.</p>
 <ul>
@@ -81,21 +81,20 @@
 </li>
 </ul>
 <p>Хабраюзер <a href="http://anexroid.habrahabr.ru/">Anexroid</a> любезно предоставил описание такого проекта:</p>
-<div class="highlight"><pre><span></span>Существуют следующие права доступа: Админ, с доступом в админку. Причем в админке порядка 20-30
-разделов, 5 админов. У всех доступ разный. То есть у кого-то 2-3 раздела, у кого-то — все 20. Все
-пункты меню храняться в БД. Пользователь — зарегестированный на сайте. Может создавать фотоальбомы,
-комментировать новости без ввода капчи и т.д. + всё то, что может делать гость.Предприятие — имеет
-личную страницу в каталоге, в зависимости от купленного пакета — различные пункты в личном кабинете.
-Ну и гость, который может всё неограниченно просматривать. Комментарии — с капчей.Еще есть
-консультанты — отвечают на вопросы в консультациях.Причем у предприятий и консультантов — нет
-регистрации, добавляются админом. +опять же, все таблицы в БД отдельные — отдельно админы, отдельно
-пользователи, отдельно — предприятия, отдельно — консультанты.
-</pre></div>
-
-
+<pre><code>:::text
+Существуют следующие права доступа: Админ, с доступом в админку. Причем в админке порядка 20-30
+разделов, 5 админов. У всех доступ разный. То есть у кого-то 2-3 раздела, у кого-то &mdash; все 20. Все
+пункты меню храняться в БД. Пользователь &mdash; зарегестированный на сайте. Может создавать фотоальбомы,
+комментировать новости без ввода капчи и т.д. + всё то, что может делать гость.Предприятие &mdash; имеет
+личную страницу в каталоге, в зависимости от купленного пакета &mdash; различные пункты в личном кабинете.
+Ну и гость, который может всё неограниченно просматривать. Комментарии &mdash; с капчей.Еще есть
+консультанты &mdash; отвечают на вопросы в консультациях.Причем у предприятий и консультантов &mdash; нет
+регистрации, добавляются админом. +опять же, все таблицы в БД отдельные &mdash; отдельно админы, отдельно
+пользователи, отдельно &mdash; предприятия, отдельно &mdash; консультанты.
+</code></pre>
 <p>Для начала определимся с ролями и ресурсами, составим иерархии
 наследования ресурсов и ролей:</p>
-<p><img alt="Иерархия ролей" src="/media/2011/06/1-1024x537.png" title="Иерархия ролей"></p>
+<p><img alt="Иерархия ролей" src="/media/2011/06/1-1024x537.png" title="Иерархия ролей"/></p>
 <p>В нашем примере верхняя часть иерархия ресурсов будет совпадать по
 структуре с иерархией ролей. Для того чтобы, удобно отобразить иерархию
 ресурсов, добавим в наш список прав доступа абстрактные ресурсы для
@@ -107,77 +106,75 @@
 ресурсов Zend_Acl, к сожалению, не поддерживает множественное
 наследование. Поэтому ресурсы для ролей Admin1-N, CompanyPackage1-N
 будут распределятся как исключения, явно назначаясь нужным ролям.</p>
-<p><img alt="Иерархия ресурсов" src="/media/2011/06/bbb.png" title="Иерархия ресурсов"></p>
+<p><img alt="Иерархия ресурсов" src="/media/2011/06/bbb.png" title="Иерархия ресурсов"/></p>
 <p>Итак, мы разобрались с иерархией ресурсов, теперь создадим
 непосредственно Acl. Для этого расширим класс Zend_Acl:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="k">class</span> <span class="nc">Acl</span> <span class="k">extends</span> <span class="nx">Zend_Acl</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// Добавляем роли</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;guest&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company-package-1&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company-package-2&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;company-package-3&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">);</span>
-        <span class="c1">// ...</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin-1&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin-2&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">);</span>
-        <span class="c1">// ...</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">&#39;admin-5&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">);</span>
+<pre><code>:::php
+&lt;?php
+class Acl extends Zend_Acl {
+    public function __construct() {
+        // Добавляем роли
+        $this-&gt;addRole('guest');
+        $this-&gt;addRole('user', 'guest');
+        $this-&gt;addRole('admin', 'user');
+        $this-&gt;addRole('company', 'user');
+        $this-&gt;addRole('company-package-1', 'company');
+        $this-&gt;addRole('company-package-2', 'company');
+        $this-&gt;addRole('company-package-3', 'company');
+        // ...
+        $this-&gt;addRole('admin-1', 'admin');
+        $this-&gt;addRole('admin-2', 'admin');
+        // ...
+        $this-&gt;addRole('admin-5', 'admin');
 
-        <span class="c1">//Добавляем ресурсы</span>
-        <span class="c1">//</span>
-        <span class="c1">// РЕСУРСЫ ГОСТЯ !</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;guest_res&#39;</span><span class="p">));</span>
-        <span class="c1">// перечисляем все ресурсы гостя, как дочерние для guest_res</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;add-comments-with-captcha&#39;</span><span class="p">),</span> <span class="s1">&#39;guest_res&#39;</span><span class="p">);</span>
+        //Добавляем ресурсы
+        //
+        // РЕСУРСЫ ГОСТЯ !
+        $this-&gt;add(new Zend_Acl_Resource('guest_res'));
+        // перечисляем все ресурсы гостя, как дочерние для guest_res
+        $this-&gt;add(new Zend_Acl_Resource('add-comments-with-captcha'), 'guest_res');
 
-        <span class="c1">// РЕСУРСЫ ПОЛЬЗОВАТЕЛЯ !</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;user_res&#39;</span><span class="p">));</span>
-        <span class="c1">// перечисляем все ресурсы пользователя, как дочерние для user_res</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;add-comments&#39;</span><span class="p">),</span> <span class="s1">&#39;user_res&#39;</span><span class="p">);</span>
+        // РЕСУРСЫ ПОЛЬЗОВАТЕЛЯ !
+        $this-&gt;add(new Zend_Acl_Resource('user_res'));
+        // перечисляем все ресурсы пользователя, как дочерние для user_res
+        $this-&gt;add(new Zend_Acl_Resource('add-comments'), 'user_res');
 
-        <span class="c1">// РЕСУРСЫ АДМИНА !</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;admin_res&#39;</span><span class="p">));</span>
-        <span class="c1">// перечисляем общие ресурсы для всех админов, как дочерние для admin_res</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;admin-tools-list&#39;</span><span class="p">),</span> <span class="s1">&#39;admin_res&#39;</span><span class="p">);</span>
+        // РЕСУРСЫ АДМИНА !
+        $this-&gt;add(new Zend_Acl_Resource('admin_res'));
+        // перечисляем общие ресурсы для всех админов, как дочерние для admin_res
+        $this-&gt;add(new Zend_Acl_Resource('admin-tools-list'), 'admin_res');
 
-        <span class="c1">// РЕСУРСЫ КОМПАНИИ !</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;company_res&#39;</span><span class="p">));</span>
-        <span class="c1">// перечисляем общие ресурсы для пакетов компаний, как дочерние для company_res</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;show-company-statistics&#39;</span><span class="p">),</span> <span class="s1">&#39;company_res&#39;</span><span class="p">);</span>
+        // РЕСУРСЫ КОМПАНИИ !
+        $this-&gt;add(new Zend_Acl_Resource('company_res'));
+        // перечисляем общие ресурсы для пакетов компаний, как дочерние для company_res
+        $this-&gt;add(new Zend_Acl_Resource('show-company-statistics'), 'company_res');
 
-        <span class="c1">// Специфические ресурсы для админов и компаний, ничего не наследуют</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;advertise&#39;</span><span class="p">));</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">&#39;add-company&#39;</span><span class="p">));</span>
+        // Специфические ресурсы для админов и компаний, ничего не наследуют
+        $this-&gt;add(new Zend_Acl_Resource('advertise'));
+        $this-&gt;add(new Zend_Acl_Resource('add-company'));
 
-        <span class="c1">//Выставляем права, по-умолчанию всё запрещено</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">deny</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;guest_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="s1">&#39;user_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">,</span><span class="s1">&#39;admin_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;company&#39;</span><span class="p">,</span><span class="s1">&#39;company_res&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
+        //Выставляем права, по-умолчанию всё запрещено
+        $this-&gt;deny(null, null, null);
+        $this-&gt;allow('guest', 'guest_res', 'show');
+        $this-&gt;allow('user', 'user_res', 'show');
+        $this-&gt;allow('admin','admin_res', 'show');
+        $this-&gt;allow('company','company_res', 'show');
 
-        <span class="c1">// Выставляем ресурсы для пакетов компаний и админов</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;company-package-1&#39;</span><span class="p">,</span><span class="s1">&#39;advertise&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">&#39;admin-1&#39;</span><span class="p">,</span><span class="s1">&#39;add-company&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+        // Выставляем ресурсы для пакетов компаний и админов
+        $this-&gt;allow('company-package-1','advertise', 'show');
+        $this-&gt;allow('admin-1','add-company', 'show');
+    }
+}
+</code></pre>
 <p>И сразу проверим что все работает как мы ожидали:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;add-comments-with-captcha&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// yes</span>
-<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;guest&#39;</span><span class="p">,</span> <span class="s1">&#39;add-comments&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// no</span>
-<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;admin-1&#39;</span><span class="p">,</span> <span class="s1">&#39;add-company&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// yes</span>
-<span class="k">echo</span> <span class="nv">$acl</span><span class="o">-&gt;</span><span class="na">isAllowed</span><span class="p">(</span><span class="s1">&#39;company-package-2&#39;</span><span class="p">,</span> <span class="s1">&#39;advertise&#39;</span><span class="p">,</span> <span class="s1">&#39;show&#39;</span><span class="p">)</span><span class="o">?</span><span class="s1">&#39;yes&#39;</span><span class="o">:</span><span class="s1">&#39;no&#39;</span><span class="p">;</span> <span class="c1">// no</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+// ...
+echo $acl-&gt;isAllowed('guest', 'add-comments-with-captcha', 'show')?'yes':'no'; // yes
+echo $acl-&gt;isAllowed('guest', 'add-comments', 'show')?'yes':'no'; // no
+echo $acl-&gt;isAllowed('admin-1', 'add-company', 'show')?'yes':'no'; // yes
+echo $acl-&gt;isAllowed('company-package-2', 'advertise', 'show')?'yes':'no'; // no
+</code></pre>
 <p>В данном примере я разрешил себе сделать упрощение и ввел одну
 привилегию show, которая соответствует возможности просмотра
 определённой страницы. Однако вы можете расширить этот пример и добавить

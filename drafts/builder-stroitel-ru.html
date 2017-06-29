@@ -54,12 +54,12 @@
     <time class="published" datetime="2011-02-20T18:27:00+03:00"><nobr>20 фев 2011</nobr></time>
   </header>
   <div class="entry-content">
-    <p><img alt="builder pattern" src="/media/2011/02/images.jpg" title="builder"></p>
+    <p><img alt="builder pattern" src="/media/2011/02/images.jpg" title="builder"/></p>
 <p>И снова рассуждение на тему порождающих шаблонов. На этот раз будем
 говорить о паттерне строитель. Данный паттерн позволяет скрыть
 инициализацию сложного объекта и создает простой интерфейс для
 инстанциирования сложных объектов с различным внутренним состоянием.</p>
-<h2>Описание</h2>
+<h2 id="opisanie">Описание</h2>
 <p>Если при проектировании вы столкнулись с тем что необходимо создавать
 сложные объекты, инициализация которых состоит из нескольких этапов и
 при этом вы не уверены в том что в дальнейшем инициализация данного
@@ -79,137 +79,135 @@
 класса строителя. Преимущество данного шаблона заключается не только в
 инкапсуляции инициализации сложного объекта, но и в выборе определённого
 типа настройки объекта во время выполнения программы.</p>
-<h2>Реализация</h2>
+<h2 id="realizatsiia">Реализация</h2>
 <p>Теперь, как всегда, рассмотрим реализацию данного шаблона на нашем
 любимом языке - PHP. Допустим нам нужно спроектировать иерархию классов
 отвечающих за воспроизведение видео-роликов в различных форматах:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="k">class</span> <span class="nc">Player</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$video_codec</span><span class="p">;</span>
-    <span class="k">protected</span> <span class="nv">$audio_codec</span><span class="p">;</span>
-    <span class="k">protected</span> <span class="nv">$width</span><span class="p">;</span>
-    <span class="k">protected</span> <span class="nv">$height</span><span class="p">;</span>
-    <span class="k">protected</span> <span class="nv">$volume</span><span class="p">;</span>
+<pre><code>:::php
+&lt;?php
+class Player{
+    protected $video_codec;
+    protected $audio_codec;
+    protected $width;
+    protected $height;
+    protected $volume;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setVideoCodec</span><span class="p">(</span><span class="nv">$codec</span><span class="p">){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">video_codec</span> <span class="o">=</span> <span class="nv">$codec</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function setVideoCodec($codec){
+        $this-&gt;video_codec = $codec;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setAudioCodec</span><span class="p">(</span><span class="nv">$codec</span><span class="p">){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">audio_codec</span> <span class="o">=</span> <span class="nv">$codec</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function setAudioCodec($codec){
+        $this-&gt;audio_codec = $codec;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setWidth</span><span class="p">(</span><span class="nv">$width</span><span class="p">){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">width</span> <span class="o">=</span> <span class="nv">$width</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function setWidth($width){
+        $this-&gt;width = $width;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setHeight</span><span class="p">(</span><span class="nv">$height</span><span class="p">){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">height</span> <span class="o">=</span> <span class="nv">$height</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function setHeight($height){
+        $this-&gt;height = $height;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setVolume</span><span class="p">(</span><span class="nv">$volume</span><span class="p">){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">volume</span> <span class="o">=</span> <span class="nv">$volume</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function setVolume($volume){
+        $this-&gt;volume = $volume;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">play</span><span class="p">(</span><span class="nv">$some_data</span><span class="p">){</span>
-        <span class="c1">// Let&#39;s rock!</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function play($some_data){
+        // Let's rock!
+    }
+}
 
-<span class="k">abstract</span>  <span class="k">class</span> <span class="nc">PlayerBuilder</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$player</span><span class="p">;</span>
+abstract  class PlayerBuilder{
+    protected $player;
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">createPlayer</span><span class="p">(){</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Player</span><span class="p">();</span>
-    <span class="p">}</span>
+    public function createPlayer(){
+        $this-&gt;player = new Player();
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getPlayer</span><span class="p">(){</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function getPlayer(){
+        return $this-&gt;player;
+    }
 
-    <span class="k">abstract</span> <span class="k">function</span> <span class="nf">setVideoCodec</span><span class="p">();</span>
-    <span class="k">abstract</span> <span class="k">function</span> <span class="nf">setAudioCodec</span><span class="p">();</span>
-    <span class="k">abstract</span> <span class="k">function</span> <span class="nf">setWidth</span><span class="p">();</span>
-    <span class="k">abstract</span> <span class="k">function</span> <span class="nf">setHeight</span><span class="p">();</span>
-    <span class="k">abstract</span> <span class="k">function</span> <span class="nf">setVolume</span><span class="p">();</span>
-<span class="p">}</span>
+    abstract function setVideoCodec();
+    abstract function setAudioCodec();
+    abstract function setWidth();
+    abstract function setHeight();
+    abstract function setVolume();
+}
 
-<span class="k">class</span> <span class="nc">HDPlayerBuilder</span> <span class="k">extends</span> <span class="nx">PlayerBuilder</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setVideoCodec</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setVideoCodec</span><span class="p">(</span><span class="s1">&#39;some greate codec&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
+class HDPlayerBuilder extends PlayerBuilder{
+    public function setVideoCodec() {
+        $this-&gt;player-&gt;setVideoCodec('some greate codec');
+    }
 
-    <span class="k">public</span> <span class="k">function</span>  <span class="nf">setAudioCodec</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setAudioCodec</span><span class="p">(</span><span class="s1">&#39;some cool codec&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function  setAudioCodec() {
+        $this-&gt;player-&gt;setAudioCodec('some cool codec');
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setWidth</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setWidth</span><span class="p">(</span><span class="mi">1280</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function setWidth() {
+        $this-&gt;player-&gt;setWidth(1280);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setHeight</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setHeight</span><span class="p">(</span><span class="mi">960</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function setHeight() {
+        $this-&gt;player-&gt;setHeight(960);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setVolume</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">setVolume</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function setVolume() {
+        $this-&gt;setVolume(100);
+    }
+}
 
-<span class="k">class</span> <span class="nc">SimplePlayerBuilder</span> <span class="k">extends</span> <span class="nx">PlayerBuilder</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setVideoCodec</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setVideoCodec</span><span class="p">(</span><span class="s1">&#39;some bad codec&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
+class SimplePlayerBuilder extends PlayerBuilder {
+    public function setVideoCodec() {
+        $this-&gt;player-&gt;setVideoCodec('some bad codec');
+    }
 
-    <span class="k">public</span> <span class="k">function</span>  <span class="nf">setAudioCodec</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setAudioCodec</span><span class="p">(</span><span class="s1">&#39;some default codec&#39;</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function  setAudioCodec() {
+        $this-&gt;player-&gt;setAudioCodec('some default codec');
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setWidth</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setWidth</span><span class="p">(</span><span class="mi">320</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function setWidth() {
+        $this-&gt;player-&gt;setWidth(320);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setHeight</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">player</span><span class="o">-&gt;</span><span class="na">setHeight</span><span class="p">(</span><span class="mi">240</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function setHeight() {
+        $this-&gt;player-&gt;setHeight(240);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">setVolume</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">setVolume</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function setVolume() {
+        $this-&gt;setVolume(50);
+    }
+}
 
-<span class="k">class</span> <span class="nc">Media</span><span class="p">{</span>
-    <span class="k">private</span> <span class="nv">$_builder</span><span class="p">;</span>
+class Media{
+    private $_builder;
 
-    <span class="k">public</span> <span class="k">function</span>  <span class="fm">__construct</span><span class="p">(</span><span class="nx">PlayerBuilder</span> <span class="nv">$builder</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span> <span class="o">=</span> <span class="nv">$builder</span><span class="p">;</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">createPlayer</span><span class="p">();</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">setAudioCodec</span><span class="p">();</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">setVideoCodec</span><span class="p">();</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">setWidth</span><span class="p">();</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">setHeight</span><span class="p">();</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">setVolume</span><span class="p">();</span>
-    <span class="p">}</span>
+    public function  __construct(PlayerBuilder $builder) {
+        $this-&gt;_builder = $builder;
+        $this-&gt;_builder-&gt;createPlayer();
+        $this-&gt;_builder-&gt;setAudioCodec();
+        $this-&gt;_builder-&gt;setVideoCodec();
+        $this-&gt;_builder-&gt;setWidth();
+        $this-&gt;_builder-&gt;setHeight();
+        $this-&gt;_builder-&gt;setVolume();
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getPlayer</span><span class="p">(){</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_builder</span><span class="o">-&gt;</span><span class="na">getPlayer</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    public function getPlayer(){
+        return $this-&gt;_builder-&gt;getPlayer();
+    }
+}
+</code></pre>
 <p>Как вы наверное уже догадались продуктом в данном случае у нас будут
 объекты класса Player, строителями - объекты наследующие PlayerBuilder,
 а директором - Media. Каких-то дополнительных пояснений на мой взгляд
 данный код не требует, перейдем к примеру использования:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="nv">$media</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Media</span><span class="p">(</span><span class="k">new</span> <span class="nx">HDPlayerBuilder</span><span class="p">());</span>
-<span class="nv">$player</span> <span class="o">=</span> <span class="nv">$media</span><span class="o">-&gt;</span><span class="na">getPlayer</span><span class="p">();</span>
-<span class="nv">$player</span><span class="o">-&gt;</span><span class="na">play</span><span class="p">(</span><span class="s1">&#39;Some_Cool_Video_File.mkv&#39;</span><span class="p">);</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+// ...
+$media = new Media(new HDPlayerBuilder());
+$player = $media-&gt;getPlayer();
+$player-&gt;play('Some_Cool_Video_File.mkv');
+</code></pre>
 <p>Таким образом можно использовать вышеописанные классы. Как вы видите
 здесь всё довольно просто и очевидно, создаем экземпляр директора
 (Media), передаем ему нужного строителя, вызываем нужный метод и вуаля -

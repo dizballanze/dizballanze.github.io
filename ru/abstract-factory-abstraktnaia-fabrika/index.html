@@ -57,7 +57,7 @@
     <p>Рассмотрим ещё один порождающий шаблон - абстрактная фабрика. Перед
 прочтением рекомендую ознакомится с шаблоном Factory Method <a href="/PHP/factory-method-fabrichnyi-metod/">здесь</a>,
 т.к. в данном топике я буду расширять рассмотренный там пример.</p>
-<h2>Описание</h2>
+<h2 id="opisanie">Описание</h2>
 <p>Во время проектирования может возникнуть необходимость создавать
 взаимосвязанные объекты из различных иерархии при этом решение о том
 какие именно объекты создавать должно приниматься в процессе работы
@@ -65,56 +65,55 @@
 понадобится кроме формы также создавать экземпляр класса валидатора,
 который умеет проверять корректность данных в форме. Т.е. у нас есть
 следующие иерархии:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<pre><code>:::php
+&lt;?php
 
-<span class="c1">//Иерархия классов форм</span>
-<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Form</span><span class="p">{</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">();</span>
-<span class="p">}</span>
+//Иерархия классов форм
+abstract class Form{
+    abstract public function generateForm();
+}
 
-<span class="k">class</span> <span class="nc">RegForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s2">&quot;Generate registration form!&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class RegForm extends Form{
+    public function generateForm() {
+        echo "Generate registration form!";
+    }
+}
 
-<span class="k">class</span> <span class="nc">AuthForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s2">&quot;Generate authentication form!&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class AuthForm extends Form{
+    public function generateForm() {
+        echo "Generate authentication form!";
+    }
+}
 
-<span class="k">class</span> <span class="nc">PostForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s2">&quot;Generate posting form!&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class PostForm extends Form{
+    public function generateForm() {
+        echo "Generate posting form!";
+    }
+}
 
-<span class="c1">//Иерархия классов валидаторов</span>
-<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Validator</span> <span class="p">{</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">();</span>
-<span class="p">}</span>
+//Иерархия классов валидаторов
+abstract class Validator {
+    abstract public function validate();
+}
 
-<span class="k">class</span> <span class="nc">RegValidator</span> <span class="k">extends</span> <span class="nx">Validator</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s1">&#39;Validate RegForm&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class RegValidator extends Validator {
+    public function validate() {
+        echo 'Validate RegForm';
+    }
+}
 
-<span class="k">class</span> <span class="nc">AuthValidator</span> <span class="k">extends</span> <span class="nx">Validator</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s1">&#39;Validate AuthForm&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class AuthValidator extends Validator {
+    public function validate() {
+        echo 'Validate AuthForm';
+    }
+}
 
-<span class="k">class</span> <span class="nc">PostValidator</span> <span class="k">extends</span> <span class="nx">Validator</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s1">&#39;Validate PostForm&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+class PostValidator extends Validator {
+    public function validate() {
+        echo 'Validate PostForm';
+    }
+}
+</code></pre>
 <p>У нас есть две иерархии классов и в зависимости от каких-то заранее
 неизвестных параметров нам нужно уметь создавать связанные экземпляры
 классов из этой иерархии. Т.е. для класса RegForm нам нужно создавать
@@ -124,94 +123,93 @@ RegValidator и тд. Для решения этой проблемы необх
 предоставляет интерфейс для создания взаимосвязанных объектов. Дочерние
 классы фабрики реализуют функционал для создания экземпляров какого-то
 одного набора компонентов.</p>
-<h2>Реализация</h2>
+<h2 id="realizatsiia">Реализация</h2>
 <p>Применим шаблон абстрактная фабрика к нашему примеру для создания
 связанных объектов: форм и валидаторов к ним:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">//Иерархия фабрик</span>
-<span class="k">abstract</span> <span class="k">class</span> <span class="nc">FormFactory</span><span class="p">{</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">();</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">getValidator</span><span class="p">();</span>
-<span class="p">}</span>
+<pre><code>:::php
+&lt;?php
+//Иерархия фабрик
+abstract class FormFactory{
+    abstract public function getForm();
+    abstract public function getValidator();
+}
 
-<span class="k">class</span> <span class="nc">RegFormFactory</span> <span class="k">extends</span> <span class="nx">FormFactory</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">RegForm</span><span class="p">();;</span>
-    <span class="p">}</span>
+class RegFormFactory extends FormFactory{
+    public function getForm() {
+        return new RegForm();;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getValidator</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">RegValidator</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function getValidator() {
+        return new RegValidator();
+    }
+}
 
-<span class="k">class</span> <span class="nc">AuthFormFactory</span> <span class="k">extends</span> <span class="nx">FormFactory</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">AuthForm</span><span class="p">();;</span>
-    <span class="p">}</span>
+class AuthFormFactory extends FormFactory{
+    public function getForm() {
+        return new AuthForm();;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getValidator</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">AuthValidator</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function getValidator() {
+        return new AuthValidator();
+    }
+}
 
-<span class="k">class</span> <span class="nc">PostFormFactory</span> <span class="k">extends</span> <span class="nx">FormFactory</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">PostForm</span><span class="p">();;</span>
-    <span class="p">}</span>
+class PostFormFactory extends FormFactory{
+    public function getForm() {
+        return new PostForm();;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">getValidator</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="k">new</span> <span class="nx">PostValidator</span><span class="p">();</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function getValidator() {
+        return new PostValidator();
+    }
+}
 
-<span class="c1">//Иерархия классов форм</span>
-<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Form</span><span class="p">{</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">();</span>
-<span class="p">}</span>
+//Иерархия классов форм
+abstract class Form{
+    abstract public function generateForm();
+}
 
-<span class="k">class</span> <span class="nc">RegForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s2">&quot;Generate registration form!&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class RegForm extends Form{
+    public function generateForm() {
+        echo "Generate registration form!";
+    }
+}
 
-<span class="k">class</span> <span class="nc">AuthForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s2">&quot;Generate authentication form!&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class AuthForm extends Form{
+    public function generateForm() {
+        echo "Generate authentication form!";
+    }
+}
 
-<span class="k">class</span> <span class="nc">PostForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s2">&quot;Generate posting form!&quot;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class PostForm extends Form{
+    public function generateForm() {
+        echo "Generate posting form!";
+    }
+}
 
-<span class="c1">//Иерархия классов валидаторов</span>
-<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Validator</span> <span class="p">{</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">();</span>
-<span class="p">}</span>
+//Иерархия классов валидаторов
+abstract class Validator {
+    abstract public function validate();
+}
 
-<span class="k">class</span> <span class="nc">RegValidator</span> <span class="k">extends</span> <span class="nx">Validator</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s1">&#39;Validate RegForm&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class RegValidator extends Validator {
+    public function validate() {
+        echo 'Validate RegForm';
+    }
+}
 
-<span class="k">class</span> <span class="nc">AuthValidator</span> <span class="k">extends</span> <span class="nx">Validator</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s1">&#39;Validate AuthForm&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+class AuthValidator extends Validator {
+    public function validate() {
+        echo 'Validate AuthForm';
+    }
+}
 
-<span class="k">class</span> <span class="nc">PostValidator</span> <span class="k">extends</span> <span class="nx">Validator</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">validate</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">echo</span> <span class="s1">&#39;Validate PostForm&#39;</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+class PostValidator extends Validator {
+    public function validate() {
+        echo 'Validate PostForm';
+    }
+}
+</code></pre>
 <p>Реализовав иерархию фабрик - FormFactory мы добились нескольких важных
 улучшений:</p>
 <ul>

@@ -65,7 +65,8 @@
 <strong>REST Console</strong>.</p>
 <p>В скрипте просто выводим значение <code>$_SERVER</code>. После нажатия кнопки Send
 получаем следующий вывод:</p>
-<div class="highlight"><pre><span></span>(
+<pre><code>:::text
+(
     ....
     [SERVER_PROTOCOL] =&gt; HTTP/1.1
     [GATEWAY_INTERFACE] =&gt; CGI/1.1
@@ -77,9 +78,7 @@
     [PHP_SELF] =&gt; /auth.php
     [REQUEST_TIME] =&gt; 1328733817
 )
-</pre></div>
-
-
+</code></pre>
 <p>Как видите заголовки успешно сохранены в <code>$_SERVER</code> и носят название
 начинающееся с префикса "HTTP_" и продолжающееся именем заголовка в
 верхнем регистре с замененными знаками "-" на "_".</p>

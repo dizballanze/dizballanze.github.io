@@ -54,11 +54,11 @@
     <time class="published" datetime="2011-02-28T21:38:00+03:00"><nobr>28 фев 2011</nobr></time>
   </header>
   <div class="entry-content">
-    <p><img alt="registry" src="/media/2011/02/Windows-7-Registry-Tricks-150x150.jpg" title="registry"></p>
+    <p><img alt="registry" src="/media/2011/02/Windows-7-Registry-Tricks-150x150.jpg" title="registry"/></p>
 <p>Рассмотрим паттерн проектирования - реестр. Данный паттерн является
 чем-то вроде безопасной замены глобальных переменных. При помощи данного
 шаблона вы сможете обмениваться данными в многоуровневом приложении.</p>
-<h2>Описание</h2>
+<h2 id="opisanie">Описание</h2>
 <p>Наверное все сложные системы являются многоуровневыми, иначе мы бы
 просто не смогли уследить за всеми зависимостями и связями внутри
 системы. Разбивая систему на независимые уровни обменивающиеся данными
@@ -80,7 +80,7 @@
 преимущества глобальных переменных без некоторых их недостатков. Теперь,
 например, вы не сможете случайно затереть важные данные, т.к. это может
 произойти с глобальными переменными.</p>
-<h2>Реализация</h2>
+<h2 id="realizatsiia">Реализация</h2>
 <p>Типичным примером паттерна реестр является объект хранящий параметры
 системы в виде древовидной структуры. Т.к. доступ к конфигурациям
 системы может потребоваться на любом уровне приложения, то мы можем
@@ -89,159 +89,158 @@
 перестаем зависеть от способа хранения конфигураций и можем легко
 перейти от хранения параметров в ini-файле к хранению в БД или в
 memcache. Итак, реализуем такой класс на языке php:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="sd">/**</span>
-<span class="sd"> * Интерфейс загрузчиков ресурсов, отвечает за загрузку ресурсов из хранилища, </span>
-<span class="sd"> * должен возвращать массив параметров</span>
-<span class="sd"> */</span>
-<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Loader</span><span class="p">{</span>
-    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">load</span><span class="p">();</span>
-<span class="p">}</span>
+<pre><code>:::php
+&lt;?php
+/**
+ * Интерфейс загрузчиков ресурсов, отвечает за загрузку ресурсов из хранилища, 
+ * должен возвращать массив параметров
+ */
+abstract class Loader{
+    abstract public function load();
+}
 
-<span class="sd">/**</span>
-<span class="sd"> * Класс загрузчик параметров из файла содержащего сериализованные данные</span>
-<span class="sd"> */</span>
-<span class="k">class</span> <span class="nc">Serialize_File_Loader</span> <span class="k">extends</span> <span class="nx">Loader</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+/**
+ * Класс загрузчик параметров из файла содержащего сериализованные данные
+ */
+class Serialize_File_Loader extends Loader{
+    protected $path = '';
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="nb">strlen</span><span class="p">(</span><span class="nv">$path</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Должен быть указан путь к файлу с параметрами в формате сериализавонного массива php&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span> <span class="o">=</span> <span class="nv">$path</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function __construct($path) {
+        if (0 == strlen($path))
+            throw new Exception ('Должен быть указан путь к файлу с параметрами в формате сериализавонного массива php');
+        $this-&gt;path = $path;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">load</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">file_exists</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_readable</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Файл не существует или его невозможно считать&#39;</span><span class="p">);</span>
-        <span class="nv">$array</span> <span class="o">=</span> <span class="nb">unserialize</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">));</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$array</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$array</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Некорректный формат файла&#39;</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nv">$array</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function load() {
+        if (!file_exists($this-&gt;path) || !is_readable($this-&gt;path))
+            throw new Exception ('Файл не существует или его невозможно считать');
+        $array = unserialize(file_get_contents($this-&gt;path));
+        if (!$array || !is_array($array))
+            throw new Exception ('Некорректный формат файла');
+        return $array;
+    }
+}
 
-<span class="sd">/**</span>
-<span class="sd"> * Класс загрузчик параметров из файла содержащего данные в формате JSON</span>
-<span class="sd"> */</span>
-<span class="k">class</span> <span class="nc">JSON_File_Loader</span> <span class="k">extends</span> <span class="nx">Loader</span><span class="p">{</span>
-    <span class="k">protected</span> <span class="nv">$path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+/**
+ * Класс загрузчик параметров из файла содержащего данные в формате JSON
+ */
+class JSON_File_Loader extends Loader{
+    protected $path = '';
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$path</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="nb">strlen</span><span class="p">(</span><span class="nv">$path</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Должен быть указан путь к файлу с параметрами в формате JSON&#39;</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span> <span class="o">=</span> <span class="nv">$path</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function __construct($path) {
+        if (0 == strlen($path))
+            throw new Exception ('Должен быть указан путь к файлу с параметрами в формате JSON');
+        $this-&gt;path = $path;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">load</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">file_exists</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_readable</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Файл не существует или его невозможно считать&#39;</span><span class="p">);</span>
-        <span class="nv">$array</span> <span class="o">=</span> <span class="nb">json_decode</span><span class="p">(</span><span class="nb">file_get_contents</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">path</span><span class="p">),</span> <span class="k">true</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$array</span> <span class="o">||</span> <span class="o">!</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$array</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Некорректный формат файла&#39;</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nv">$array</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+    public function load() {
+        if (!file_exists($this-&gt;path) || !is_readable($this-&gt;path))
+            throw new Exception ('Файл не существует или его невозможно считать');
+        $array = json_decode(file_get_contents($this-&gt;path), true);
+        if (!$array || !is_array($array))
+            throw new Exception ('Некорректный формат файла');
+        return $array;
+    }
+}
 
-<span class="k">class</span> <span class="nc">Parameters_Registry</span> <span class="k">implements</span> <span class="nx">Countable</span><span class="p">,</span> <span class="nx">Iterator</span><span class="p">{</span>
-    <span class="sd">/**</span>
-<span class="sd">     * Собственно данные</span>
-<span class="sd">     * @var array</span>
-<span class="sd">     */</span>
-    <span class="k">protected</span> <span class="nv">$data</span> <span class="o">=</span> <span class="k">array</span><span class="p">();</span>
+class Parameters_Registry implements Countable, Iterator{
+    /**
+     * Собственно данные
+     * @var array
+     */
+    protected $data = array();
 
-    <span class="sd">/**</span>
-<span class="sd">     * Статическая переменная - ссылается на экземпляр данного класса</span>
-<span class="sd">     * @var type </span>
-<span class="sd">     */</span>
-    <span class="k">static</span> <span class="k">protected</span> <span class="nv">$instance</span> <span class="o">=</span> <span class="k">null</span><span class="p">;</span>
+    /**
+     * Статическая переменная - ссылается на экземпляр данного класса
+     * @var type 
+     */
+    static protected $instance = null;
 
-    <span class="sd">/**</span>
-<span class="sd">     * Метод инициализации, необходимо запускать перед началом работы</span>
-<span class="sd">     * @param Loader $loader - загрузчик параметров</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">init</span><span class="p">(</span><span class="nx">Loader</span> <span class="nv">$loader</span><span class="p">){</span>
-        <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parameters_Registry</span><span class="p">(</span><span class="nv">$loader</span><span class="o">-&gt;</span><span class="na">load</span><span class="p">());</span>
-    <span class="p">}</span>
+    /**
+     * Метод инициализации, необходимо запускать перед началом работы
+     * @param Loader $loader - загрузчик параметров
+     */
+    public static function init(Loader $loader){
+        self::$instance = new Parameters_Registry($loader-&gt;load());
+    }
 
-    <span class="sd">/**</span>
-<span class="sd">     * Реализуем паттерн Singleton</span>
-<span class="sd">     * @return type </span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">static</span> <span class="k">function</span> <span class="nf">getInstance</span><span class="p">(){</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">is_null</span><span class="p">(</span><span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">))</span>
-            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Exception</span> <span class="p">(</span><span class="s1">&#39;Реест должен быть инициализирован перед использованием!&#39;</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nx">self</span><span class="o">::</span><span class="nv">$instance</span><span class="p">;</span>
-    <span class="p">}</span>
+    /**
+     * Реализуем паттерн Singleton
+     * @return type 
+     */
+    public static function getInstance(){
+        if (is_null(self::$instance))
+            throw new Exception ('Реест должен быть инициализирован перед использованием!');
+        return self::$instance;
+    }
 
-    <span class="sd">/**</span>
-<span class="sd">     * Закрытый конструктор, необходим для реализации Singleton</span>
-<span class="sd">     * @param array $data </span>
-<span class="sd">     */</span>
-    <span class="k">protected</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="k">Array</span> <span class="nv">$data</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span> <span class="o">=</span> <span class="nv">$data</span><span class="p">;</span>
-    <span class="p">}</span>
+    /**
+     * Закрытый конструктор, необходим для реализации Singleton
+     * @param array $data 
+     */
+    protected function __construct(Array $data) {
+        $this-&gt;data = $data;
+    }
 
-    <span class="sd">/**</span>
-<span class="sd">     * Магические методы и реализация интерфейсов</span>
-<span class="sd">     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__get</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">)){</span>
-            <span class="nb">trigger_error</span><span class="p">(</span><span class="s1">&#39;Неизвестный параметр: &#39;</span> <span class="o">.</span> <span class="nv">$name</span><span class="p">,</span> <span class="nx">E_USER_NOTICE</span><span class="p">);</span>
-            <span class="k">return</span> <span class="k">null</span><span class="p">;</span>
-        <span class="p">}</span>
+    /**
+     * Магические методы и реализация интерфейсов
+     */
+    public function __get($name) {
+        if (!array_key_exists($name, $this-&gt;data)){
+            trigger_error('Неизвестный параметр: ' . $name, E_USER_NOTICE);
+            return null;
+        }
 
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">is_array</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]))</span>
-            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">];</span>
-        <span class="c1">// Если массив, то создаём ещё один экземпляр класса параметров, инициализируем</span>
-        <span class="c1">// его данными этого массива, ставим на его место в массиве данных</span>
-        <span class="c1">// и возвращаем.</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Parameters_Registry</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]);</span> <span class="c1">// %)</span>
-    <span class="p">}</span>
+        if (!is_array($this-&gt;data[$name]))
+            return $this-&gt;data[$name];
+        // Если массив, то создаём ещё один экземпляр класса параметров, инициализируем
+        // его данными этого массива, ставим на его место в массиве данных
+        // и возвращаем.
+        return $this-&gt;data[$name] = new Parameters_Registry($this-&gt;data[$name]); // %)
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__set</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$value</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$value</span><span class="p">;</span>
-    <span class="p">}</span>
+    public function __set($name, $value) {
+        $this-&gt;data['name'] = $value;
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">count</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nb">count</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function count() {
+        return count($this-&gt;data);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__isset</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nb">isset</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]);</span>
-    <span class="p">}</span>
+    public function __isset($name) {
+        return isset ($this-&gt;data[$name]);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="fm">__unset</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">))</span>
-            <span class="nb">unset</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">[</span><span class="nv">$name</span><span class="p">]);</span>
-    <span class="p">}</span>
+    public function __unset($name) {
+        if (array_key_exists($name, $this-&gt;data))
+            unset ($this-&gt;data[$name]);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">rewind</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nb">reset</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function rewind() {
+        reset($this-&gt;data);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">current</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$key</span> <span class="o">=</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">__get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function current() {
+        $key = key($this-&gt;data);
+        return $this-&gt;__get($key);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">key</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function key() {
+        return key($this-&gt;data);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">next</span><span class="p">(){</span>
-        <span class="nb">next</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-        <span class="nv">$key</span> <span class="o">=</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">__get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
-    <span class="p">}</span>
+    public function next(){
+        next($this-&gt;data);
+        $key = key($this-&gt;data);
+        return $this-&gt;__get($key);
+    }
 
-    <span class="k">public</span> <span class="k">function</span> <span class="nf">valid</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$key</span> <span class="o">=</span> <span class="nb">key</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">data</span><span class="p">);</span>
-        <span class="k">return</span> <span class="p">((</span><span class="k">false</span> <span class="o">!==</span> <span class="nv">$key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="k">null</span> <span class="o">!==</span> <span class="nv">$key</span><span class="p">));</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+    public function valid() {
+        $key = key($this-&gt;data);
+        return ((false !== $key) &amp;&amp; (null !== $key));
+    }
+}
+</code></pre>
 <p>Вот собственно полная иерархия классов необходимых для того, что-бы раз
 и на всегда решить ваши проблемы с доступом к конфигурациям ;). А если
 серьезно, то у нас есть иерархия классов наследующих Loader, они
@@ -267,65 +266,60 @@ memcache. Итак, реализуем такой класс на языке php
 функционал реестра.</p>
 <p>Теперь давайте протестируем полученные классы и разберемся с тем как же
 можно их использовать. Генерируем тесты:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// Готовим данные для тестирования</span>
-<span class="nv">$array</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span>
-    <span class="s1">&#39;db&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
-        <span class="s1">&#39;db_name&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;test_db&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;db_host&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;db_port&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;3301&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;db_type&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;MySQL&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;db_pass&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;ololo&#39;</span>
-    <span class="p">),</span>
-    <span class="s1">&#39;test&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
-        <span class="s1">&#39;test2&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
-            <span class="s1">&#39;test3&#39;</span><span class="o">=&gt;</span><span class="k">array</span><span class="p">(</span>
-                <span class="s1">&#39;last_one&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;Фааааак йеееех ;[&#39;</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-<span class="p">);</span>
-<span class="nb">file_put_contents</span><span class="p">(</span><span class="s1">&#39;test.ser&#39;</span><span class="p">,</span> <span class="nb">serialize</span><span class="p">(</span><span class="nv">$array</span><span class="p">));</span>
-<span class="nb">file_put_contents</span><span class="p">(</span><span class="s1">&#39;test.json&#39;</span><span class="p">,</span> <span class="nb">json_encode</span><span class="p">(</span><span class="nv">$array</span><span class="p">));</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+// Готовим данные для тестирования
+$array = array(
+    'db'=&gt;array(
+        'db_name'=&gt;'test_db',
+        'db_host'=&gt;'localhost',
+        'db_port'=&gt;'3301',
+        'db_type'=&gt;'MySQL',
+        'db_pass'=&gt;'ololo'
+    ),
+    'test'=&gt;array(
+        'test2'=&gt;array(
+            'test3'=&gt;array(
+                'last_one'=&gt;'Фааааак йеееех ;['
+            )
+        )
+    )
+);
+file_put_contents('test.ser', serialize($array));
+file_put_contents('test.json', json_encode($array));
+</code></pre>
 <p>Первый тест:</p>
-<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
-<span class="c1">// ...</span>
-<span class="nx">Parameters_Registry</span><span class="o">::</span><span class="na">init</span><span class="p">(</span><span class="k">new</span> <span class="nx">JSON_File_Loader</span><span class="p">(</span><span class="s1">&#39;test.json&#39;</span><span class="p">));</span>
-<span class="nv">$registry</span> <span class="o">=</span> <span class="nx">Parameters_Registry</span><span class="o">::</span><span class="na">getInstance</span><span class="p">();</span>
-<span class="k">echo</span> <span class="nb">count</span><span class="p">(</span><span class="nv">$registry</span><span class="o">-&gt;</span><span class="na">db</span><span class="p">)</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
-<span class="k">foreach</span> <span class="p">(</span><span class="nv">$registry</span><span class="o">-&gt;</span><span class="na">db</span> <span class="k">as</span> <span class="nv">$key</span><span class="o">=&gt;</span><span class="nv">$value</span><span class="p">){</span>
-    <span class="k">echo</span> <span class="nv">$key</span> <span class="o">.</span> <span class="s1">&#39;:&#39;</span> <span class="o">.</span> <span class="nv">$value</span> <span class="o">.</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<pre><code>:::php
+&lt;?php
+// ...
+Parameters_Registry::init(new JSON_File_Loader('test.json'));
+$registry = Parameters_Registry::getInstance();
+echo count($registry-&gt;db) . "\n";
+foreach ($registry-&gt;db as $key=&gt;$value){
+    echo $key . ':' . $value . "\n";
+}
+</code></pre>
 <p>Здесь я демонстрирую Countable и Iterator. В результате выполнения
 предыдущего теста получим следующее:</p>
-<div class="highlight"><pre><span></span>5
+<pre><code>:::text
+5
 db_name:test_db
 db_host:localhost
 db_port:3301
 db_type:MySQL
 db_pass:ololo
-</pre></div>
-
-
+</code></pre>
 <p>Второй тест:</p>
-<div class="highlight"><pre><span></span><span class="x">Parameters_Registry::init(new Serialize_File_Loader(&#39;test.ser&#39;));</span>
-<span class="x">$registry = Parameters_Registry::getInstance();</span>
-<span class="x">echo $registry-&gt;test-&gt;test2-&gt;test3-&gt;last_one;</span>
-</pre></div>
-
-
+<pre><code>:::php
+Parameters_Registry::init(new Serialize_File_Loader('test.ser'));
+$registry = Parameters_Registry::getInstance();
+echo $registry-&gt;test-&gt;test2-&gt;test3-&gt;last_one;
+</code></pre>
 <p>Здесь вы можете увидеть, как работает chaining. Результат:</p>
-<div class="highlight"><pre><span></span>Фааааак йеееех ;[
-</pre></div>
-
-
-<h2>Заключение</h2>
+<pre><code>:::text
+Фааааак йеееех ;[
+</code></pre>
+<h2 id="zakliuchenie">Заключение</h2>
 <p>В заключении подведем итог всему вышеизложенному. Паттерн Registry
 позволяет нам получать доступ к необходим данным на различных уровнях
 приложения, предоставляя единую точку доступа для всех уровней. Таким

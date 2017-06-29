@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - БД</title><link href="/ru/" rel="alternate"></link><link href="http://dizballanze.com/feeds/bd.atom.xml" rel="self"></link><id>/ru/</id><updated>2011-01-29T18:42:00+03:00</updated><entry><title>MySQL - обзор типов таблиц</title><link href="/ru/mysql-obzor-tipov-tablits/" rel="alternate"></link><published>2011-01-29T18:42:00+03:00</published><updated>2011-01-29T18:42:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-01-29:/ru/mysql-obzor-tipov-tablits/</id><summary type="html">&lt;p&gt;&lt;img alt="mysql" src="/media/2011/01/mysql-125x125.png" title="MySQL logo"&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - БД</title><link href="/ru/" rel="alternate"></link><link href="http://dizballanze.com/feeds/bd.atom.xml" rel="self"></link><id>/ru/</id><updated>2011-01-29T18:42:00+03:00</updated><entry><title>MySQL - обзор типов таблиц</title><link href="/ru/mysql-obzor-tipov-tablits/" rel="alternate"></link><published>2011-01-29T18:42:00+03:00</published><updated>2011-01-29T18:42:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2011-01-29:/ru/mysql-obzor-tipov-tablits/</id><summary type="html">&lt;p&gt;&lt;img alt="mysql" src="/media/2011/01/mysql-125x125.png" title="MySQL logo"/&gt;&lt;/p&gt;
 &lt;p&gt;Здравствуйте, сегодня мы поговорим о типах таблиц в MySQL. Архитектура
 MySQL позволяет подключать разные движки таблиц. На данный момент MySQL
 поддерживает множество различных типов таблиц, каждый из которых имеет
 свои преимущества и недостатки. Я перечислю и коротко опишу основные
 типы таблиц, а затем проведу небольшой тест производительности наиболее
-часто используемых …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="mysql" src="/media/2011/01/mysql-125x125.png" title="MySQL logo"&gt;&lt;/p&gt;
+часто используемых …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="mysql" src="/media/2011/01/mysql-125x125.png" title="MySQL logo"/&gt;&lt;/p&gt;
 &lt;p&gt;Здравствуйте, сегодня мы поговорим о типах таблиц в MySQL. Архитектура
 MySQL позволяет подключать разные движки таблиц. На данный момент MySQL
 поддерживает множество различных типов таблиц, каждый из которых имеет
@@ -14,90 +14,21 @@ MySQL позволяет подключать разные движки табл
 часто используемых типов - myisam и innodb.&lt;/p&gt;
 &lt;p&gt;Для того что-бы посмотреть какие типы поддерживает ваша инсталляция
 MySQL необходимо выполнить следующий SQL запрос:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;SHOW&lt;/span&gt; &lt;span class="n"&gt;ENGINES&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::sql
+SHOW ENGINES;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;В результате вы получаете таблицу содержащую информацию о том какие типы
 таблиц установлены в вашей системе и краткое описание их возможностей.&lt;/p&gt;
-&lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th align="left"&gt;Engine&lt;/th&gt;
-&lt;th align="left"&gt;Support&lt;/th&gt;
-&lt;th align="left"&gt;Comment&lt;/th&gt;
-&lt;th align="left"&gt;Transactions&lt;/th&gt;
-&lt;th align="left"&gt;XA&lt;/th&gt;
-&lt;th align="left"&gt;Savepoints&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;FEDERATED&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;Federated MySQL storage engine&lt;/td&gt;
-&lt;td align="left"&gt;NULL&lt;/td&gt;
-&lt;td align="left"&gt;NULL&lt;/td&gt;
-&lt;td align="left"&gt;NULL CSV&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;MyISAM&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;MyISAM storage engine&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;BLACKHOLE&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;/dev/null storage engine (anything you write to it disappears)&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;MRG_MYISAM&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;Collection of identical MyISAM tables&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;MEMORY&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;Hash based, stored in memory, useful for temporary tables&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;ARCHIVE&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;Archive storage engine&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;InnoDB&lt;/td&gt;
-&lt;td align="left"&gt;DEFAULT&lt;/td&gt;
-&lt;td align="left"&gt;Supports transactions, row-level locking, and foreign keys&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;PERFORMANCE_SCHEMA&lt;/td&gt;
-&lt;td align="left"&gt;YES&lt;/td&gt;
-&lt;td align="left"&gt;Performance Schema&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;td align="left"&gt;NO&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
+&lt;p&gt;Engine             | Support | Comment | Transactions | XA   | Savepoints
+:------------------|:--------|:--------|:-------------|:-----|:-----------
+FEDERATED          | NO      | Federated MySQL storage engine | NULL         | NULL | NULL CSV                | YES     | CSV storage engine                                             | NO           | NO   | NO       &lt;br/&gt;
+MyISAM             | YES     | MyISAM storage engine                                          | NO           | NO   | NO       &lt;br/&gt;
+BLACKHOLE          | YES     | /dev/null storage engine (anything you write to it disappears) | NO           | NO   | NO       &lt;br/&gt;
+MRG_MYISAM         | YES     | Collection of identical MyISAM tables                          | NO           | NO   | NO       &lt;br/&gt;
+MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables      | NO           | NO   | NO       &lt;br/&gt;
+ARCHIVE            | YES     | Archive storage engine                                         | NO           | NO   | NO       &lt;br/&gt;
+InnoDB             | DEFAULT | Supports transactions, row-level locking, and foreign keys     | YES          | YES  | YES      &lt;br/&gt;
+PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO&lt;/p&gt;
 &lt;p&gt;Нас в основном будет интересовать столбец support, который содержит
 информацию о поддержке типа таблицы и может принимать значения: NO - не
 поддерживается, YES - поддерживается, DEFAULT -используется
@@ -137,281 +68,145 @@ MySQL необходимо выполнить следующий SQL запро�
     в качестве примера.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Сравнительная таблица основных типов таблиц&lt;/p&gt;
-&lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th align="left"&gt;Функция&lt;/th&gt;
-&lt;th align="left"&gt;MyISAM&lt;/th&gt;
-&lt;th align="left"&gt;Memory&lt;/th&gt;
-&lt;th align="left"&gt;InnoDB&lt;/th&gt;
-&lt;th align="left"&gt;Archive&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Максимальный объём хранимых данных&lt;/td&gt;
-&lt;td align="left"&gt;256TB&lt;/td&gt;
-&lt;td align="left"&gt;RAM&lt;/td&gt;
-&lt;td align="left"&gt;64TB&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Транзакции&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Блокировки&lt;/td&gt;
-&lt;td align="left"&gt;Таблица&lt;/td&gt;
-&lt;td align="left"&gt;Таблица&lt;/td&gt;
-&lt;td align="left"&gt;Запись&lt;/td&gt;
-&lt;td align="left"&gt;Запись&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;MVCC&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;B-деревья&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Хэш индексы&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Индексы полнотекстового поиска&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Кластерные индексы&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Кэширование данных&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Н/д&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Кэширование индексов&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Н/д&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Сжатие данных&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Шифрование данных&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Поддержка кластерных БД&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Репликация&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Внешние ключи&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Нет&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Бэкап&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Кэширование запросов&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;td align="left"&gt;Да&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-&lt;h2&gt;Тестирование производительность InnoDB и MyIASM&lt;/h2&gt;
+&lt;p&gt;Функция | MyISAM | Memory | InnoDB | Archive
+:-------|:-------|:-------|:-------|:-------
+Максимальный объём хранимых данных | 256TB | RAM | 64TB | Нет
+Транзакции | Нет | Нет | Да | Нет
+Блокировки | Таблица | Таблица | Запись | Запись
+MVCC | Нет | Нет | Да | Нет
+B-деревья | Да | Да | Да | Нет
+Хэш индексы | Нет | Да | Нет | Нет
+Индексы полнотекстового поиска | Да | Нет | Нет | Нет
+Кластерные индексы | Нет | Нет | Да | Нет
+Кэширование данных | Нет | Н/д | Да | Нет
+Кэширование индексов | Да | Н/д | Да | Нет
+Сжатие данных | Да | Нет | Да | Да
+Шифрование данных | Да | Да | Да | Да
+Поддержка кластерных БД | Нет | Нет | Нет | Нет
+Репликация | Да | Да | Да | Да
+Внешние ключи | Нет | Нет | Да | Нет
+Бэкап | Да | Да | Да | Да
+Кэширование запросов | Да | Да | Да | Да&lt;/p&gt;
+&lt;h2 id="testirovanie-proizvoditelnost-innodb-i-myiasm"&gt;Тестирование производительность InnoDB и MyIASM&lt;/h2&gt;
 &lt;p&gt;Наибольший интерес для web-разработчика составляют innodb и myisam.
 Сейчас мы проведем сравнительный тест производительности этих типов
 таблиц. Для этого сначала создадим две одинаковые по структуре таблицы,
 но с разным типом движка хранения:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;CREATE&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt; &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;inno&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
-  &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;BIGINT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt; &lt;span class="n"&gt;AUTO_INCREMENT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="k"&gt;data&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;VARCHAR&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="k"&gt;PRIMARY&lt;/span&gt; &lt;span class="k"&gt;KEY&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;ENGINE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;InnoDB&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::sql
+CREATE TABLE `inno` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `data` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
 
-&lt;span class="k"&gt;CREATE&lt;/span&gt; &lt;span class="k"&gt;TABLE&lt;/span&gt; &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;myisam&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
-  &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;BIGINT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt; &lt;span class="n"&gt;AUTO_INCREMENT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="k"&gt;data&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt; &lt;span class="nb"&gt;VARCHAR&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;NOT&lt;/span&gt; &lt;span class="k"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="k"&gt;PRIMARY&lt;/span&gt; &lt;span class="k"&gt;KEY&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="o"&gt;`&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;ENGINE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;MyISAM&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+CREATE TABLE `myisam` (
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `data` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Напишем небольшой скрипт который будет выполнять 3 теста: запись данных
 (insert), выборка по ключу, выборка по не ключевому полю.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
-&lt;span class="c1"&gt;// ...&lt;/span&gt;
-&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;timer&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nv"&gt;$value&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::php
+&amp;lt;?php
+// ...
+class timer{
+    public $value=0;
 
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;microtime&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
+    public function start(){
+        $this-&amp;gt;value = microtime(true);
+    }
 
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;end&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;microtime&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+    public function end(){
+        return microtime(true) - $this-&amp;gt;value;
+    }
+}
 
-&lt;span class="nv"&gt;$timer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;timer&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+$timer = new timer();
 
-&lt;span class="nb"&gt;mysql_connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;localhost&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;root&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nb"&gt;mysql_select_db&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;test&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+mysql_connect('localhost','root');
+mysql_select_db('test');
 
-&lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nv"&gt;$select_query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;SELECT data FROM myisam WHERE id = :val:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nv"&gt;$i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;=&lt;/span&gt; &lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="nv"&gt;$result&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;mysql_query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;str_replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;:val:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$select_query&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-    &lt;span class="nv"&gt;$tmp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;mysql_fetch_array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$tmp&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+$data = array();
+$select_query = 'SELECT data FROM myisam WHERE id = :val:';
+for ($i = 0; $i &amp;lt;= 10000; $i++){
+    $result = mysql_query(str_replace(':val:', $i, $select_query));
+    $tmp = mysql_fetch_array($result);
+    $data[] = $tmp[0];
+}
 
-&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;lt;br/&amp;gt;MyISAM select&amp;lt;br/&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$select_query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;SELECT * FROM myisam WHERE data = :val:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$timer&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$one&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="nb"&gt;mysql_query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;str_replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;:val:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$one&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$select_query&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$timer&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;end&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; s&amp;lt;br/&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+echo '&amp;lt;br/&amp;gt;MyISAM select&amp;lt;br/&amp;gt;';
+$select_query = 'SELECT * FROM myisam WHERE data = :val:';
+$timer-&amp;gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $select_query));
+}
+echo $timer-&amp;gt;end() . ' s&amp;lt;br/&amp;gt;';
 
-&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;lt;br/&amp;gt;InnoDB select&amp;lt;br/&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$select_query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;SELECT * FROM inno WHERE data = :val:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$timer&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;start&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$one&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-    &lt;span class="nb"&gt;mysql_query&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;str_replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;:val:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$one&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$select_query&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="k"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$timer&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;end&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; s&amp;lt;br/&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+echo '&amp;lt;br/&amp;gt;InnoDB select&amp;lt;br/&amp;gt;';
+$select_query = 'SELECT * FROM inno WHERE data = :val:';
+$timer-&amp;gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $select_query));
+}
+echo $timer-&amp;gt;end() . ' s&amp;lt;br/&amp;gt;';
 
-&lt;span class="cm"&gt;/*&lt;/span&gt;
+/*
 
-&lt;span class="cm"&gt;$data = array();&lt;/span&gt;
-&lt;span class="cm"&gt;for ($i = 0; $i &amp;lt;= 10000; $i++){&lt;/span&gt;
-&lt;span class="cm"&gt;    $data[] = mt_rand(0, 100500);&lt;/span&gt;
-&lt;span class="cm"&gt;}&lt;/span&gt;
+$data = array();
+for ($i = 0; $i &amp;lt;= 10000; $i++){
+    $data[] = mt_rand(0, 100500);
+}
 
-&lt;span class="cm"&gt;echo &amp;#39;&amp;lt;br/&amp;gt;MyISAM select by key&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$select_query = &amp;#39;SELECT * FROM myisam WHERE id = :val:&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$timer-&amp;gt;start();&lt;/span&gt;
-&lt;span class="cm"&gt;for ($i = 0; $i &amp;lt;= 10000; $i++){&lt;/span&gt;
-&lt;span class="cm"&gt;    mysql_query(str_replace(&amp;#39;:val:&amp;#39;, $i, $select_query));&lt;/span&gt;
-&lt;span class="cm"&gt;}&lt;/span&gt;
-&lt;span class="cm"&gt;echo $timer-&amp;gt;end() . &amp;#39; s&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
+echo '&amp;lt;br/&amp;gt;MyISAM select by key&amp;lt;br/&amp;gt;';
+$select_query = 'SELECT * FROM myisam WHERE id = :val:';
+$timer-&amp;gt;start();
+for ($i = 0; $i &amp;lt;= 10000; $i++){
+    mysql_query(str_replace(':val:', $i, $select_query));
+}
+echo $timer-&amp;gt;end() . ' s&amp;lt;br/&amp;gt;';
 
-&lt;span class="cm"&gt;echo &amp;#39;&amp;lt;br/&amp;gt;InnoDB select by key&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$select_query = &amp;#39;SELECT * FROM inno WHERE id = :val:&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$timer-&amp;gt;start();&lt;/span&gt;
-&lt;span class="cm"&gt;for ($i = 0; $i &amp;lt;= 10000; $i++){&lt;/span&gt;
-&lt;span class="cm"&gt;    mysql_query(str_replace(&amp;#39;:val:&amp;#39;, $i, $select_query));&lt;/span&gt;
-&lt;span class="cm"&gt;}&lt;/span&gt;
-&lt;span class="cm"&gt;echo $timer-&amp;gt;end() . &amp;#39; s&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;*/&lt;/span&gt;
+echo '&amp;lt;br/&amp;gt;InnoDB select by key&amp;lt;br/&amp;gt;';
+$select_query = 'SELECT * FROM inno WHERE id = :val:';
+$timer-&amp;gt;start();
+for ($i = 0; $i &amp;lt;= 10000; $i++){
+    mysql_query(str_replace(':val:', $i, $select_query));
+}
+echo $timer-&amp;gt;end() . ' s&amp;lt;br/&amp;gt;';
+*/
 
-&lt;span class="cm"&gt;/*&lt;/span&gt;
+/*
 
-&lt;span class="cm"&gt;$data = array();&lt;/span&gt;
-&lt;span class="cm"&gt;for ($i = 0; $i &amp;lt;= 10000; $i++){&lt;/span&gt;
-&lt;span class="cm"&gt;    $data[] = mt_rand(0, 100500);&lt;/span&gt;
-&lt;span class="cm"&gt;}&lt;/span&gt;
+$data = array();
+for ($i = 0; $i &amp;lt;= 10000; $i++){
+    $data[] = mt_rand(0, 100500);
+}
 
-&lt;span class="cm"&gt;echo &amp;#39;&amp;lt;br/&amp;gt;MyISAM insert&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$insert_query = &amp;#39;INSERT INTO myisam VALUES (NULL,\&amp;#39;:val:\&amp;#39;)&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$timer-&amp;gt;start();&lt;/span&gt;
-&lt;span class="cm"&gt;foreach ($data as $one){&lt;/span&gt;
-&lt;span class="cm"&gt;    mysql_query(str_replace(&amp;#39;:val:&amp;#39;, $one, $insert_query));&lt;/span&gt;
-&lt;span class="cm"&gt;}&lt;/span&gt;
-&lt;span class="cm"&gt;echo $timer-&amp;gt;end() . &amp;#39; s&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
+echo '&amp;lt;br/&amp;gt;MyISAM insert&amp;lt;br/&amp;gt;';
+$insert_query = 'INSERT INTO myisam VALUES (NULL,\':val:\')';
+$timer-&amp;gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $insert_query));
+}
+echo $timer-&amp;gt;end() . ' s&amp;lt;br/&amp;gt;';
 
-&lt;span class="cm"&gt;echo &amp;#39;InnoDB insert&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$insert_query = &amp;#39;INSERT INTO inno VALUES (NULL,\&amp;#39;:val:\&amp;#39;)&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt;$timer-&amp;gt;start();&lt;/span&gt;
-&lt;span class="cm"&gt;foreach ($data as $one){&lt;/span&gt;
-&lt;span class="cm"&gt;    mysql_query(str_replace(&amp;#39;:val:&amp;#39;, $one, $insert_query));&lt;/span&gt;
-&lt;span class="cm"&gt;}&lt;/span&gt;
-&lt;span class="cm"&gt;echo $timer-&amp;gt;end() . &amp;#39; s&amp;lt;br/&amp;gt;&amp;#39;;&lt;/span&gt;
-&lt;span class="cm"&gt; */&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+echo 'InnoDB insert&amp;lt;br/&amp;gt;';
+$insert_query = 'INSERT INTO inno VALUES (NULL,\':val:\')';
+$timer-&amp;gt;start();
+foreach ($data as $one){
+    mysql_query(str_replace(':val:', $one, $insert_query));
+}
+echo $timer-&amp;gt;end() . ' s&amp;lt;br/&amp;gt;';
+ */
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Для того что-бы выполнить тест, нужно раскоментить один соответствующий
 блок кода. И собственно, то что у меня получилось в результате
 тестирования:&lt;/p&gt;
-&lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th align="left"&gt;Тест&lt;/th&gt;
-&lt;th align="left"&gt;InnoDB&lt;/th&gt;
-&lt;th align="left"&gt;MyISAM&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Вставка данных(insert)&lt;/td&gt;
-&lt;td align="left"&gt;15.697 с&lt;/td&gt;
-&lt;td align="left"&gt;1.591 с&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Выборка по ключу&lt;/td&gt;
-&lt;td align="left"&gt;1.678 с&lt;/td&gt;
-&lt;td align="left"&gt;1.603 с&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td align="left"&gt;Выборка по не ключевому полю&lt;/td&gt;
-&lt;td align="left"&gt;149.961 c&lt;/td&gt;
-&lt;td align="left"&gt;95.984 c&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
+&lt;p&gt;Тест                         | InnoDB    | MyISAM
+:----------------------------|:----------|:--------
+Вставка данных(insert)       | 15.697 с  | 1.591 с
+Выборка по ключу             | 1.678 с   | 1.603 с
+Выборка по не ключевому полю | 149.961 c | 95.984 c&lt;/p&gt;
 &lt;p&gt;Как мы видим myisam работает значительно быстрее, особенно это заметно
 при вставке данных. Хотя innodb и дает ряд новых возможностей и
 преимуществ, такая медлительность не позволяет ему конкурировать с

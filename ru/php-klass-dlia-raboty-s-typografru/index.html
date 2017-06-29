@@ -55,7 +55,7 @@
   </header>
   <div class="entry-content">
     <p>С недавнего времени начал использовать сервис для подготовки текстов к
-web-изданию - <img alt="ТИПО - правильно!" src="http://www.typograf.ru/img/typograf.gif">. Очень полезный и удобный
+web-изданию - <img alt="ТИПО - правильно!" src="http://www.typograf.ru/img/typograf.gif"/>. Очень полезный и удобный
 сервис, который позволяет проводить различного рода корректировки
 символов и даже выполняет исправление орфографических ошибок.</p>
 <p>Также у данного сервиса есть свое api, которое позволяет внешним сайтам
@@ -67,11 +67,12 @@ web-изданию - <img alt="ТИПО - правильно!" src="http://www.t
 phpdoc для более удобного использования.</p>
 <p>Исходный код доступен здесь: <a href="http://pastebin.com/biQqBrih">http://pastebin.com/biQqBrih</a></p>
 <p>Пример использования:</p>
-<div class="highlight"><pre><span></span><span class="x">$typograf = new Typograf();</span>
-<span class="x">// не использовать неразрывные конструкции вместо (неразрывного пробела)</span>
-<span class="x">$typograf-&gt;nowraped_insert = 0;</span>
-<span class="x">$description = $typograf-&gt;typograf($_POST[&#39;description&#39;]);</span>
-</pre></div>
+<pre><code>:::php
+$typograf = new Typograf();
+// не использовать неразрывные конструкции вместо (неразрывного пробела)
+$typograf-&gt;nowraped_insert = 0;
+$description = $typograf-&gt;typograf($_POST['description']);
+</code></pre>
   </div>
 </section>
         <footer id="contentinfo" class="body">

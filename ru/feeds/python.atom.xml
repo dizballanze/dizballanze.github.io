@@ -1,5 +1,524 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Python</title><link href="/ru/" rel="alternate"></link><link href="http://dizballanze.com/feeds/python.atom.xml" rel="self"></link><id>/ru/</id><updated>2017-06-14T16:47:00+03:00</updated><entry><title>Оптимизация производительности Django проектов (часть 1)</title><link href="/ru/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/ru/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - python</title><link href="/ru/" rel="alternate"></link><link href="http://dizballanze.com/feeds/python.atom.xml" rel="self"></link><id>/ru/</id><updated>2017-06-27T16:00:00+03:00</updated><entry><title>Оптимизация производительности Django проектов (часть 2)</title><link href="/ru/django-project-optimization-part-2/" rel="alternate"></link><published>2017-06-27T16:00:00+03:00</published><updated>2017-06-27T16:00:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-06-27:/ru/django-project-optimization-part-2/</id><summary type="html">&lt;p&gt;Содержание:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#massovye-izmeneniia"&gt;Массовые изменения&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#massovaia-vstavka"&gt;Массовая вставка&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovaia-vstavka-m2m"&gt;Массовая вставка M2M&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovoe-izmenenie"&gt;Массовое изменение&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovoe-udalenie-obektov"&gt;Массовое удаление объектов&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#iterator_1"&gt;Iterator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ispolzovanie-vneshnikh-kliuchei"&gt;Использование внешних ключей&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#poluchenie-sviazannykh-obektov"&gt;Получение связанных объектов&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ogranichenie-polei-v-vyborkakh"&gt;Ограничение полей в выборках&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#indeksy-bd"&gt;Индексы БД&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenivyi-queryset"&gt;Ленивый QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
+&lt;a href="/ru/django-project-optimization-part-1/"&gt;здесь&lt;/a&gt; и рассказывает …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Содержание:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#massovye-izmeneniia"&gt;Массовые изменения&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#massovaia-vstavka"&gt;Массовая вставка&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovaia-vstavka-m2m"&gt;Массовая вставка M2M&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovoe-izmenenie"&gt;Массовое изменение&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#massovoe-udalenie-obektov"&gt;Массовое удаление объектов&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#iterator_1"&gt;Iterator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ispolzovanie-vneshnikh-kliuchei"&gt;Использование внешних ключей&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#poluchenie-sviazannykh-obektov"&gt;Получение связанных объектов&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#ogranichenie-polei-v-vyborkakh"&gt;Ограничение полей в выборках&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#indeksy-bd"&gt;Индексы БД&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenivyi-queryset"&gt;Ленивый QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
+&lt;a href="/ru/django-project-optimization-part-1/"&gt;здесь&lt;/a&gt; и рассказывает о профилировании и настройках Django. В этой части
+мы рассмотрим оптимизацию работы с БД (модели Django).&lt;/p&gt;
+&lt;p&gt;В этой части часто будет использоваться логирование SQL запросов и DDT, про которые написано в первом посте.
+В качестве БД во всех примерах будет использоваться PostgreSQL, но для пользователей других СУБД большая часть статьи
+также будет актуальна.&lt;/p&gt;
+&lt;p&gt;Примеры в этой части будут основаны на простом приложении блога, которое мы будем разрабатывать и оптимизировать по
+ходу статьи. Начнем с следующих моделей:&lt;/p&gt;
+&lt;p&gt;```python
+from django.db import models&lt;/p&gt;
+&lt;p&gt;class Tag(models.Model):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;name = models.CharField(max_length=64)
+
+def __str__(self):
+    return self.name
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;class Author(models.Model):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;username = models.CharField(max_length=64)
+email = models.EmailField()
+bio = models.TextField()
+
+def __str__(self):
+    return self.username
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;class Article(models.Model):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;title = models.CharField(max_length=64)
+content = models.TextField()
+created_at = models.DateField()
+author = models.ForeignKey(Author)
+tags = models.ManyToManyField(Tag)
+
+def __str__(self):
+    return self.title
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Весь код доступен на &lt;a href="https://github.com/dizballanze/django-optimization-guide-2-sample/tree/initial"&gt;GitHub&lt;/a&gt;
+с разбивкой по &lt;a href="https://github.com/dizballanze/django-optimization-guide-2-sample/tags"&gt;тегам&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="massovye-izmeneniia"&gt;Массовые изменения&lt;/h2&gt;
+&lt;h3 id="massovaia-vstavka"&gt;Массовая вставка&lt;/h3&gt;
+&lt;p&gt;Предположим, что наше новое приложение блога заменяет старое приложение и нам нужно перенести данные в новые модели.
+Мы экспортировали данные из старого приложения в огромные JSON файлы. Файл с авторами имеет следующий вид:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;json
+[
+  {
+    "username": "mackchristopher",
+    "email": "dcortez@yahoo.com",
+    "bio": "Vitae mollitia in modi suscipit similique. Tempore sunt aliquid porro. Molestias tempora quos corporis quam."
+  }
+]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Сделаем команду Django для импортирования авторов из JSON файла:&lt;/p&gt;
+&lt;p&gt;```python
+class Command(BaseCommand):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;help = 'Load authors from `data/old_authors.json`'
+
+DATA_FILE_PATH = os.path.join(settings.BASE_DIR, '..', 'data', 'old_data.json')
+
+def handle(self, *args, **kwargs):
+    with open(self.DATA_FILE_PATH, 'r') as json_file:
+        data = json.loads(json_file.read())
+    for author in data:
+        self._import_author(author)
+
+def _import_author(self, author_data):
+    author = Author(
+        username=author_data['username'],
+        email=author_data['email'],
+        bio=author_data['bio'])
+    author.save()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Проверим сколько SQL запросов выполняется при загрузке 200 авторов. Используем &lt;code&gt;python manage.py shell&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+from django.core.management import call_command
+from django.db import connection
+call_command('load_data')
+print(len(connection.queries))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Этот код выведет множество SQL запросов (т.к. у нас включено их логирование), а в последней строке будет число &lt;code&gt;200&lt;/code&gt;.
+Это означает, что для каждого автора выполняется отдельный &lt;code&gt;INSERT&lt;/code&gt; SQL запрос. Если у вас большое количество данных,
+то такой подход может быть очень медленным. Воспользуемся методом &lt;code&gt;bulk_create&lt;/code&gt; менеджера модели &lt;code&gt;Author&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;```python
+    def handle(self, &lt;em&gt;args, &lt;/em&gt;*kwargs):
+        with open(self.DATA_FILE_PATH, 'r') as json_file:
+            data = json.loads(json_file.read())
+        author_instances = []
+        for author in data:
+            author_instances.append(self._import_author(author))
+        Author.objects.bulk_create(author_instances)&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;def _import_author(self, author_data):
+    author = Author(
+        username=author_data['username'],
+        email=author_data['email'],
+        bio=author_data['bio'])
+    return author
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Запустив команду, описанным выше способом, мы увидим, что был выполнен один огромный запрос к БД, для всех авторов.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Если вам действительно нужно вставить большой объем данных, возможно, придется разбить вставку на несколько запросов.
+Для этого существует параметр &lt;code&gt;batch_size&lt;/code&gt; у метода &lt;code&gt;bulk_create&lt;/code&gt;, который задает максимальное количество объектов,
+которые будут вставлены за один запрос. Т.е. если у нас 200 объектов, задав &lt;code&gt;bulk_size = 50&lt;/code&gt; мы получим 4 запроса.&lt;/p&gt;
+&lt;p&gt;У метода &lt;code&gt;bulk_size&lt;/code&gt; есть ряд ограничений с которыми вы можете ознакомиться в &lt;a href="https://docs.djangoproject.com/en/1.11/ref/models/querysets/#bulk-create"&gt;документации&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id="massovaia-vstavka-m2m"&gt;Массовая вставка M2M&lt;/h3&gt;
+&lt;p&gt;Теперь нам нужно вставить статьи и теги, которые находятся в отдельном JSON файле с следующей структурой:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;json
+[
+  {
+    "created_at": "2016-06-11",
+    "author": "nichole52",
+    "tags": [
+      "ab",
+      "iure",
+      "iusto"
+    ],
+    "title": "...",
+    "content": "..."
+  }
+]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Напишем для этого еще одну команду Django:&lt;/p&gt;
+&lt;p&gt;```python
+class Command(BaseCommand):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;help = 'Load articles from `data/old_articles.json`'
+
+DATA_FILE_PATH = os.path.join(settings.BASE_DIR, '..', 'data', 'old_articles.json')
+
+def handle(self, *args, **kwargs):
+    with open(self.DATA_FILE_PATH, 'r') as json_file:
+        data = json.loads(json_file.read())
+    for article in data:
+        self._import_article(article)
+
+def _import_article(self, article_data):
+    author = Author.objects.get(username=article_data['author'])
+    article = Article(
+        title=article_data['title'],
+        content=article_data['content'],
+        created_at=article_data['created_at'],
+        author=author)
+    article.save()
+    for tag in article_data['tags']:
+        tag_instance, _ = Tag.objects.get_or_create(name=tag)
+        article.tags.add(tag_instance)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Запустив ее я получил 3349 SQL запросов! Многие из которых имели следующий вид:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;SQL
+(0.001) SELECT "blog_article_tags"."tag_id" FROM "blog_article_tags" WHERE ("blog_article_tags"."article_id" = 2319 AND "blog_article_tags"."tag_id" IN (67)); args=(2319, 67)
+(0.000) INSERT INTO "blog_article_tags" ("article_id", "tag_id") VALUES (2319, 67) RETURNING "blog_article_tags"."id"; args=(2319, 67)
+(0.000) SELECT "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" WHERE "blog_tag"."name" = 'fugiat'; args=('fugiat',)
+(0.001) SELECT "blog_article_tags"."tag_id" FROM "blog_article_tags" WHERE ("blog_article_tags"."article_id" = 2319 AND "blog_article_tags"."tag_id" IN (68)); args=(2319, 68)
+(0.000) INSERT INTO "blog_article_tags" ("article_id", "tag_id") VALUES (2319, 68) RETURNING "blog_article_tags"."id"; args=(2319, 68)
+(0.000) SELECT "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" WHERE "blog_tag"."name" = 'repellat'; args=('repellat',)
+(0.001) SELECT "blog_article_tags"."tag_id" FROM "blog_article_tags" WHERE ("blog_article_tags"."article_id" = 2319 AND "blog_article_tags"."tag_id" IN (58)); args=(2319, 58)
+(0.000) INSERT INTO "blog_article_tags" ("article_id", "tag_id") VALUES (2319, 58) RETURNING "blog_article_tags"."id"; args=(2319, 58&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Добавление каждого тега к статье выполняется отдельным запросом. Это можно улучшить передавая методу &lt;code&gt;article.tags.add&lt;/code&gt;
+сразу список тегов:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+    def _import_article(self, article_data):
+        # ...
+        tags = []
+        for tag in article_data['tags']:
+            tag_instance, _ = Tag.objects.get_or_create(name=tag)
+            tags.append(tag_instance)
+        article.tags.add(*tags)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Этот вариант отправляет 1834 запроса, почти в 2 раза меньше, неплохой результат, учитывая что мы изменили всего лишь
+пару строк кода.&lt;/p&gt;
+&lt;h3 id="massovoe-izmenenie"&gt;Массовое изменение&lt;/h3&gt;
+&lt;p&gt;После переноса данных пришла идея, что к старым статьям (раньше 2012 года) нужно запретить комментирование. Для этого
+было добавлено логическое поле &lt;code&gt;comments_on&lt;/code&gt; к модели &lt;code&gt;Article&lt;/code&gt; и нам необходимо проставить его значение:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+from django.db import connection
+from blog.models import Article
+for article in Article.objects.filter(created_at__year__lt=2012):
+    article.comments_on = False
+    article.save()
+print(len(connection.queries))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Запустив этот код я получил 179 запросов следующего вида:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.000) UPDATE "blog_article" SET "title" = 'Saepe eius facere magni et eligendi minima sint.', "content" = '...', "created_at" = '1992-03-01'::date, "author_id" = 730, "comments_on" = false WHERE "blog_article"."id" = 3507; args=('Saepe eius facere magni et eligendi minima sint.', '...', datetime.date(1992, 3, 1), 730, False, 3507)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Кроме того, что для каждой статьи подходящей по условию происходит отдельный SQL запрос, еще и все поля этих статей
+перезаписываются. А это может привести к перезаписи изменений сделанных в промежутке между &lt;code&gt;SELECT&lt;/code&gt; и &lt;code&gt;UPDATE&lt;/code&gt; запросами.
+Т.е. кроме проблем с производительностью мы также получаем race condition.&lt;/p&gt;
+&lt;p&gt;Вместо этого мы можем использовать метод &lt;code&gt;update&lt;/code&gt; доступный у объектов &lt;code&gt;QuerySet&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+Article.objects.filter(created_at__year__lt=2012).update(comments_on=False)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Этот код генерирует всего один SQL запрос:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.004) UPDATE "blog_article" SET "comments_on" = false WHERE "blog_article"."created_at" &amp;lt; '2012-01-01'::date; args=(False, datetime.date(2012, 1, 1))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Если для изменения полей нужна сложная логика, которую нельзя реализовать полностью в update операторе, можете вычислить
+значение поля в Python коде и затем использовать один из следующих вариантов:&lt;/p&gt;
+&lt;p&gt;```python
+Model.object.filter(id=instance.id).update(field=computed_value)&lt;/p&gt;
+&lt;h1 id="or_2"&gt;or&lt;/h1&gt;
+&lt;p&gt;instance.field = computed_value
+instance.save(update_fields=('fields',))
+```&lt;/p&gt;
+&lt;p&gt;Но оба эти варианта также страдают от race condition, хоть и в меньшей степени.&lt;/p&gt;
+&lt;h3 id="massovoe-udalenie-obektov"&gt;Массовое удаление объектов&lt;/h3&gt;
+&lt;p&gt;Сейчас нам потребовалось удалить все статьи отмеченные тегом &lt;code&gt;minus&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+from django.db import connection
+from blog.models import Article
+for article in Article.objects.filter(tags__name='minus'):
+    article.delete()
+print(len(connection.queries))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Код сгенерировал 93 запроса следующего вида:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.000) DELETE FROM "blog_article_tags" WHERE "blog_article_tags"."article_id" IN (3510); args=(3510,)
+(0.000) DELETE FROM "blog_article" WHERE "blog_article"."id" IN (3510); args=(3510,)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Сначала удаляется связь статьи с тегом в промежуточной таблице, а затем и сама статья. Мы можем сделать это за
+меньшее количество запросов, используя метод &lt;code&gt;delete&lt;/code&gt; класса &lt;code&gt;QuerySet&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+from django.db import connection
+from blog.models import Article
+Article.objects.filter(tags__name='minus').delete()
+print(len(connection.queries))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Этот код выполняет то же самое всего за 3 запроса к БД:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.004) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on" FROM "blog_article" INNER JOIN "blog_article_tags" ON ("blog_article"."id" = "blog_article_tags"."article_id") INNER JOIN "blog_tag" ON ("blog_article_tags"."tag_id" = "blog_tag"."id") WHERE "blog_tag"."name" = 'minus'; args=('minus',)
+(0.002) DELETE FROM "blog_article_tags" WHERE "blog_article_tags"."article_id" IN (3713, 3717, 3722, ...); args=(3713, 3717, 3722, ...)
+(0.001) DELETE FROM "blog_article" WHERE "blog_article"."id" IN (3713, 3717, ...); args=(3713, 3717, 3722, ...)``sql&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Сначала одним запросом получается список идентификаторов всех статей, отмеченных тегом &lt;code&gt;minus&lt;/code&gt;, затем второй запрос
+удаляет связи сразу всех этих статей с тегами, и последний запрос удаляет статьи.&lt;/p&gt;
+&lt;h2 id="iterator_1"&gt;Iterator&lt;/h2&gt;
+&lt;p&gt;Предположим, нам нужно добавить возможность экспорта статей в CSV формат. Сделаем для этого простую команду Django:&lt;/p&gt;
+&lt;p&gt;```python
+class Command(BaseCommand):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;help = 'Export articles to csv'
+
+EXPORT_FILE_PATH = os.path.join(settings.BASE_DIR, '..', 'data', 'articles_export.csv')
+COLUMNS = ['title', 'content', 'created_at', 'author', 'comments_on']
+
+def handle(self, *args, **kwargs):
+    with open(self.EXPORT_FILE_PATH, 'w') as export_file:
+        articles_writer = csv.writer(export_file, delimiter=';')
+        articles_writer.writerow(self.COLUMNS)
+        for article in Article.objects.select_related('author').all():
+            articles_writer.writerow([getattr(article, column) for column in self.COLUMNS])
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Для тестирования этой команды я сгенерировал около 100Мb статей и загрузил их в БД. Далее я запустил команду через профайлер
+памяти &lt;a href="https://pypi.python.org/pypi/memory_profiler"&gt;memory_profiler&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mprof run python manage.py export_articles
+mprof plot&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;В результате я получил следующий график по использованию памяти:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="export articles profiling" src="/media/2017/6/export_articles_without_iterator.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Команда использует около 250Mb памяти, потому что при выполнении запроса &lt;code&gt;QuerySet&lt;/code&gt; получает из БД сразу все статьи и
+кэширует их в памяти, чтобы при последующем обращении к этому &lt;code&gt;QuerySet&lt;/code&gt; дополнительные запросы не выполнялись.
+Мы можем уменьшить объем используемой памяти, используя метод &lt;code&gt;iterator&lt;/code&gt; класса &lt;code&gt;QuerySet&lt;/code&gt;, который позволяет получать
+результаты по одному, используя &lt;a href="http://initd.org/psycopg/docs/cursor.html"&gt;server-side cursor&lt;/a&gt;, и при этом он отключает
+кэширование результатов в &lt;code&gt;QuerySet&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;```python&lt;/p&gt;
+&lt;h1 id="_2"&gt;...&lt;/h1&gt;
+&lt;p&gt;for article in Article.objects.select_related('author').iterator():&lt;/p&gt;
+&lt;h1 id="_3"&gt;...&lt;/h1&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Запустив обновленный пример в профайлере я получил следующий результат:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="export articles profiling" src="/media/2017/6/export_articles_with_iterator.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Теперь команда использует всего 50Mb. Также приятным побочным эффектом является то, что при любом размере данных,
+при использовании &lt;code&gt;iterator&lt;/code&gt;, команда использует постоянный объем памяти. Вот графики для ~200Mb статей
+(без &lt;code&gt;iterator&lt;/code&gt; и с ним соответственно):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="huge export articles profiling" src="/media/2017/6/export_articles_huge_before_and_after.png"/&gt;&lt;/p&gt;
+&lt;h2 id="ispolzovanie-vneshnikh-kliuchei"&gt;Использование внешних ключей&lt;/h2&gt;
+&lt;p&gt;Теперь нам потребовалось добавить действие в админку статей для создания копии статьи:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+def clone_article(modeladmin, request, queryset):
+    if queryset.count() != 1:
+        modeladmin.message_user(request, "You could clone only one article at a time.", level=messages.ERROR)
+        return
+    origin_article = queryset.first()
+    cloned_article = Article(
+        title="{} (COPY)".format(origin_article.title),
+        content=origin_article.content,
+        created_at=origin_article.created_at,
+        author=origin_article.author,
+        comments_on=origin_article.comments_on)
+    cloned_article.save()
+    cloned_article.tags = origin_article.tags.all()
+    modeladmin.message_user(request, "Article successfully cloned", level=messages.SUCCESS)
+clone_article.short_description = 'Clone article'&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;В логах можно увидеть следующие запросы к БД:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.001) SELECT COUNT(*) AS "__count" FROM "blog_article" WHERE "blog_article"."id" IN (31582); args=(31582,)
+(0.001) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on" FROM "blog_article" WHERE "blog_article"."id" IN (31582) ORDER BY "blog_article"."created_at" DESC, "blog_article"."id" DESC LIMIT 1; args=(31582,)
+(0.000) SELECT "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_author" WHERE "blog_author"."id" = 2156; args=(2156,)
+(0.001) INSERT INTO "blog_article" ("title", "content", "created_at", "author_id", "comments_on") VALUES ('Explicabo maiores nobis cum vel fugit. (COPY)', ...&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;У нас почему-то запрашивается автор, хотя нам не нужны какие-либо данные об авторе, кроме его ID. Чтобы исправить это,
+нужно обращаться к внешнему ключу напрямую, для получения id автора нужно использовать &lt;code&gt;origin_article.author_id&lt;/code&gt;.
+Теперь код клонирования статьи будет выглядеть следующим образом:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+cloned_article = Article(
+    title="{} (COPY)".format(origin_article.title),
+    content=origin_article.content,
+    created_at=origin_article.created_at,
+    author_id=origin_article.author_id,
+    comments_on=origin_article.comments_on)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;И в логах больше нет запросов на получение информации об авторе.&lt;/p&gt;
+&lt;h2 id="poluchenie-sviazannykh-obektov"&gt;Получение связанных объектов&lt;/h2&gt;
+&lt;p&gt;Наконец-то пришло время сделать наши статьи публично доступными, и начнем мы со страницы со списком статей. Реализуем
+view, используя &lt;code&gt;ListView&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;```python
+class ArticlesListView(ListView):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;template_name = 'blog/articles_list.html'
+model = Article
+context_object_name = 'articles'
+paginate_by = 20
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;В шаблоне мы выводим информацию о статье, авторе и тегах:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;django
+&amp;lt;article&amp;gt;
+    &amp;lt;h2&amp;gt;{{ article.title }}&amp;lt;/h2&amp;gt;
+    &amp;lt;time&amp;gt;{{ article.created_at }}&amp;lt;/time&amp;gt;
+    &amp;lt;p&amp;gt;Author: {{ article.author.username }}&amp;lt;/p&amp;gt;
+    &amp;lt;p&amp;gt;Tags:
+    {% for tag in article.tags.all %}
+        {{ tag }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+&amp;lt;/article&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;DDT показывает при открытии списка статей 45 SQL запросов следующего вида:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.002) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on" FROM "blog_article" LIMIT 20; args=()
+(0.001) SELECT "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_author" WHERE "blog_author"."id" = 2043; args=(2043,)
+(0.001) SELECT "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" = 20425; args=(20425,)
+(0.000) SELECT "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_author" WHERE "blog_author"."id" = 2043; args=(2043,)
+(0.001) SELECT "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" = 20426; args=(20426,)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Т.е. мы сначала получаем все статьи одним SQL запросом (с учетом пагинации) и затем для каждой из этих статей отдельно
+запрашиваются автор и теги. Нам нужно заставить Django запросить все эти данные меньшим количеством запросов.&lt;/p&gt;
+&lt;p&gt;Начнем с получения авторов, для того, чтобы &lt;code&gt;QuerySet&lt;/code&gt; получил заранее данные по определенным внешним ключам есть метод &lt;code&gt;select_related&lt;/code&gt;. Обновим &lt;code&gt;queryset&lt;/code&gt; в нашем view для использования этого метода:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+queryset = Article.objects.select_related('author')&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;После этого DDT показывает уже 25 SQL запросов, т.к. получение информации об авторах и статьях теперь выполняется одним
+SQL запросом с &lt;code&gt;JOIN&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.004) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on", "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_article" INNER JOIN "blog_author" ON ("blog_article"."author_id" = "blog_author"."id") LIMIT 21; args=()&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Метод &lt;code&gt;select_related&lt;/code&gt; работает только с внешними ключами в текущей модели, для того, чтобы уменьшить количество запросов
+при получении множества связанных объектов (таких как теги в нашем примере), нужно использовать метод &lt;code&gt;prefetch_related&lt;/code&gt;.
+Опять обновим атрибут &lt;code&gt;queryset&lt;/code&gt; у класса &lt;code&gt;AticlsListView&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+queryset = Article.objects.select_related('author').prefetch_related('tags')&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;И теперь DDT показывает всего 7 запросов. Если проигнорировать запросы, которые выполняет пагинатор и запросы, связанные
+с сессией получаем всего 2 запроса для отображения списка статей:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.002) SELECT "blog_article"."id", "blog_article"."title", "blog_article"."content", "blog_article"."created_at", "blog_article"."author_id", "blog_article"."comments_on", "blog_author"."id", "blog_author"."username", "blog_author"."email", "blog_author"."bio" FROM "blog_article" INNER JOIN "blog_author" ON ("blog_article"."author_id" = "blog_author"."id") LIMIT 20; args=()
+(0.001) SELECT ("blog_article_tags"."article_id") AS "_prefetch_related_val_article_id", "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" IN (16352, 16353, 16354, 16355, 16356, 16357, 16358, 16359, 16360, 16361, 16362, 16363, 16344, 16345, 16346, 16347, 16348, 16349, 16350, 16351); args=(16352, 16353, 16354, 16355, 16356, 16357, 16358, 16359, 16360, 16361, 16362, 16363, 16344, 16345, 16346, 16347, 16348, 16349, 16350, 16351)&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Используйте &lt;code&gt;select_related&lt;/code&gt; для внешних ключей в текущей модели. Для получения M2M объектов и объектов из моделей
+ссылающихся на текущую, используйте &lt;code&gt;prefetch_related&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Также &lt;code&gt;prefetch_related&lt;/code&gt; можно использовать для получения связанных объектов большей вложенности: &lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Tag.objects.all().prefetch_related('article_set__author')&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Этот код запросит вместе с тегом также все статьи отмеченные тегом и всех авторов этих статей.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="ogranichenie-polei-v-vyborkakh"&gt;Ограничение полей в выборках&lt;/h2&gt;
+&lt;p&gt;Если мы присмотримся получше к SQL запросам в предыдущем примере, мы увидим, что мы получаем больше полей, чем нам нужно.
+В DDT можно посмотреть результаты запроса и убедиться в этом:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="SQL query result for articles list" src="/media/2017/6/sql-queries-results.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Мы получаем все поля автора и статьи, включая текст статьи огромного размера. Можно значительно
+уменьшить объем передаваемых данных, используя метод defer, который позволяет отложить получение определенных полей.
+В случае, если в коде все же произойдет обращение к такому полю, то Django сделает дополнительный запрос для его получения.
+Добавим вызов метода &lt;code&gt;defer&lt;/code&gt; в &lt;code&gt;queryset&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+queryset = Article.objects.select_related('author').prefetch_related('tags').defer('content', 'comments_on')&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Теперь некоторые ненужные поля не запрашиваются и это уменьшило время обработки запроса, как нам показывает DDT
+(до и после &lt;code&gt;defer&lt;/code&gt; соответственно):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - SQL speedup after defer" src="/media/2017/6/sql-speedup-defer.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Мы все еще получаем множество полей автора, которые мы не используем. Проще было бы указать только те поля,
+которые нам действительно нужны. Для этого есть метод &lt;code&gt;only&lt;/code&gt;, передав которому названия полей, остальные поля будут отложены:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+queryset = Article.objects.select_related('author').prefetch_related('tags').only(
+    'title', 'created_at', 'author__username', 'tags__name')&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;В результате мы получаем только нужные данные, что можно посмотреть в DDT:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - SQL after only" src="/media/2017/6/sql-after-only.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Т.е. &lt;code&gt;defer&lt;/code&gt; и &lt;code&gt;only&lt;/code&gt; выполняют одну и ту же задачу, ограничения полей в выборках, различие только в то что:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;defer&lt;/code&gt; откладывает получение полей переданных в качестве аргументов,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;only&lt;/code&gt; откладывает получение всех полей, кроме переданных.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="indeksy-bd"&gt;Индексы БД&lt;/h2&gt;
+&lt;p&gt;Нам нужно сделать страницу автора, которая будет доступна по такому URL: &lt;code&gt;/authors/&amp;lt;username&amp;gt;&lt;/code&gt;. Сделаем view
+для этого:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+def author_page_view(request, username):
+    author = get_object_or_404(Author, username=username)
+    return render(request, 'blog/author.html', context=dict(author=author))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Этот код работает достаточно быстро при небольшом объеме данных, но если объем значительный и продолжает расти, то
+производительность будет только падать. Все дело в том, что для поиска по полю &lt;code&gt;username&lt;/code&gt; СУБД приходится сканировать
+всю таблицу до тех пор пока не найдет нужное значение. Есть вариант лучше - добавить на данное поле индекс, что позволит
+СУБД искать гораздо эффективнее. Для добавления индекса нужно добавить аргумент &lt;code&gt;db_index=True&lt;/code&gt; в объявление
+поля &lt;code&gt;username&lt;/code&gt;, а затем создать и применить миграции:&lt;/p&gt;
+&lt;p&gt;```python
+class Author(models.Model):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;username = models.CharField(max_length=64, db_index=True)
+# ...
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Сравним производительность до и после добавления индекса на БД авторов размером в 100К.&lt;/p&gt;
+&lt;p&gt;Без индекса:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="select by username without index" src="/media/2017/6/ddt-select-by-username-without-index.png"/&gt;&lt;/p&gt;
+&lt;p&gt;С индексом:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="select by username with index" src="/media/2017/6/ddt-select-by-username-with-index.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Запрос выполнился быстрее в 16 раз!&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Индексы полезны не только при фильтрации данных, но и при сортировке. Также многие СУБД позволяют делать индексы по
+нескольким полям, что полезно, если вы фильтруете данные по набору полей. Советую изучить документацию к вашей СУБД,
+чтобы узнать подробности.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/h2&gt;
+&lt;p&gt;По какой-то причине, нам потребовалось вывести на странице со списком статей счетчик с количеством авторов. Обновим view:&lt;/p&gt;
+&lt;p&gt;```python
+class ArticlesListView(ListView):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# ...
+
+def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    context['authors_count'] = len(Author.objects.all())
+    return context
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
+&lt;p&gt;Посмотрим какие SQL запросы генерирует этот код:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - len(qs)" src="/media/2017/6/ddt-authors-len-queryset.png"/&gt;&lt;/p&gt;
+&lt;p&gt;На скриншоте мы видим, что запрашиваются все значения из таблицы авторов, соответственно подсчет количества происходит
+уже в самом view. Конечно это не самый оптимальный вариант и нам было бы достаточно получить из БД одно число -
+количество авторов. Для этого можно использовать метод &lt;code&gt;count&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+        context['authors_count'] = Author.objects.count()&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Посмотрим результат в DDT:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - len(qs)" src="/media/2017/6/ddt-authors-count.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Теперь Django сгенерировал намного более оптимальный запрос для нашей задачи.&lt;/p&gt;
+&lt;h2 id="count-vs-exists"&gt;count vs exists&lt;/h2&gt;
+&lt;p&gt;На странице автора нужно вывести ссылку на каталог статей этого автора, если у него есть статьи. Одним из решений будет
+получить количество статей и сравнить равно ли количество 0, например так:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+def author_page_view(request, username):
+    author = get_object_or_404(Author, username=username)
+    show_articles_link = (author.articles.count() &amp;gt; 0)
+    return render(
+        request, 'blog/author.html',
+        context=dict(author=author, show_articles_link=show_articles_link))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Но при большом количестве статей этот код будет работать медленно. Т.к. нам не нужно знать точное количество статей
+у пользователя, то мы можем использовать метод &lt;code&gt;exists&lt;/code&gt;, который проверяет, что в &lt;code&gt;QuertSet&lt;/code&gt; есть хотя бы один результат:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+    # ...
+    show_articles_link = author.articles.exists()
+    # ...&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Сравниваем производительность при большом количестве статей (~10K):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - exists vs count" src="/media/2017/6/ddt-exists-vs-count.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Мы достигли цели запросом, который выполняется в 10 раз быстрее.&lt;/p&gt;
+&lt;h2 id="lenivyi-queryset"&gt;Ленивый QuerySet&lt;/h2&gt;
+&lt;p&gt;Теперь нам захотелось, чтобы авторы конкурировали между собой, для этого мы добавим рейтинг топ-20 авторов по количеству
+статей.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+class ArticlesListView(ListView):
+    # ...
+    def get_context_data(self, **kwargs):
+        # ...
+        context['top_authors'] = list(
+            Author.objects.order_by('-articles_count'))[:20]
+        # ...&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Здесь мы получаем список всех авторов, отсортированный по количеству статей, и берем первые 20 элементов этого списка.
+&lt;code&gt;articles_count&lt;/code&gt;, в нашем примере, это денормализованное поле, которое содержит количество статей у данного автора.
+На реальном проекте, возможно вы захотели бы настроить сигналы, для актуализации этого поля.&lt;/p&gt;
+&lt;p&gt;Думаю уже сейчас понятно, что это не самый оптимальный вариант, это подтверждает и DDT:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - get top authors slice" src="/media/2017/6/ddt-top-authors-list.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Конечно нам нужно, чтобы ограничение выборки первыми 20-ю авторами происходило на стороне БД. Для этого нужно понять,
+что &lt;code&gt;QuerySet&lt;/code&gt; старается максимально отсрочить выполнение запроса к БД. Непосредственно запрос к БД осуществляется в
+следующих случаях:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;итерация по QuerySet (например, &lt;code&gt;for obj in Model.objects.all():&lt;/code&gt;),&lt;/li&gt;
+&lt;li&gt;slicing, если вы используете "нарезку" с определенным шагом (например, &lt;code&gt;Model.objects.all()[::2]&lt;/code&gt;),&lt;/li&gt;
+&lt;li&gt;применение метода &lt;code&gt;len&lt;/code&gt; (например, &lt;code&gt;len(Model.objects.all())&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;применение метода &lt;code&gt;list&lt;/code&gt; (например, &lt;code&gt;list(Model.objects.all())&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;применение метода &lt;code&gt;bool&lt;/code&gt; (например, &lt;code&gt;bool(Model.objects.all())&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;сериализация при помощи &lt;a href="https://docs.python.org/3/library/pickle.html"&gt;pickle&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Т.е. вызвав &lt;code&gt;list&lt;/code&gt; мы заставили &lt;code&gt;QuerySet&lt;/code&gt; выполнить запрос к БД и вернуть нам список объектов, после чего уже к нему была
+применена операция обрезки. Для того, чтобы ограничение выборки происходило в SQL запросе, нужно применить slicing
+к самому &lt;code&gt;QuerySet&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;python
+context['top_authors'] =\
+    Author.objects.order_by('-articles_count')[:20]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Теперь размер выборки ограничивается в запросе: &lt;code&gt;...LIMIT 20&lt;/code&gt;. Также видно, что отправка запроса
+к БД была отложена до итерации по циклу в шаблоне.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Оптимизация производительности Django проектов (часть 1)</title><link href="/ru/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/ru/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
 батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
 растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
 рассказать о том с какими проблемами …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
@@ -7,61 +526,57 @@
 растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
 рассказать о том с какими проблемами вы можете столкнуться и как их решить.&lt;/p&gt;
 &lt;p&gt;Это первая статья из серии, здесь будут рассмотрено профилирование и настройки Django.&lt;/p&gt;
-&lt;h2&gt;Профилирование&lt;/h2&gt;
+&lt;h2 id="profilirovanie"&gt;Профилирование&lt;/h2&gt;
 &lt;p&gt;Перед тем выполнять оптимизацию необходимо измерить текущую производительность, чтобы после оптимизации можно было сравнить
 результаты. Такие измерения нужно будет делать часто, после каждого изменения, так что процесс должен быть автоматизированным.&lt;/p&gt;
 &lt;p&gt;Профилирование - это процесс измерения метрик проекта. Таких как: время ответа сервера, использование CPU,
 использование памяти и тд. Python предоставляет &lt;a href="https://docs.python.org/3/library/profile.html"&gt;профайлер&lt;/a&gt; в стандартной
 библиотеке, который вполне удобно использовать для измерения производительности кусков кода.
 Но для профилирования целового проекта существуют более удобные решения.&lt;/p&gt;
-&lt;h3&gt;Логирование&lt;/h3&gt;
+&lt;h3 id="logirovanie"&gt;Логирование&lt;/h3&gt;
 &lt;p&gt;Самая частая проблема производительности это лишние и/или не эффективные запросы к БД. Можно настроить логирование,
 для просмотра всех SQL запросов, которые выполняются в процессе обработки запроса. Добавьте в &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;LOGGING&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="s1"&gt;&amp;#39;version&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s1"&gt;&amp;#39;disable_existing_loggers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s1"&gt;&amp;#39;handlers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="s1"&gt;&amp;#39;console&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="s1"&gt;&amp;#39;class&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;logging.StreamHandler&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="s1"&gt;&amp;#39;loggers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="s1"&gt;&amp;#39;django.db.backends&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="s1"&gt;&amp;#39;level&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;DEBUG&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="s1"&gt;&amp;#39;handlers&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;console&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="p"&gt;},&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;&lt;code&gt;python
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    },
+}&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Убедитесь, что &lt;code&gt;DEBUG = True&lt;/code&gt; и перезагрузите сервер. Теперь в консоли должны выводится все SQL запросы и длительность
 выполнения каждого из них.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;002&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_type_id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;LEFT&lt;/span&gt; &lt;span class="k"&gt;OUTER&lt;/span&gt; &lt;span class="k"&gt;JOIN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ON&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;color_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;color_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;row&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_type_id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;LEFT&lt;/span&gt; &lt;span class="k"&gt;OUTER&lt;/span&gt; &lt;span class="k"&gt;JOIN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ON&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;handbooks_size&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;size_id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;000&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;season&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;season&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;000&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;DISTINCT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;state&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;ORDER&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;state&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;ASC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;002&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;MAX&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;__col1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="k"&gt;MIN&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;__col2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;Col1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;x_order&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;price_sell&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;__col1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;price_sell&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;__col2&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;GROUP&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;subquery&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="mi"&gt;001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="k"&gt;COUNT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;Col1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt; &lt;span class="k"&gt;AS&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;x_order&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;WHERE&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;IN&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;GROUP&lt;/span&gt; &lt;span class="k"&gt;BY&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;CASE&lt;/span&gt; &lt;span class="k"&gt;WHEN&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;goods_goods&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;status&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt; &lt;span class="k"&gt;THEN&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="k"&gt;ELSE&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="k"&gt;END&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;subquery&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;reserved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;approved&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;sold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;Jun&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;2017&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;03&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;49&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="ss"&gt;&amp;quot;GET /goods HTTP/1.0&amp;quot;&lt;/span&gt; &lt;span class="mi"&gt;200&lt;/span&gt; &lt;span class="mi"&gt;32583&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Django Debug Toolbar&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;sql
+(0.002) SELECT DISTINCT "handbooks_size"."size_type_id", "goods_goods"."size_id" FROM "goods_goods" LEFT OUTER JOIN "handbooks_size" ON ("goods_goods"."size_id" = "handbooks_size"."id") WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."size_id" ASC; args=('reserved', 'sold', 'approved')
+(0.001) SELECT DISTINCT "goods_goods"."color_id" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."color_id" ASC; args=('reserved', 'sold', 'approved')
+(0.001) SELECT DISTINCT "handbooks_size"."row", "handbooks_size"."size_type_id", "goods_goods"."size_id" FROM "goods_goods" LEFT OUTER JOIN "handbooks_size" ON ("goods_goods"."size_id" = "handbooks_size"."id") WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."size_id" ASC; args=('reserved', 'sold', 'approved')
+(0.000) SELECT DISTINCT "goods_goods"."season" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."season" ASC; args=('reserved', 'sold', 'approved')
+(0.000) SELECT DISTINCT "goods_goods"."state" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') ORDER BY "goods_goods"."state" ASC; args=('reserved', 'sold', 'approved')
+(0.002) SELECT MAX("__col1"), MIN("__col2") FROM (SELECT "goods_goods"."id" AS Col1, CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END AS "x_order", "goods_goods"."price_sell" AS "__col1", "goods_goods"."price_sell" AS "__col2" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') GROUP BY "goods_goods"."id", CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END) subquery; args=('sold', 1, 0, 'reserved', 'sold', 'approved', 'sold', 1, 0)
+(0.001) SELECT COUNT(*) FROM (SELECT "goods_goods"."id" AS Col1, CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END AS "x_order" FROM "goods_goods" WHERE "goods_goods"."status" IN ('reserved', 'sold', 'approved') GROUP BY "goods_goods"."id", CASE WHEN "goods_goods"."status" = 'sold' THEN 1 ELSE 0 END) subquery; args=('sold', 1, 0, 'reserved', 'sold', 'approved', 'sold', 1, 0)
+[15/Jun/2017 11:03:49] "GET /goods HTTP/1.0" 200 32583&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id="django-debug-toolbar"&gt;Django Debug Toolbar&lt;/h3&gt;
 &lt;p&gt;&lt;a href="http://django-debug-toolbar.readthedocs.io/en/stable/"&gt;Это&lt;/a&gt; Django приложение, которые предоставляет набор панелей,
 некоторые из которых удобно использовать для профилирование. По умолчанию включена SQL панель, которая предоставляет
 даже больше информации чем стандартное логирование Django. Некоторые дополнительные возможности: временная диаграмма
 запросов, traceback, просмотр результатов и &lt;code&gt;EXPLAIN&lt;/code&gt; каждого запроса.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="DDT" src="/media/2017/6/ddt.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="DDT" src="/media/2017/6/ddt.png"/&gt;&lt;/p&gt;
 &lt;p&gt;DDT также поставляется с отключенной по умолчанию панелью для профилирования. Эта панель отображает результаты профилирования
 в удобном web-интерфейсе. Для включения панели добавьте &lt;code&gt;debug_toolbar.panels.profiling.ProfilingPanel&lt;/code&gt; в
 список &lt;code&gt;DEBUG_TOOLBAR_PANELS&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"&gt;&lt;/p&gt;
-&lt;h3&gt;Silk&lt;/h3&gt;
+&lt;p&gt;&lt;img alt="DDT profiling panel" src="/media/2017/6/ddt-profiling-panel.png"/&gt;&lt;/p&gt;
+&lt;h3 id="silk"&gt;Silk&lt;/h3&gt;
 &lt;p&gt;Еще один отличный пакет, который особенно пригодится если у вас API и соответственно DDT нельзя использовать.
 Как установить и настроить пакет можно посмотреть на &lt;a href="https://github.com/django-silk/silk#installation"&gt;github проекта&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="silky-screenshot.png" src="/media/2017/6/silky-screenshot.png"/&gt;&lt;/p&gt;
 &lt;p&gt;После установки и настройки перезагрузите сервер и перейдите по URL: &lt;code&gt;/silk/&lt;/code&gt;. По этому адресу должен быть доступен
 web-интерфейс, который показывает:&lt;/p&gt;
 &lt;ul&gt;
@@ -71,31 +586,27 @@ web-интерфейс, который показывает:&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;Профайлер можно включить для всего проекта установив &lt;code&gt;SILKY_PYTHON_PROFILER = True&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;. Или использовать
 только в определенных местах, заключив профилируемый код в декоратор или контекст процессор:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;silk.profiling.profiler&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;silk_profile&lt;/span&gt;
-
-
-&lt;span class="nd"&gt;@silk_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;View Blog Post&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-    &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Post&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;render_to_response&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;post.html&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="s1"&gt;&amp;#39;post&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-
-&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-    &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;silk_profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;View Blog Post #&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pk&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-        &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Post&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;post_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;render_to_response&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;post.html&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="s1"&gt;&amp;#39;post&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;
-        &lt;span class="p"&gt;})&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Тестовые данные&lt;/h3&gt;
+&lt;p&gt;```python
+from silk.profiling.profiler import silk_profile&lt;/p&gt;
+&lt;p&gt;@silk_profile(name='View Blog Post')
+def post(request, post_id):
+    p = Post.objects.get(pk=post_id)
+    return render_to_response('post.html', {
+        'post': p
+    })&lt;/p&gt;
+&lt;p&gt;def post(request, post_id):
+    with silk_profile(name='View Blog Post #%d' % self.pk):
+        p = Post.objects.get(pk=post_id)
+        return render_to_response('post.html', {
+            'post': p
+        })
+```&lt;/p&gt;
+&lt;h3 id="testovye-dannye"&gt;Тестовые данные&lt;/h3&gt;
 &lt;p&gt;Очень важно использовать для профилирования данные похожие на те, что используются в production. В идеале нужно взять бекап
 с production сервера, развернуть его на локальной машине и использовать эти данные для профилирования проекта. Если вы
 попробуете профилировать проект на пустой/маленькой базе данных, вероятно, вы получите некорректный результат, который
 не будет соответствовать реальным проблемам на боевом окружении, что не поможет выполнить нужные оптимизации.&lt;/p&gt;
-&lt;h2&gt;Нагрузочное тестирование&lt;/h2&gt;
+&lt;h2 id="nagruzochnoe-testirovanie_1"&gt;Нагрузочное тестирование&lt;/h2&gt;
 &lt;p&gt;После оптимизации хорошей идеей будет провести нагрузочное тестирование, чтобы убедится, что уровень производительности
 приложения соответствует реальной (или ожидаемой) нагрузке или SLA. Для этого типа тестирования вам потребуется окружение
 аналогичное используемому на production. К счастью облачные сервисы и автоматизированная сборка проектов позволяют
@@ -103,40 +614,35 @@ web-интерфейс, который показывает:&lt;/p&gt;
 &lt;p&gt;Рекомендую использовать &lt;a href="http://locust.io/"&gt;Locust&lt;/a&gt; для нагрузочного тестирования. Главное преимущество Locust,
 что тесты описываются в виде Python кода. Можно настраивать сложные сценарии тестирования, чтобы максимально
 приблизить нагрузку к той, которую генерируют реальные пользователи. Пример &lt;code&gt;locustfile.py&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;locust&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;HttpLocust&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TaskSet&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;task&lt;/span&gt;
+&lt;p&gt;```python
+from locust import HttpLocust, TaskSet, task&lt;/p&gt;
+&lt;p&gt;class UserBehavior(TaskSet):
+    def on_start(self):
+        """ on_start is called when a Locust start before any task is scheduled """
+        self.login()&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;def login(self):
+    self.client.post("/login", {"username":"ellen_key", "password":"education"})
 
+@task(2)
+def index(self):
+    self.client.get("/")
 
-&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;UserBehavior&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;TaskSet&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;on_start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-        &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot; on_start is called when a Locust start before any task is scheduled &amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
-        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;login&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/login&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;username&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;ellen_key&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;password&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;education&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;
-
-    &lt;span class="nd"&gt;@task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-
-    &lt;span class="nd"&gt;@task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;profile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/profile&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-
-
-&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;WebsiteUser&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HttpLocust&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-    &lt;span class="n"&gt;task_set&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;UserBehavior&lt;/span&gt;
-    &lt;span class="n"&gt;min_wait&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;5000&lt;/span&gt;
-    &lt;span class="n"&gt;max_wait&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;9000&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+@task(1)
+def profile(self):
+    self.client.get("/profile")
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 5000
+    max_wait = 9000
+```&lt;/p&gt;
 &lt;p&gt;Также Locust предоставляет web-интерфейс для запуска тестов и просмотра результатов:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Locust web interface" src="/media/2017/6/locust-screenshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Locust web interface" src="/media/2017/6/locust-screenshot.png"/&gt;&lt;/p&gt;
 &lt;p&gt;Лучше всего то, что можно настроить Locust один раз и использовать для тестирования производительности после каждого
 вносимого изменения. Возможно вы даже сможете добавить его в ваш CI/CD pipeline.&lt;/p&gt;
-&lt;h2&gt;Настройки Django&lt;/h2&gt;
+&lt;h2 id="nastroiki-django"&gt;Настройки Django&lt;/h2&gt;
 &lt;p&gt;В этом разделе мы рассмотрим настройки Django, которые могут повлиять на производительность.&lt;/p&gt;
-&lt;h3&gt;TTL соединения с БД&lt;/h3&gt;
+&lt;h3 id="ttl-soedineniia-s-bd"&gt;TTL соединения с БД&lt;/h3&gt;
 &lt;p&gt;По умолчанию Django закрывает соединение с БД после завершения каждого запроса. Можно настроить TTL соединения с БД,
 изменив значение параметра &lt;a href="https://docs.djangoproject.com/en/1.11/ref/settings/#conn-max-age"&gt;&lt;code&gt;CONN_MAX_AGE&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
 &lt;ul&gt;
@@ -144,75 +650,60 @@ web-интерфейс, который показывает:&lt;/p&gt;
 &lt;li&gt;&lt;code&gt;&amp;gt; 0&lt;/code&gt; - TTL в секундах,&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;None&lt;/code&gt; - неограниченное TTL.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;DATABASES = {
-    &amp;#39;default&amp;#39;: {
-        &amp;#39;ENGINE&amp;#39;: &amp;#39;django.db.backends.postgresql&amp;#39;,
-        &amp;#39;NAME&amp;#39;: &amp;#39;mydatabase&amp;#39;,
-        &amp;#39;USER&amp;#39;: &amp;#39;mydatabaseuser&amp;#39;,
-        &amp;#39;PASSWORD&amp;#39;: &amp;#39;mypassword&amp;#39;,
-        &amp;#39;HOST&amp;#39;: &amp;#39;127.0.0.1&amp;#39;,
-        &amp;#39;PORT&amp;#39;: &amp;#39;5432&amp;#39;,
-        &amp;#39;CONN_MAX_AGE&amp;#39;: 60 * 10,  # 10 minutes
+&lt;p&gt;&lt;code&gt;DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydatabase',
+        'USER': 'mydatabaseuser',
+        'PASSWORD': 'mypassword',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+        'CONN_MAX_AGE': 60 * 10,  # 10 minutes
     }
-}
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Кэширование шаблонов&lt;/h3&gt;
+}&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id="keshirovanie-shablonov"&gt;Кэширование шаблонов&lt;/h3&gt;
 &lt;p&gt;Если вам приходится использовать Django версии меньше чем 1.11, то вы можете рассмотреть включение кэширования шаблонов.
 По умолчанию, Django (&amp;lt;1.11) считывает и компилирует шаблоны каждый раз, когда они рендерятся. Можно использовать
 загрузчик &lt;code&gt;django.template.loaders.cached.Loader&lt;/code&gt; для включения кэширования шаблонов в памяти. Отредактируйте в 
 &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;TEMPLATES = [
+&lt;p&gt;&lt;code&gt;TEMPLATES = [
     {
-        &amp;#39;BACKEND&amp;#39;: &amp;#39;django.template.backends.django.DjangoTemplates&amp;#39;,
-        &amp;#39;DIRS&amp;#39;: [os.path.join(BASE_DIR, &amp;#39;foo&amp;#39;, &amp;#39;bar&amp;#39;), ],
-        &amp;#39;OPTIONS&amp;#39;: {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'foo', 'bar'), ],
+        'OPTIONS': {
             # ...
-            &amp;#39;loaders&amp;#39;: [
-                (&amp;#39;django.template.loaders.cached.Loader&amp;#39;, [
-                    &amp;#39;django.template.loaders.filesystem.Loader&amp;#39;,
-                    &amp;#39;django.template.loaders.app_directories.Loader&amp;#39;,
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
                 ]),
             ],
         },
     },
-]
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Redis как хранилище кэша&lt;/h3&gt;
+]&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id="redis-kak-khranilishche-kesha"&gt;Redis как хранилище кэша&lt;/h3&gt;
 &lt;p&gt;Django предоставляет несколько вариантов хранилищ для кэша, например, БД, файловая система и тд. Рекомендую хранить кэш
 в Redis - популярное хранилище объектов в памяти, с большой вероятностью вы уже используете его в своем проекте.
 Для настройки Redis, как хранилища кэша нам нужно будет установить сторонний пакет, например &lt;code&gt;django-redis&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Устанавливаем django-redis при помощи pip:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip install django-redis
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;&lt;code&gt;pip install django-redis&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Добавьте настройки кэша в &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CACHES = {
-    &amp;quot;default&amp;quot;: {
-        &amp;quot;BACKEND&amp;quot;: &amp;quot;django_redis.cache.RedisCache&amp;quot;,
-        &amp;quot;LOCATION&amp;quot;: &amp;quot;redis://127.0.0.1:6379/1&amp;quot;,
-        &amp;quot;OPTIONS&amp;quot;: {
-            &amp;quot;CLIENT_CLASS&amp;quot;: &amp;quot;django_redis.client.DefaultClient&amp;quot;,
+&lt;p&gt;&lt;code&gt;CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
-}
-&lt;/pre&gt;&lt;/div&gt;
-
-
+}&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Читайте полную документацию &lt;a href="http://niwinz.github.io/django-redis/latest/"&gt;здесь&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;Хранилище сессий&lt;/h3&gt;
+&lt;h3 id="khranilishche-sessii"&gt;Хранилище сессий&lt;/h3&gt;
 &lt;p&gt;По умолчанию Django хранит сессии в БД. Для ускорения не помешает хранить сессии в кэше. Добавьте следующее
 в &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;SESSION_ENGINE = &amp;quot;django.contrib.sessions.backends.cache&amp;quot;
-SESSION_CACHE_ALIAS = &amp;quot;default&amp;quot;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h3&gt;Удаление ненужных middleware&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id="udalenie-nenuzhnykh-middleware"&gt;Удаление ненужных middleware&lt;/h3&gt;
 &lt;p&gt;Проверьте список используемых middleware (&lt;code&gt;MIDDLEWARE&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;). Убедитесь, что там нет ничего не нужного.
 Django вызывает каждый middleware для каждого обрабатываемого запроса, так что накладные расходы могут быть значительными.&lt;/p&gt;
 &lt;p&gt;Если у вас есть какой-либо кастомный middleware, который используется не для всех запросов, попробуйте вынести его
@@ -234,40 +725,37 @@ Django вызывает каждый middleware для каждого обраб
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Для решения этой проблемы предлагается использование заранее подготовленных пакетов wheel для всех зависимостей и хранение их в репозитории системы.&lt;/p&gt;
-&lt;h2&gt;Создаем архив wheel пакетов&lt;/h2&gt;
+&lt;h2 id="sozdaem-arkhiv-wheel-paketov"&gt;Создаем архив wheel пакетов&lt;/h2&gt;
 &lt;p&gt;Wheel - это современный формат распространения пакетов в Python среде, который пришел на замену eggs. Рассмотрим процесс создания архива wheel для всех зависимостей системы. &lt;/p&gt;
 &lt;p&gt;Представим типичный Python проект с файлом requirements.txt содержащим зависимости. Пример файла &lt;code&gt;requirements.txt&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;svgwrite&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.1.6&lt;/span&gt;
-&lt;span class="n"&gt;ipython&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;2.3.0&lt;/span&gt;
-&lt;span class="n"&gt;flask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.10.1&lt;/span&gt;
-&lt;span class="n"&gt;flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;mongoengine&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.7.1&lt;/span&gt;
-&lt;span class="n"&gt;flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;uploads&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.1.3&lt;/span&gt;
-&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="nl"&gt;git&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//github.com/Samael500/flask-principal.git@dab7f391f0eeb76a25fa1b3dae7308a0924c8a12#egg=flask-principal&lt;/span&gt;
-&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="nl"&gt;git&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//github.com/Samael500/flask-security.git@f1042b5db67147b8ddaa8b767b2dfe063bb56ffa#egg=flask-security&lt;/span&gt;
-&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Admin&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.0.8&lt;/span&gt;
-&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Session&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.1.1&lt;/span&gt;
-&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Script&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;2.0.5&lt;/span&gt;
-&lt;span class="n"&gt;gunicorn&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;19.1.1&lt;/span&gt;
-&lt;span class="n"&gt;Flask&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Testing&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.4.2&lt;/span&gt;
-&lt;span class="n"&gt;tornado&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;4.0.2&lt;/span&gt;
-&lt;span class="n"&gt;nose&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.3.4&lt;/span&gt;
-&lt;span class="n"&gt;pep8&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.5.7&lt;/span&gt;
-&lt;span class="n"&gt;Pillow&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;2.6.1&lt;/span&gt;
-&lt;span class="n"&gt;pyflakes&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.8.1&lt;/span&gt;
-&lt;span class="n"&gt;pylama&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;6.1.1&lt;/span&gt;
-&lt;span class="n"&gt;spec&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.11.1&lt;/span&gt;
-&lt;span class="n"&gt;py&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;bcrypt&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;0.4&lt;/span&gt;
-&lt;span class="n"&gt;WTForms&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.0.4&lt;/span&gt;
-&lt;span class="n"&gt;blessings&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;1.6&lt;/span&gt;
-&lt;span class="n"&gt;beautifulsoup4&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;4.3.2&lt;/span&gt;
-&lt;span class="n"&gt;lxml&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;3.4.1&lt;/span&gt;
-&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt; &lt;span class="nl"&gt;git&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="c1"&gt;//github.com/Samael500/jinja-assets-compressor.git@8e1639cec6f8b347794fe1334519daacc6b763b0#egg=jac&lt;/span&gt;
-&lt;span class="n"&gt;PyYAML&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="mf"&gt;3.10&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;&lt;code&gt;svgwrite==1.1.6
+ipython==2.3.0
+flask==0.10.1
+flask-mongoengine==0.7.1
+flask-uploads==0.1.3
+-e git://github.com/Samael500/flask-principal.git@dab7f391f0eeb76a25fa1b3dae7308a0924c8a12#egg=flask-principal
+-e git://github.com/Samael500/flask-security.git@f1042b5db67147b8ddaa8b767b2dfe063bb56ffa#egg=flask-security
+Flask-Admin==1.0.8
+Flask-Session==0.1.1
+Flask-Script==2.0.5
+gunicorn==19.1.1
+Flask-Testing==0.4.2
+tornado==4.0.2
+nose==1.3.4
+pep8==1.5.7
+Pillow==2.6.1
+pyflakes==0.8.1
+pylama==6.1.1
+spec==0.11.1
+py-bcrypt==0.4
+WTForms==1.0.4
+blessings==1.6
+beautifulsoup4==4.3.2
+lxml==3.4.1
+-e git://github.com/Samael500/jinja-assets-compressor.git@8e1639cec6f8b347794fe1334519daacc6b763b0#egg=jac
+PyYAML==3.10&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;В нашем файле &lt;code&gt;requirements.txt&lt;/code&gt; есть зависимости из внешних ресурсов (не PyPI), которые предполагают загрузку пакетов из VCS (в данном случае из git репозиториев на Github). Скопируем старый &lt;code&gt;requirements.txt&lt;/code&gt; в &lt;code&gt;requirements-remote.txt&lt;/code&gt;, а в &lt;code&gt;requirements.txt&lt;/code&gt; заменим внешние ресурсы на обычные пакеты из PyPI и получим:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;svgwrite==1.1.6
+&lt;p&gt;&lt;code&gt;svgwrite==1.1.6
 ipython==2.3.0
 flask==0.10.1
 flask-mongoengine==0.7.1
@@ -292,74 +780,46 @@ blessings==1.6
 beautifulsoup4==4.3.2
 lxml==3.4.1
 jac
-PyYAML==3.10
-&lt;/pre&gt;&lt;/div&gt;
-
-
+PyYAML==3.10&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Это делается для того, чтобы при установке из архива wheel пакетов не происходили запросы к внешним VCS, а брались локальные wheel, которые мы сейчас будем генерировать.&lt;/p&gt;
-&lt;p&gt;Cоздаем и активируем &lt;code&gt;venv&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pyvenv venv
-. venv/bin/activate
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Устанавливаем все пакеты как обычно, но из &lt;code&gt;requirements-remote.txt&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip install -r requirements-remote.txt
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Сгенерируем архив всех пакетов PyPI, всех их зависимостей и всех зависимостей внешних пакетов (VCS). Для этого нам потребуется свежая версия &lt;code&gt;pip&lt;/code&gt; и пакет &lt;code&gt;wheel&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip install -U pip
+&lt;p&gt;Cоздаем и активируем &lt;code&gt;venv&lt;/code&gt;:
+&lt;code&gt;pyvenv venv
+. venv/bin/activate&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Устанавливаем все пакеты как обычно, но из &lt;code&gt;requirements-remote.txt&lt;/code&gt;:
+&lt;code&gt;pip install -r requirements-remote.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Сгенерируем архив всех пакетов PyPI, всех их зависимостей и всех зависимостей внешних пакетов (VCS). Для этого нам потребуется свежая версия &lt;code&gt;pip&lt;/code&gt; и пакет &lt;code&gt;wheel&lt;/code&gt;:
+&lt;code&gt;pip install -U pip
 pip install wheel
 mkdir wheels
-pip wheel -w wheels/ -r requirements-remote.txt --pre --allow-all-external
-&lt;/pre&gt;&lt;/div&gt;
-
-
+pip wheel -w wheels/ -r requirements-remote.txt --pre --allow-all-external&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;После этого получаем архив wheel пакетов для всех зависимостей кроме внешних (VCS). Для внешних пакетов устанавливаемых из исходников необходимо сгенерировать пакеты вручную при помощи &lt;code&gt;setup.py bdist_wheel&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;cd venv/src/flask-principal
+&lt;p&gt;&lt;code&gt;cd venv/src/flask-principal
 python setup.py bdist_wheel --dist-dir ../../../wheels/
 cd ../flask-security
 python setup.py bdist_wheel --dist-dir ../../../wheels/
 cd ../jac
-python setup.py bdist_wheel --dist-dir ../../../wheels/
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Теперь в директории &lt;code&gt;wheels&lt;/code&gt; есть все необходимые пакеты для установки всех зависимостей системы. Процесс уставновки зависимостей из локального архива пакетов выполняется так:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip install --no-index -f wheels/ -r requirements.txt
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;обратите внимание, что используется файл &lt;code&gt;requirements.txt&lt;/code&gt;, а не &lt;code&gt;requirements-remote.txt&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;Тестирование скорости установки&lt;/h2&gt;
-&lt;p&gt;Обычная установка со скачиванием пакетов из PyPI и VCS:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;time pip install -r requirements-remote.txt
+python setup.py bdist_wheel --dist-dir ../../../wheels/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Теперь в директории &lt;code&gt;wheels&lt;/code&gt; есть все необходимые пакеты для установки всех зависимостей системы. Процесс уставновки зависимостей из локального архива пакетов выполняется так:
+&lt;code&gt;pip install --no-index -f wheels/ -r requirements.txt&lt;/code&gt;
+обратите внимание, что используется файл &lt;code&gt;requirements.txt&lt;/code&gt;, а не &lt;code&gt;requirements-remote.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="testirovanie-skorosti-ustanovki"&gt;Тестирование скорости установки&lt;/h2&gt;
+&lt;p&gt;Обычная установка со скачиванием пакетов из PyPI и VCS:
+&lt;code&gt;time pip install -r requirements-remote.txt
 real    4m20.655s
 user    1m31.242s
-sys 0m55.539s
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;Установка из локального архива wheels:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;time pip install --no-index -f wheels/ -r requirements.txt
+sys 0m55.539s&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Установка из локального архива wheels:
+&lt;code&gt;time pip install --no-index -f wheels/ -r requirements.txt
 real    1m3.412s
 user    0m4.808s
-sys 0m31.210s
-&lt;/pre&gt;&lt;/div&gt;
-
-
+sys 0m31.210s&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Из результатов можно сделать вывод, что время установки пакетов из локального архива в нашем случае меньше в 4 раза.
 Что логично, т.к. пакеты заново не скачиваются из интернета и не компилируются.&lt;/p&gt;
-&lt;h2&gt;Бонус&lt;/h2&gt;
+&lt;h2 id="bonus"&gt;Бонус&lt;/h2&gt;
 &lt;p&gt;Для удобства написал &lt;a href="https://gist.github.com/dizballanze/070434f4eb3b5febae39"&gt;небольшой скрипт&lt;/a&gt;, автоматизирующий сборку пакетов установленных из исходников.&lt;/p&gt;
 &lt;script src="https://gist.github.com/dizballanze/070434f4eb3b5febae39.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;Пример использования скрипта:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;python build_wheels --sources-dir venv/src/ --wheels-dir wheels/
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;p&gt;Пример использования скрипта:
+&lt;code&gt;python build_wheels --sources-dir venv/src/ --wheels-dir wheels/&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Скрипт пройдется по всем поддиректориям &lt;code&gt;venv/src/&lt;/code&gt; и в каждой из них попробует собрать пакет в директорию &lt;code&gt;wheels/&lt;/code&gt;.&lt;/p&gt;</content><category term="pip"></category><category term="wheels"></category><category term="dev tools"></category></entry><entry><title>Настраиваем dev-сервер для удобной разработки на django</title><link href="/ru/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/" rel="alternate"></link><published>2012-12-22T22:55:00+04:00</published><updated>2012-12-22T22:55:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2012-12-22:/ru/nastraivaem-dev-server-dlia-udobnoi-razrabotki-na-django/</id><summary type="html">&lt;p&gt;При разработке не хочется тратить время, которого и так не хватает, на
 рутинные действия. После каждой отправки изменений в репозиторий,
 необходимо выполнить обновление кода на dev-сервере, применить миграции
@@ -371,8 +831,8 @@ django-приложения на dev-сервер. Я рассмотрю мак�
 и тд. Сегодня мы рассмотрим, как быстро настроить автоматический deploy
 django-приложения на dev-сервер. Я рассмотрю максимально простое
 решение, которое подойдет для небольших проектов.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="image" src="/media/2012/12/FotoFlexer_Photo.jpg"&gt;&lt;/p&gt;
-&lt;h2&gt;Требования к процессу&lt;/h2&gt;
+&lt;p&gt;&lt;img alt="image" src="/media/2012/12/FotoFlexer_Photo.jpg"/&gt;&lt;/p&gt;
+&lt;h2 id="trebovaniia-k-protsessu"&gt;Требования к процессу&lt;/h2&gt;
 &lt;p&gt;Итак, давайте определимся какие именно действия необходимо
 автоматизировать:&lt;/p&gt;
 &lt;ul&gt;
@@ -381,7 +841,7 @@ django-приложения на dev-сервер. Я рассмотрю мак�
 &lt;li&gt;Применение миграций&lt;/li&gt;
 &lt;li&gt;Перезагрузка web-сервера&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;Post-Receive Hooks&lt;/h2&gt;
+&lt;h2 id="post-receive-hooks"&gt;Post-Receive Hooks&lt;/h2&gt;
 &lt;p&gt;Необходимо каким-то образом отлавливать событие, когда пользователь
 выполняет git push и запускать git pull на dev-сервере. Чаще всего я
 использую github в качестве хостинга для git-репозиториев. Github
@@ -392,51 +852,49 @@ url в настройках репозитория:&lt;/p&gt;
 &lt;li&gt;&lt;a href="https://help.github.com/articles/post-receive-hooks"&gt;GitHub&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management"&gt;Bitbucket&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;Обработчик запросов&lt;/h3&gt;
+&lt;h3 id="obrabotchik-zaprosov"&gt;Обработчик запросов&lt;/h3&gt;
 &lt;p&gt;Как настроить отправку запросов мы узнали, теперь необходимо реализовать
 обработчик запросов. Можно обрабатывать запросы в самом приложении или
 отдельно, вот небольшой пример на node.js:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;exec&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;child_process&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;exec&lt;/span&gt;
-  &lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;child&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nx"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;writeHead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;text/plain&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;end&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="nx"&gt;child&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;exec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/path/to/project/deploy.sh&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;out&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;error&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;8000&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;0.0.0.0&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Git monitor server is running at 0.0.0.0:8000&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::javascript
+http = require('http')
+var exec = require('child_process').exec
+  , child;
+server = http.createServer(function(req, res) {
+    res.writeHead(200, {'Content-Type': 'text/plain'});
+    res.end();
+    child = exec('/path/to/project/deploy.sh', function(error, out, err){
+        if (error) console.error(error);
+    });
+}).listen(8000, '0.0.0.0');
+console.log('Git monitor server is running at 0.0.0.0:8000');
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Здесь, при поступлении любого запроса, просто выполняется bash скрипт.
 При желании можно добавить дополнительные действия, например логировать
 запросы или добавить валидацию, чтобы запрос мог поступать только с
 определенных серверов.&lt;/p&gt;
 &lt;p&gt;Далее просто нужно добавить адрес, на котором весит наш демон, в
 настройках github/bitbucket.&lt;/p&gt;
-&lt;h2&gt;Применяем изменения&lt;/h2&gt;
+&lt;h2 id="primeniaem-izmeneniia_1"&gt;Применяем изменения&lt;/h2&gt;
 &lt;p&gt;В обработчике запросов мы выполняем bash скрипт. Рассмотрим пример того,
 что может содержать такой скрипт:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
-&lt;span class="nb"&gt;cd&lt;/span&gt; /path/to/project/dir
-&lt;span class="c1"&gt;# update code&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::bash
+#!/bin/bash
+cd /path/to/project/dir
+# update code
 git pull
-&lt;span class="c1"&gt;# activate virtualenv&lt;/span&gt;
-&lt;span class="nb"&gt;source&lt;/span&gt; ../bin/activate
-&lt;span class="c1"&gt;# install new packages with pip&lt;/span&gt;
+# activate virtualenv
+source ../bin/activate
+# install new packages with pip
 pip install -r ./requirements.txt
-&lt;span class="c1"&gt;# Sync db changes&lt;/span&gt;
+# Sync db changes
 app/manage.py syncdb
 app/manage.py migrate --all --merge
-&lt;span class="c1"&gt;# kill runserver&lt;/span&gt;
+# kill runserver
 killall python
 nohup app/manage.py 
-runserver &lt;span class="m"&gt;0&lt;/span&gt;.0.0.0:9000 &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
+runserver 0.0.0.0:9000 &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Итак, что здесь происходит:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Переходим в директорию проекта&lt;/li&gt;
@@ -450,13 +908,13 @@ runserver &lt;span class="m"&gt;0&lt;/span&gt;.0.0.0:9000 &lt;span class="p"&gt;
 управление пакетами. При установке нового пакета необходимо добавить его
 в текстовый файл. Создать такой файл можно автоматически при помощи
 следующей команды:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip freeze &amp;gt; requirements.txt
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+pip freeze &amp;gt; requirements.txt
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Данная команда сформирует список всех установленных пакетов и также
 укажет их версии. Вот пример сгенерированного файла:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Django==1.4.2
+&lt;pre&gt;&lt;code&gt;:::text
+Django==1.4.2
 PIL==1.1.7
 South==0.7.6
 argparse==1.2.1
@@ -466,140 +924,129 @@ mongoengine==0.7.5
 psycopg2==2.4.5
 pymongo==2.3
 python-dateutil==2.1
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;При выполнении нашего bash-скрипта будет вызвана команда:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;pip install -r ./requirements.txt
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::text
+pip install -r ./requirements.txt
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Это приведет к установке всех пакетов, из списка в файле, которые ещё
 небыли установлены.&lt;/p&gt;
 &lt;p&gt;Конечно, в зависимости от ваших потребностей, могут понадобится
 дополнительные действия, например трансляция CoffeeScript, Compass или
 выполнение тестов. Добавить новые команды в скрипт, я думаю, не составит
 трудностей :)&lt;/p&gt;
-&lt;h2&gt;Настройка Nginx&lt;/h2&gt;
+&lt;h2 id="nastroika-nginx"&gt;Настройка Nginx&lt;/h2&gt;
 &lt;p&gt;Для того, чтобы перенаправлять запросы с 80 порта на runserver я
 использую nginx (ну не запускать же runserver от root'а :)). Пример
 конфигурации nginx:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s"&gt;www-data&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;worker_processes&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;pid&lt;/span&gt; &lt;span class="s"&gt;/var/run/nginx.pid&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;pre&gt;&lt;code&gt;:::nginx
+user www-data;
+worker_processes 4;
+pid /var/run/nginx.pid;
 
-&lt;span class="k"&gt;events&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kn"&gt;worker_connections&lt;/span&gt; &lt;span class="mi"&gt;768&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
+events {
+    worker_connections 768;
+}
 
-&lt;span class="k"&gt;http&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+http {
 
-    &lt;span class="c1"&gt;##&lt;/span&gt;
-    &lt;span class="c1"&gt;# Basic Settings&lt;/span&gt;
-    &lt;span class="c1"&gt;##&lt;/span&gt;
+    ##
+    # Basic Settings
+    ##
 
-    &lt;span class="kn"&gt;sendfile&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;tcp_nopush&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;tcp_nodelay&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;keepalive_timeout&lt;/span&gt; &lt;span class="mi"&gt;65&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;types_hash_max_size&lt;/span&gt; &lt;span class="mi"&gt;2048&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
 
-    &lt;span class="kn"&gt;include&lt;/span&gt; &lt;span class="s"&gt;/etc/nginx/mime.types&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;default_type&lt;/span&gt; &lt;span class="s"&gt;application/octet-stream&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
 
-    &lt;span class="c1"&gt;##&lt;/span&gt;
-    &lt;span class="c1"&gt;# Logging Settings&lt;/span&gt;
-    &lt;span class="c1"&gt;##&lt;/span&gt;
+    ##
+    # Logging Settings
+    ##
 
-    &lt;span class="kn"&gt;access_log&lt;/span&gt; &lt;span class="s"&gt;/var/log/nginx/access.log&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="kn"&gt;error_log&lt;/span&gt; &lt;span class="s"&gt;/var/log/nginx/error.log&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
 
-    &lt;span class="c1"&gt;##&lt;/span&gt;
-    &lt;span class="c1"&gt;# Proxy Settings&lt;/span&gt;
-    &lt;span class="c1"&gt;##&lt;/span&gt;
-    &lt;span class="kn"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="kn"&gt;listen&lt;/span&gt; &lt;span class="s"&gt;*:80&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    ##
+    # Proxy Settings
+    ##
+    server {
+        listen *:80;
 
-        &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="kn"&gt;proxy_pass&lt;/span&gt;  &lt;span class="s"&gt;http://localhost:9000&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-            &lt;span class="kn"&gt;proxy_set_header&lt;/span&gt;    &lt;span class="s"&gt;Host&lt;/span&gt; &lt;span class="nv"&gt;$host&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-            &lt;span class="kn"&gt;proxy_set_header&lt;/span&gt; &lt;span class="s"&gt;X-Real-IP&lt;/span&gt; &lt;span class="nv"&gt;$remote_addr&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;На этом все, пишите в комментариях, если я что-то упустил.&lt;/p&gt;</content><category term="bitbucket"></category><category term="django"></category><category term="git"></category><category term="github"></category><category term="nginx"></category><category term="nodejs"></category><category term="pip"></category><category term="python"></category><category term="south"></category></entry><entry><title>Python 2.7 в Debian 6 Squeeze</title><link href="/ru/python-27-v-debian-6-squeeze/" rel="alternate"></link><published>2012-07-22T09:26:00+04:00</published><updated>2012-07-22T09:26:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2012-07-22:/ru/python-27-v-debian-6-squeeze/</id><summary type="html">&lt;p&gt;&lt;img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo"&gt;&lt;/p&gt;
+        location / {
+            proxy_pass  http://localhost:9000;
+            proxy_set_header    Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;На этом все, пишите в комментариях, если я что-то упустил.&lt;/p&gt;</content><category term="bitbucket"></category><category term="django"></category><category term="git"></category><category term="github"></category><category term="nginx"></category><category term="nodejs"></category><category term="pip"></category><category term="python"></category><category term="south"></category></entry><entry><title>Python 2.7 в Debian 6 Squeeze</title><link href="/ru/python-27-v-debian-6-squeeze/" rel="alternate"></link><published>2012-07-22T09:26:00+04:00</published><updated>2012-07-22T09:26:00+04:00</updated><author><name>Admin</name></author><id>tag:None,2012-07-22:/ru/python-27-v-debian-6-squeeze/</id><summary type="html">&lt;p&gt;&lt;img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo"/&gt;&lt;/p&gt;
 &lt;p&gt;Приветствую! На данный момент в stable репозитарии Debian squeeze лежит
 python 2.6.6. Однако, последней (на момент написания поста) стабильной
 версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
 несколько версий python и использовать их независимо.&lt;/p&gt;
-&lt;h2&gt;Устанавливаем Python 2.7.3&lt;/h2&gt;
-&lt;p&gt;Скомпилируем python 2.7.3 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo"&gt;&lt;/p&gt;
+&lt;h2 id="ustanavlivaem-python-273"&gt;Устанавливаем Python 2.7.3&lt;/h2&gt;
+&lt;p&gt;Скомпилируем python 2.7.3 …&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;img alt="python logo" src="/media/2012/07/python-logo-master-v3-TM.png" title="python logo"/&gt;&lt;/p&gt;
 &lt;p&gt;Приветствую! На данный момент в stable репозитарии Debian squeeze лежит
 python 2.6.6. Однако, последней (на момент написания поста) стабильной
 версией ветки 2.x является 2.7.3. Далее рассмотрим, как установить
 несколько версий python и использовать их независимо.&lt;/p&gt;
-&lt;h2&gt;Устанавливаем Python 2.7.3&lt;/h2&gt;
+&lt;h2 id="ustanavlivaem-python-273"&gt;Устанавливаем Python 2.7.3&lt;/h2&gt;
 &lt;p&gt;Скомпилируем python 2.7.3 из исходников. Стянуть последнюю версию можно
 &lt;a href="http://www.python.org/download/releases/"&gt;здесь&lt;/a&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /tmp
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /tmp
 wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
 tar xvzf Python-2.7.3.tgz
-&lt;span class="nb"&gt;cd&lt;/span&gt; Python-2.7.3
-./configure --prefix&lt;span class="o"&gt;=&lt;/span&gt;/usr/local/python-2.7.3
-make &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; make install
+cd Python-2.7.3
+./configure --prefix=/usr/local/python-2.7.3
+make &amp;amp;&amp;amp; make install
 ln -s /usr/local/python-2.7.3/bin/python2.7 /usr/bin/python2.7.3
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;После этого можем проверить что все работает:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;python2.7.3 
-Python &lt;span class="m"&gt;2&lt;/span&gt;.7.3 &lt;span class="o"&gt;(&lt;/span&gt;default, Jul &lt;span class="m"&gt;22&lt;/span&gt; &lt;span class="m"&gt;2012&lt;/span&gt;, &lt;span class="m"&gt;10&lt;/span&gt;:05:02&lt;span class="o"&gt;)&lt;/span&gt; 
-&lt;span class="o"&gt;[&lt;/span&gt;GCC &lt;span class="m"&gt;4&lt;/span&gt;.4.5&lt;span class="o"&gt;]&lt;/span&gt; on linux2
-Type &lt;span class="s2"&gt;&amp;quot;help&amp;quot;&lt;/span&gt;, &lt;span class="s2"&gt;&amp;quot;copyright&amp;quot;&lt;/span&gt;, &lt;span class="s2"&gt;&amp;quot;credits&amp;quot;&lt;/span&gt; or &lt;span class="s2"&gt;&amp;quot;license&amp;quot;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; more information.
+&lt;pre&gt;&lt;code&gt;:::bash
+python2.7.3 
+Python 2.7.3 (default, Jul 22 2012, 10:05:02) 
+[GCC 4.4.5] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
 &amp;gt;&amp;gt;&amp;gt;
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;h2&gt;Используем virtualenv&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id="ispolzuem-virtualenv"&gt;Используем virtualenv&lt;/h2&gt;
 &lt;p&gt;Для того чтобы обеспечить удобную работу с несколькими версиями python
 воспользуемся утилитой virtualenv. Сначала скачиваем скрипт:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /home/dizballanze
+&lt;pre&gt;&lt;code&gt;:::bash
+cd /home/dizballanze
 mkdir apps
-&lt;span class="nb"&gt;cd&lt;/span&gt; apps
+cd apps
 wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Теперь нам нужно выполнить скрипт с использованием нужной версии python:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mkdir test_app
-&lt;span class="nb"&gt;cd&lt;/span&gt; test_app
+&lt;pre&gt;&lt;code&gt;:::bash
+mkdir test_app
+cd test_app
 python2.7.3 ../virtualenv.py venv
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Таким образом мы успешно добавили виртуальное окружение. В текущей
 директории должна появится директория с названием venv (второй
 параметр). Для того чтобы активировать окружение выполните:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;source&lt;/span&gt; venv/bin/activate
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+source venv/bin/activate
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Сразу после этого должна изменится строка ввода в терминале следующим
 образом:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;venv&lt;span class="o"&gt;)&lt;/span&gt;dizballanze@dizballanze-desktop:~/apps/test
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+(venv)dizballanze@dizballanze-desktop:~/apps/test
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Что означает, что мы находимся в окружении с названием venv. Проверим
 версию python:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;python --version
-Python &lt;span class="m"&gt;2&lt;/span&gt;.7.3
-&lt;/pre&gt;&lt;/div&gt;
-
-
+&lt;pre&gt;&lt;code&gt;:::bash
+python --version
+Python 2.7.3
+&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Таким образом можно установить любое количество версий Python на одной
 машине и при этом использовать их независимо. Более того, активировав
 virtualenv все устанавливаемые через pip пакеты будут хранится в
