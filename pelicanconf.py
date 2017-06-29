@@ -39,8 +39,10 @@ TAG_SAVE_AS = u'tag/{slug}/index.html'
 GITHUB_URL = 'https://github.com/dizballanze'
 TWITTER_USERNAME = 'dizballanze'
 
-# https://github.com/getpelican/pelican-plugins
-MD_EXTENSIONS = ['toc', 'extra']
+MARKDOWN = {
+    'extra': {},
+    'toc': {}
+}
 
 # Uncomment following line if you want document-relative URLs when developing
 RELATIVE_URLS = True
@@ -57,7 +59,7 @@ THEME = './basic-theme'
 
 
 PLUGIN_PATHS = 'plugins'
-PLUGINS = ['i18n_subsites']
+PLUGINS = ['i18n_subsites', 'pelican-toc']
 
 
 I18N_UNTRANSLATED_ARTICLES = 'hide'

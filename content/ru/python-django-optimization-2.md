@@ -4,7 +4,22 @@ Date: 2017-06-27 16:00
 Category: python
 Tags: python, django
 Lang: ru
-Status: draft
+
+Содержание:
+
+-   [Массовые изменения](#massovye-izmeneniia)
+    - [Массовая вставка](#massovaia-vstavka)
+    - [Массовая вставка M2M](#massovaia-vstavka-m2m)
+    - [Массовое изменение](#massovoe-izmenenie)
+    - [Массовое удаление объектов](#massovoe-udalenie-obektov)
+-   [Iterator](#iterator_1)
+-   [Использование внешних ключей](#ispolzovanie-vneshnikh-kliuchei)
+-   [Получение связанных объектов](#poluchenie-sviazannykh-obektov)
+-   [Ограничение полей в выборках](#ogranichenie-polei-v-vyborkakh)
+-   [Индексы БД](#indeksy-bd)
+-   [len(qs) vs qs.count](#lenqs-vs-qscount)
+-   [count vs exists](#count-vs-exists)
+-   [Ленивый QuerySet](#lenivyi-queryset)
 
 Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
 [здесь](/ru/django-project-optimization-part-1/) и рассказывает о профилировании и настройках Django. В этой части
@@ -436,9 +451,9 @@ DDT показывает при открытии списка статей 45 SQ
 ```
 
 Т.е. мы сначала получаем все статьи одним SQL запросом (с учетом пагинации) и затем для каждой из этих статей отдельно
-запрашиваются автор и теги. Нам нужно заставить Django запросить все эти данные меньшим количеством запросов. Начнем с
-получения авторов, для того, чтобы `QuerySet` получил заранее данные по определенным внешним ключам есть метод `select_related`.
-Обновим `queryset` в нашем view для использования этого метода:
+запрашиваются автор и теги. Нам нужно заставить Django запросить все эти данные меньшим количеством запросов.
+
+Начнем с получения авторов, для того, чтобы `QuerySet` получил заранее данные по определенным внешним ключам есть метод `select_related`. Обновим `queryset` в нашем view для использования этого метода:
 
 ```python
 queryset = Article.objects.select_related('author')
@@ -467,7 +482,7 @@ queryset = Article.objects.select_related('author').prefetch_related('tags')
 (0.001) SELECT ("blog_article_tags"."article_id") AS "_prefetch_related_val_article_id", "blog_tag"."id", "blog_tag"."name" FROM "blog_tag" INNER JOIN "blog_article_tags" ON ("blog_tag"."id" = "blog_article_tags"."tag_id") WHERE "blog_article_tags"."article_id" IN (16352, 16353, 16354, 16355, 16356, 16357, 16358, 16359, 16360, 16361, 16362, 16363, 16344, 16345, 16346, 16347, 16348, 16349, 16350, 16351); args=(16352, 16353, 16354, 16355, 16356, 16357, 16358, 16359, 16360, 16361, 16362, 16363, 16344, 16345, 16346, 16347, 16348, 16349, 16350, 16351)
 ```
 
->Используйте `select_related` для внешних ключах в текущей модели. Для получения M2M объектов и объектов из моделей
+>Используйте `select_related` для внешних ключей в текущей модели. Для получения M2M объектов и объектов из моделей
 ссылающихся на текущую, используйте `prefetch_related`.
 
 >Также `prefetch_related` можно использовать для получения связанных объектов большей вложенности: 
@@ -650,7 +665,7 @@ class ArticlesListView(ListView):
 - применение метода `bool` (например, `bool(Model.objects.all())`,
 - сериализация при помощи [pickle](https://docs.python.org/3/library/pickle.html).
 
-Т.е. вызваз `list` мы заставили `QuerySet` выполнить запрос к БД и вернуть нам список объектов, после чего уже к нему была
+Т.е. вызвав `list` мы заставили `QuerySet` выполнить запрос к БД и вернуть нам список объектов, после чего уже к нему была
 применена операция обрезки. Для того, чтобы ограничение выборки происходило в SQL запросе, нужно применить slicing
 к самому `QuerySet`:
 
