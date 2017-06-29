@@ -75,27 +75,29 @@
 <li>luarocks - менеджер модулей lua</li>
 <li>git-core - для того, чтобы установить smtp модуль из GitHub</li>
 </ul>
-<p><code>apt-get install nginx-extras lua5.1 luarocks git-core</code></p>
+<div class="highlight"><pre><span></span>apt-get install nginx-extras lua5.1 luarocks git-core
+</pre></div>
 <p>Теперь воспользуемся luarocks для установки модуля <a href="https://github.com/duhoobo/lua-resty-smtp">lua-resty-smtp</a>:</p>
-<p><code>sudo luarocks install https://raw.githubusercontent.com/duhoobo/lua-resty-smtp/master/rockspec/resty.smtp-0.0.3-1.rockspec</code></p>
+<div class="highlight"><pre><span></span>sudo luarocks install https://raw.githubusercontent.com/duhoobo/lua-resty-smtp/master/rockspec/resty.smtp-0.0.3-1.rockspec
+</pre></div>
 <p>Вобщем-то это все, можно приступать к разработке.</p>
 <h2 id="0-hello-world">0: Hello world</h2>
 <p>Сначала напишем классический hello world пример:</p>
-<p>```nginx
-server {
-    listen    80;</p>
-<pre><code>location /hi {
-    content_by_lua '
-        ngx.header["Content-Type"] = "text/plain;charset=utf-8"
-        ngx.say("Hello world!");
-    ';
-}
-</code></pre>
-<p>}
-```</p>
+<div class="highlight"><pre><span></span><span class="k">server</span> <span class="p">{</span>
+    <span class="kn">listen</span>    <span class="mi">80</span><span class="p">;</span>
+
+    <span class="kn">location</span> <span class="s">/hi</span> <span class="p">{</span>
+        <span class="kn">content_by_lua</span> <span class="s">'</span>
+            <span class="s">ngx.header["Content-Type"]</span> <span class="p">=</span> <span class="s">"text/plain</span><span class="p">;</span><span class="kn">charset=utf-8"</span>
+            <span class="s">ngx.say("Hello</span> <span class="s">world!")</span><span class="p">;</span>
+        <span class="kn">'</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>После перезапуска проверяем:</p>
-<p><code>➜  ~  curl http://10.1.1.97/hi
-Hello world!</code></p>
+<div class="highlight"><pre><span></span>➜  ~  curl http://10.1.1.97/hi
+Hello world!
+</pre></div>
 <p>Для обработки запроса мы используем директиву <code>content_by_lua</code>, которая принимает строку lua кода и ожидает, что этот код 
 сгенерирует и вернет ответ используя Nginx API. Встраивать lua код в конфиг Nginx не обязательно, вместо этого можно использовать 
 директиву <code>content_by_lua_file</code>.</p>
@@ -106,62 +108,66 @@ Hello world!</code></p>
 <p>Теперь попробуем выполнить отправку какого-либо тестового письма, просто чтобы убедиться, что это работает. Для отправки 
 письма будем использовать установленную нами ранее библиотеку lua-resty-smtp. Примерный код скрипта отправка письма через
 внешний SMTP будет выглядить так (используем <a href="https://debugmail.io/">debugmail.io</a> для тестирования):</p>
-<p>```lua
--- Загружаем библиотеку для работы с SMTP
-local smtp = require("resty.smtp")</p>
-<p>from = "<a href="mailto:test@example.org">test@example.org</a>"
-to = "<a href="mailto:rcpt@example.org">rcpt@example.org</a>"</p>
-<p>-- Формируем данные письма
-mesgt = {
-    headers = {
-        to = to,
-        from = from,
-        subject = "Mail from Nginx and Lua"
-    },
-    body = "Hello from Nginx and Lua!"
-}</p>
-<p>source = smtp.message(mesgt)
--- Выполняем отправку письма
-res, error = smtp.send{
-    from = from,
-    rcpt = to,
-    source = source,
-    user = "dizballanze@gmail.com",
-    password = "<wow-very-secret>",
-    server = "debugmail.io",
-    port = 25
-}</wow-very-secret></p>
-<p>-- Формируем ответ сервера
-ngx.header["Content-Type"] = "text/plain;charset=utf-8"
-if res then
-    ngx.say("Success!")
-else
-    -- Статус 500 в случае ошибки
-    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-    ngx.say("Error while send mail")
-    ngx.say(error)
-end
-```</p>
+<div class="highlight"><pre><span></span><span class="c1">-- Загружаем библиотеку для работы с SMTP</span>
+<span class="kd">local</span> <span class="n">smtp</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s2">"resty.smtp"</span><span class="p">)</span>
+
+<span class="n">from</span> <span class="o">=</span> <span class="s2">"&lt;test@example.org&gt;"</span>
+<span class="n">to</span> <span class="o">=</span> <span class="s2">"&lt;rcpt@example.org&gt;"</span>
+
+<span class="c1">-- Формируем данные письма</span>
+<span class="n">mesgt</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">to</span> <span class="o">=</span> <span class="n">to</span><span class="p">,</span>
+        <span class="n">from</span> <span class="o">=</span> <span class="n">from</span><span class="p">,</span>
+        <span class="n">subject</span> <span class="o">=</span> <span class="s2">"Mail from Nginx and Lua"</span>
+    <span class="p">},</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="s2">"Hello from Nginx and Lua!"</span>
+<span class="p">}</span>
+
+<span class="n">source</span> <span class="o">=</span> <span class="n">smtp</span><span class="p">.</span><span class="n">message</span><span class="p">(</span><span class="n">mesgt</span><span class="p">)</span>
+<span class="c1">-- Выполняем отправку письма</span>
+<span class="n">res</span><span class="p">,</span> <span class="nb">error</span> <span class="o">=</span> <span class="n">smtp</span><span class="p">.</span><span class="n">send</span><span class="p">{</span>
+    <span class="n">from</span> <span class="o">=</span> <span class="n">from</span><span class="p">,</span>
+    <span class="n">rcpt</span> <span class="o">=</span> <span class="n">to</span><span class="p">,</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">source</span><span class="p">,</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="s2">"dizballanze@gmail.com"</span><span class="p">,</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="s2">"&lt;wow-very-secret&gt;"</span><span class="p">,</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="s2">"debugmail.io"</span><span class="p">,</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="p">}</span>
+
+<span class="c1">-- Формируем ответ сервера</span>
+<span class="n">ngx</span><span class="p">.</span><span class="n">header</span><span class="p">[</span><span class="s2">"Content-Type"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"text/plain;charset=utf-8"</span>
+<span class="kr">if</span> <span class="n">res</span> <span class="kr">then</span>
+    <span class="n">ngx</span><span class="p">.</span><span class="n">say</span><span class="p">(</span><span class="s2">"Success!"</span><span class="p">)</span>
+<span class="kr">else</span>
+    <span class="c1">-- Статус 500 в случае ошибки</span>
+    <span class="n">ngx</span><span class="p">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">ngx</span><span class="p">.</span><span class="n">HTTP_INTERNAL_SERVER_ERROR</span>
+    <span class="n">ngx</span><span class="p">.</span><span class="n">say</span><span class="p">(</span><span class="s2">"Error while send mail"</span><span class="p">)</span>
+    <span class="n">ngx</span><span class="p">.</span><span class="n">say</span><span class="p">(</span><span class="nb">error</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
 <p>Размещаем этот код в директиве <code>content_by_lua</code> (или через внешний файл в <code>content_by_lua_file</code>) в
  и добавляем директиву resolver, чтобы nginx мог определить ip адрес debugmail.io:</p>
-<p>```
-server {
-    listen 80;</p>
-<pre><code>location /send-mail {
-    resolver 8.8.8.8;
-    content_by_lua '...';
+<div class="highlight"><pre><span></span>server {
+    listen 80;
+
+    location /send-mail {
+        resolver 8.8.8.8;
+        content_by_lua '...';
+    }
 }
-</code></pre>
-<p>}
-```</p>
+</pre></div>
 <p>Проверяем:</p>
-<p><code>➜  ~  curl http://10.1.1.97/send-mail
-Success!</code></p>
+<div class="highlight"><pre><span></span>➜  ~  curl http://10.1.1.97/send-mail
+Success!
+</pre></div>
 <p>Проверяем, что письмо пришло и содержит корректные данные на <a href="http://bit.ly/1FNrev5">debugmail (смотреть письмо)</a>.</p>
 <p>Меняем пароль на неправильный и проверяем, выводится ли ошибка (не забываем перезапускать Nginx после изменений):</p>
-<p><code>➜  ~  curl http://10.1.1.97/send-mail
+<div class="highlight"><pre><span></span>➜  ~  curl http://10.1.1.97/send-mail
 Error while send mail
-535 5.7.0 Invalid login or password</code></p>
+535 5.7.0 Invalid login or password
+</pre></div>
 <h2 id="2-form-handling">2: Form Handling</h2>
 <p>Для того, чтобы обработать обычную форму нужно добавить директиву <code>lua_need_request_body on;</code>, чтобы 
 Nginx подготовил для нас тело запроса и lua мог его распарсить. Далее мы используем метод <code>ngx.req.get_post_args</code>, который возвращает таблицу содержащую все параметры запроса.</p>

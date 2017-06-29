@@ -69,73 +69,66 @@
 <p>Для начала необходимо скопировать стандартный файл конфигурации хоста в
 apache. Мы будем использовать его в качестве основы для настройки новых
 хостов:</p>
-<pre><code>:::bash
-cd /etc/apache2/sites-available/
-cp default test
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /etc/apache2/sites-available/
+cp default <span class="nb">test</span>
+</pre></div>
 <p>Откроем файл test в любом текстовом редакторе и уведем приблизительно
 следующее:</p>
-<pre><code>:::apache
-&lt;VirtualHost *:80&gt;
-    ServerAdmin webmaster@localhost
-    DocumentRoot /var/www
-    &lt;Directory /&gt;
-        Options FollowSymLinks
-        AllowOverride All
-    &lt;/Directory&gt;
-    &lt;Directory /var/www/&gt;
-        Options Indexes FollowSymLinks MultiViews
-        AllowOverride All
-        Order allow,deny
-        allow from all
-    &lt;/Directory&gt;
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    LogLevel warn
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
-&lt;/VirtualHost&gt;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nt">&lt;VirtualHost</span> <span class="s">*:80</span><span class="nt">&gt;</span>
+    <span class="nb">ServerAdmin</span> webmaster@localhost
+    <span class="nb">DocumentRoot</span> <span class="sx">/var/www</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> FollowSymLinks
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/var/www/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> Indexes FollowSymLinks MultiViews
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+        <span class="nb">Order</span> allow,deny
+        <span class="nb">allow</span> from <span class="k">all</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nb">ErrorLog</span> ${APACHE_LOG_DIR}/error.log
+    <span class="nb">LogLevel</span> <span class="k">warn</span>
+    <span class="nb">CustomLog</span> ${APACHE_LOG_DIR}/access.log combined
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
 <p>Итак, допустим нам нужно настроить хост с корнем в директории
 /var/www/test/ в таком случае изменим файл конфигураций следующим
 образом:</p>
-<pre><code>:::apache
-&lt;VirtualHost 127.0.1.1:80&gt;
-    ServerAdmin webmaster@localhost
-    DocumentRoot /var/www/test
-    &lt;Directory /&gt;
-        Options FollowSymLinks
-        AllowOverride All
-    &lt;/Directory&gt;
-    &lt;Directory /var/www/&gt;
-        Options Indexes FollowSymLinks MultiViews
-        AllowOverride All
-        Order allow,deny
-        allow from all
-    &lt;/Directory&gt;
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    LogLevel warn
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
-&lt;/VirtualHost&gt;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nt">&lt;VirtualHost</span> <span class="s">127.0.1.1:80</span><span class="nt">&gt;</span>
+    <span class="nb">ServerAdmin</span> webmaster@localhost
+    <span class="nb">DocumentRoot</span> <span class="sx">/var/www/test</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> FollowSymLinks
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nt">&lt;Directory</span> <span class="s">/var/www/</span><span class="nt">&gt;</span>
+        <span class="nb">Options</span> Indexes FollowSymLinks MultiViews
+        <span class="nb">AllowOverride</span> <span class="k">All</span>
+        <span class="nb">Order</span> allow,deny
+        <span class="nb">allow</span> from <span class="k">all</span>
+    <span class="nt">&lt;/Directory&gt;</span>
+    <span class="nb">ErrorLog</span> ${APACHE_LOG_DIR}/error.log
+    <span class="nb">LogLevel</span> <span class="k">warn</span>
+    <span class="nb">CustomLog</span> ${APACHE_LOG_DIR}/access.log combined
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
 <p>С конфигурацией apache мы закончили, теперь нужно создать символическую
 ссылку на наш файл конфигураций в директории /etc/apache2/sites-enabled/
 для этого выполним следующую команду:</p>
-<pre><code>:::bash
-ln -s /etc/apache2/sites-available/test /etc/apache2/sites-enabled/test
-</code></pre>
+<div class="highlight"><pre><span></span>ln -s /etc/apache2/sites-available/test /etc/apache2/sites-enabled/test
+</pre></div>
 <p>или</p>
-<pre><code>:::bash
-a2ensite test
-</code></pre>
+<div class="highlight"><pre><span></span>a2ensite <span class="nb">test</span>
+</pre></div>
 <h2 id="sozdanie-simvolicheskogo-imeni">Создание символического имени</h2>
 <p>Т.к. в начале мы указали адрес 127.0.1.1 теперь необходимо связать его с
 символическим именем добавив следующую строку в файл /etc/hosts:</p>
-<pre><code>:::text
-127.0.1.1  test.loc
-</code></pre>
+<div class="highlight"><pre><span></span>127.0.1.1  test.loc
+</pre></div>
 <p>На этом все настройки закончены, можно выполнить перезапуск apache:</p>
-<pre><code>:::bash
-/etc/init.d/apache2 restart
-</code></pre>
+<div class="highlight"><pre><span></span>/etc/init.d/apache2 restart
+</pre></div>
 <p>Теперь вы можете открыть в браузере http://test.loc или 127.0.1.1 и
 увидеть то что находится в директории /var/www/test. Таким образом вы
 можете настроить столько хостов, сколько вам нужно, главное выбирать для
@@ -146,28 +139,25 @@ a2ensite test
 путь после DocumentRoot на путь к проекту включающий /public.</p>
 <h2 id="upd">UPD</h2>
 <p>Более простой способ:</p>
-<pre><code>:::apache
-&lt;VirtualHost *:80&gt;
-   DocumentRoot "/var/www/skeleton/public"
-   ServerName skeleton.local
-   # This should be omitted in the production environment
-   SetEnv APPLICATION_ENV development
-   &lt;Directory "/var/www/skeleton/public"&gt;
-       Options Indexes MultiViews FollowSymLinks
-       AllowOverride All
-       Order allow,deny
-       Allow from all
-   &lt;/Directory&gt;
-&lt;/VirtualHost&gt;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nt">&lt;VirtualHost</span> <span class="s">*:80</span><span class="nt">&gt;</span>
+   <span class="nb">DocumentRoot</span> <span class="s2">"/var/www/skeleton/public"</span>
+   <span class="nb">ServerName</span> skeleton.local
+   <span class="c"># This should be omitted in the production environment</span>
+   <span class="nb">SetEnv</span> APPLICATION_ENV development
+   <span class="nt">&lt;Directory</span> <span class="s">"/var/www/skeleton/public"</span><span class="nt">&gt;</span>
+       <span class="nb">Options</span> Indexes MultiViews FollowSymLinks
+       <span class="nb">AllowOverride</span> <span class="k">All</span>
+       <span class="nb">Order</span> allow,deny
+       <span class="nb">Allow</span> from <span class="k">all</span>
+   <span class="nt">&lt;/Directory&gt;</span>
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</pre></div>
 <p>После этого добавляем в /etc/hosts:</p>
-<pre><code>:::text
-127.0.0.1 skeleton.local
-</code></pre>
+<div class="highlight"><pre><span></span>127.0.0.1 skeleton.local
+</pre></div>
 <p>Включаем хост и рестартим апач:</p>
-<pre><code>:::bash
-a2ensite skeleton# /etc/init.d/apache2 restart
-</code></pre>
+<div class="highlight"><pre><span></span>a2ensite skeleton# /etc/init.d/apache2 restart
+</pre></div>
   </div>
 </section>
         <footer id="contentinfo" class="body">

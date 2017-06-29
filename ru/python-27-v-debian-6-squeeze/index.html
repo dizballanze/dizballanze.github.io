@@ -62,55 +62,48 @@ python 2.6.6. Однако, последней (на момент написан
 <h2 id="ustanavlivaem-python-273">Устанавливаем Python 2.7.3</h2>
 <p>Скомпилируем python 2.7.3 из исходников. Стянуть последнюю версию можно
 <a href="http://www.python.org/download/releases/">здесь</a>.</p>
-<pre><code>:::bash
-cd /tmp
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /tmp
 wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
 tar xvzf Python-2.7.3.tgz
-cd Python-2.7.3
-./configure --prefix=/usr/local/python-2.7.3
-make &amp;&amp; make install
+<span class="nb">cd</span> Python-2.7.3
+./configure --prefix<span class="o">=</span>/usr/local/python-2.7.3
+make <span class="o">&amp;&amp;</span> make install
 ln -s /usr/local/python-2.7.3/bin/python2.7 /usr/bin/python2.7.3
-</code></pre>
+</pre></div>
 <p>После этого можем проверить что все работает:</p>
-<pre><code>:::bash
-python2.7.3 
-Python 2.7.3 (default, Jul 22 2012, 10:05:02) 
-[GCC 4.4.5] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
+<div class="highlight"><pre><span></span>python2.7.3 
+Python <span class="m">2</span>.7.3 <span class="o">(</span>default, Jul <span class="m">22</span> <span class="m">2012</span>, <span class="m">10</span>:05:02<span class="o">)</span> 
+<span class="o">[</span>GCC <span class="m">4</span>.4.5<span class="o">]</span> on linux2
+Type <span class="s2">"help"</span>, <span class="s2">"copyright"</span>, <span class="s2">"credits"</span> or <span class="s2">"license"</span> <span class="k">for</span> more information.
 &gt;&gt;&gt;
-</code></pre>
+</pre></div>
 <h2 id="ispolzuem-virtualenv">Используем virtualenv</h2>
 <p>Для того чтобы обеспечить удобную работу с несколькими версиями python
 воспользуемся утилитой virtualenv. Сначала скачиваем скрипт:</p>
-<pre><code>:::bash
-cd /home/dizballanze
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /home/dizballanze
 mkdir apps
-cd apps
+<span class="nb">cd</span> apps
 wget https://raw.github.com/pypa/virtualenv/master/virtualenv.py
-</code></pre>
+</pre></div>
 <p>Теперь нам нужно выполнить скрипт с использованием нужной версии python:</p>
-<pre><code>:::bash
-mkdir test_app
-cd test_app
+<div class="highlight"><pre><span></span>mkdir test_app
+<span class="nb">cd</span> test_app
 python2.7.3 ../virtualenv.py venv
-</code></pre>
+</pre></div>
 <p>Таким образом мы успешно добавили виртуальное окружение. В текущей
 директории должна появится директория с названием venv (второй
 параметр). Для того чтобы активировать окружение выполните:</p>
-<pre><code>:::bash
-source venv/bin/activate
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nb">source</span> venv/bin/activate
+</pre></div>
 <p>Сразу после этого должна изменится строка ввода в терминале следующим
 образом:</p>
-<pre><code>:::bash
-(venv)dizballanze@dizballanze-desktop:~/apps/test
-</code></pre>
+<div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span>dizballanze@dizballanze-desktop:~/apps/test
+</pre></div>
 <p>Что означает, что мы находимся в окружении с названием venv. Проверим
 версию python:</p>
-<pre><code>:::bash
-python --version
-Python 2.7.3
-</code></pre>
+<div class="highlight"><pre><span></span>python --version
+Python <span class="m">2</span>.7.3
+</pre></div>
 <p>Таким образом можно установить любое количество версий Python на одной
 машине и при этом использовать их независимо. Более того, активировав
 virtualenv все устанавливаемые через pip пакеты будут хранится в

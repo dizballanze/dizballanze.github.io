@@ -70,12 +70,11 @@ Selenium, в том числе для тестирования Yii прилож�
 <p>Если вы скрыли index.php в url, то нужно снова включить его отображение
 для тестового окружения. Для этого добавим в <code>config/test.php</code> в
 components следующие строки:</p>
-<pre><code>:::php
-'urlManager' =&gt; array(
-    'urlFormat' =&gt; 'path',
-    'showScriptName' =&gt; true,
-),
-</code></pre>
+<div class="highlight"><pre><span></span><span class="x">'urlManager' =&gt; array(</span>
+<span class="x">    'urlFormat' =&gt; 'path',</span>
+<span class="x">    'showScriptName' =&gt; true,</span>
+<span class="x">),</span>
+</pre></div>
 <p>При этом стоит отметить, что дублировать здесь все маршруты нет
 необходимости, т.к. yii сам корректным образом объединяет тестовые
 параметры с "боевыми" и все маршруты описанные в main.php останутся
@@ -103,26 +102,24 @@ components следующие строки:</p>
 </ul>
 <p>Для того чтобы <em>проверить значение атрибута элемента</em>, нужно добавить к
 locator название атрибута после знака @, например:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$this-&gt;assertAttribute('css=.sidebar-fb-list li:eq(0) img@alt', $user-&gt;getFullName());
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertAttribute</span><span class="p">(</span><span class="s1">'css=.sidebar-fb-list li:eq(0) img@alt'</span><span class="p">,</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">getFullName</span><span class="p">());</span>
+</pre></div>
 <h2 id="sozdanie-skrinshotov">Создание скриншотов</h2>
 <p>Часто после каких-то значительных изменений падает много тестов, т.к.
 скорость их выполнения не радует для облегчения отладки можно настроить
 selenium на создание скриншотов, после того как тест падает. Для этого
 достаточно добавить следующие строки в метод <code>WebTestCase::setUp():</code></p>
-<pre><code>:::php
-&lt;?php
-// ...
-// директория в которую будут сохранятся 
-$this-&gt;screenshotPath = '/var/www/report/';
-// Url, по которому доступна директория указанная в предыдущей строке
-$this-&gt;screenshotUrl = "http://localhost/report";
-// Включаем создание скриншотов
-$this-&gt;captureScreenshotOnFailure = true;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">// директория в которую будут сохранятся </span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">screenshotPath</span> <span class="o">=</span> <span class="s1">'/var/www/report/'</span><span class="p">;</span>
+<span class="c1">// Url, по которому доступна директория указанная в предыдущей строке</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">screenshotUrl</span> <span class="o">=</span> <span class="s2">"http://localhost/report"</span><span class="p">;</span>
+<span class="c1">// Включаем создание скриншотов</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">captureScreenshotOnFailure</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+</pre></div>
 <p>После этого скриншоты будут сохранятся в указанную директорию, а в
 терминале будет выводится ссылка, через которую можно будет быстро
 открыть определенный скриншот. Скриншоты можно создавать только в
@@ -132,12 +129,11 @@ firefox, к сожалению webkit пока не поддерживается
 браузером, но иногда его возможностей не хватает. В таких случаях можно
 подключить всю мощь клиентского javascript к нашим тестам. Например,
 так:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$items_count = (int)$this-&gt;getEval('selenium.browserbot.getCurrentWindow().jQuery(".item").size()');
-$this-&gt;assertEquals(Item::PER_PAGE, $items_count);
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$items_count</span> <span class="o">=</span> <span class="p">(</span><span class="nx">int</span><span class="p">)</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getEval</span><span class="p">(</span><span class="s1">'selenium.browserbot.getCurrentWindow().jQuery(".item").size()'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nx">Item</span><span class="o">::</span><span class="na">PER_PAGE</span><span class="p">,</span> <span class="nv">$items_count</span><span class="p">);</span>
+</pre></div>
 <h2 id="izbavliaemsia-ot-poiavliaiushchikhsia-okon-brauzera">Избавляемся от появляющихся окон браузера</h2>
 <p>Для того чтобы избавится от надоедливых всплывающих окон браузера в
 linux можно использовать утилиту Xvfb. В интернете можно найти <a href="http://goo.gl/gmkj2">много
@@ -147,41 +143,38 @@ linux можно использовать утилиту Xvfb. В интерне
 необходимо подождать его завершения, чтобы проверить, например,
 изменение какого-то блока на странице. Для этого добавим в класс
 WebTestCase метод:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-protected function waitForAjax(){
-    $this-&gt;waitForCondition('selenium.browserbot.getCurrentWindow().jQuery.active == 0');
-}
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">waitForAjax</span><span class="p">(){</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">waitForCondition</span><span class="p">(</span><span class="s1">'selenium.browserbot.getCurrentWindow().jQuery.active == 0'</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
 <p>Естественно, что данное решение будет работать, только если вы
 используете jquery, но для других фреймворков, я думаю, не составит
 труда найти аналогичное решение. Пример использования:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$this-&gt;type('id=field', $value);
-$this-&gt;click('css=#ajax-form input[type="submit"]');
-$this-&gt;waitForAjax();
-$this-&gt;verifyElementPresent('id=result-block ', $value);
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">'id=field'</span><span class="p">,</span> <span class="nv">$value</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">click</span><span class="p">(</span><span class="s1">'css=#ajax-form input[type="submit"]'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">waitForAjax</span><span class="p">();</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">verifyElementPresent</span><span class="p">(</span><span class="s1">'id=result-block '</span><span class="p">,</span> <span class="nv">$value</span><span class="p">);</span>
+</pre></div>
 <h2 id="boremsia-s-dublirovaniem-koda">Боремся с дублированием кода</h2>
 <p>Часто будут встречаться повторяющиеся операции, например, аутентификация
 пользователя. Для того чтобы избежать дублирования, можно просто вынести
 общие для нескольких тестов алгоритмы в родительский класс
 (WebTestCase). Наример:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-protected function login(){
-    $this-&gt;open(Yii::app()-&gt;createUrl('/'));
-    $user = $this-&gt;users('first_user');
-    $this-&gt;type('id=f_username', $user-&gt;user_name);
-    $this-&gt;type('id=f_password', '111111');
-    $this-&gt;submitAndWait('id=login-form');
-    return $user;
-}
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">protected</span> <span class="k">function</span> <span class="nf">login</span><span class="p">(){</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">open</span><span class="p">(</span><span class="nx">Yii</span><span class="o">::</span><span class="na">app</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">createUrl</span><span class="p">(</span><span class="s1">'/'</span><span class="p">));</span>
+    <span class="nv">$user</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">users</span><span class="p">(</span><span class="s1">'first_user'</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">'id=f_username'</span><span class="p">,</span> <span class="nv">$user</span><span class="o">-&gt;</span><span class="na">user_name</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">(</span><span class="s1">'id=f_password'</span><span class="p">,</span> <span class="s1">'111111'</span><span class="p">);</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">submitAndWait</span><span class="p">(</span><span class="s1">'id=login-form'</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nv">$user</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
 <h2 id="avtodopolnenie">Автодополнение</h2>
 <p>У меня автодополнение кода для методов selenium api работает не совсем
 корректно. Присутствуют не все методы, а те что присутствуют с
@@ -189,23 +182,22 @@ protected function login(){
 добавил описание наиболее часто используемых мной методов в описание
 WebTestCase. В будущем планирую описать все методы, которые доступны и
 выложить здесь в блоге. Вот некоторые методы, может кому-то пригодится:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-/**
- * @method assertTextPresent($pattern)
- * @method assertTextNotPresent($pattern)
- * @method assertText($locator, $pattern)
- * @method assertNotText($locator, $pattern)
- * @method assertTitle($pattern)
- * @method assertNotTitle($pattern)
- * @method verifyElementPresent($locator)
- * @method verifyElementNotPresent($locator)
- * @method assertVisible($locator)
- * @method assertNotVisible($locator)
- * @method assertAttribute ($attributeLocator, $pattern)
- */
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="sd">/**</span>
+<span class="sd"> * @method assertTextPresent($pattern)</span>
+<span class="sd"> * @method assertTextNotPresent($pattern)</span>
+<span class="sd"> * @method assertText($locator, $pattern)</span>
+<span class="sd"> * @method assertNotText($locator, $pattern)</span>
+<span class="sd"> * @method assertTitle($pattern)</span>
+<span class="sd"> * @method assertNotTitle($pattern)</span>
+<span class="sd"> * @method verifyElementPresent($locator)</span>
+<span class="sd"> * @method verifyElementNotPresent($locator)</span>
+<span class="sd"> * @method assertVisible($locator)</span>
+<span class="sd"> * @method assertNotVisible($locator)</span>
+<span class="sd"> * @method assertAttribute ($attributeLocator, $pattern)</span>
+<span class="sd"> */</span>
+</pre></div>
 <h2 id="ps">P.S.</h2>
 <p>Для того чтобы ознакомится со всеми возможностями selenium api,
 рекомендую прочитать следующий док - <a href="http://release.seleniumhq.org/selenium-core/1.0.1/reference.html">selenium reference</a>. Если есть

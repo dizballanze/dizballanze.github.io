@@ -83,36 +83,35 @@
 рефакторингу.</p>
 <h2 id="realizatsiia">Реализация</h2>
 <p>И по традиции рассмотрим пример на php:</p>
-<pre><code>:::php
-&lt;?php
-class DBSimpleGateway{
-    protected $connection;
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">DBSimpleGateway</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$connection</span><span class="p">;</span>
 
-    public function __construct($db_host, $db_user_name, $db_password, $db_name) {
-        //Устанавливаем соединение с сервером MySQL
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$db_host</span><span class="p">,</span> <span class="nv">$db_user_name</span><span class="p">,</span> <span class="nv">$db_password</span><span class="p">,</span> <span class="nv">$db_name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//Устанавливаем соединение с сервером MySQL</span>
+    <span class="p">}</span>
 
-    public function query($query){
-        //Выполняем запрос
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">query</span><span class="p">(</span><span class="nv">$query</span><span class="p">){</span>
+        <span class="c1">//Выполняем запрос</span>
+    <span class="p">}</span>
 
-    public function reConnect($db_host, $db_user_name, $db_password, $db_name){
-        //Выполняем пересоединение
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">reConnect</span><span class="p">(</span><span class="nv">$db_host</span><span class="p">,</span> <span class="nv">$db_user_name</span><span class="p">,</span> <span class="nv">$db_password</span><span class="p">,</span> <span class="nv">$db_name</span><span class="p">){</span>
+        <span class="c1">//Выполняем пересоединение</span>
+    <span class="p">}</span>
 
-    public function disconnect(){
-        //Разрываем соединение
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">disconnect</span><span class="p">(){</span>
+        <span class="c1">//Разрываем соединение</span>
+    <span class="p">}</span>
 
-    public function getError(){
-        //Возвращаем ошибку
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getError</span><span class="p">(){</span>
+        <span class="c1">//Возвращаем ошибку</span>
+    <span class="p">}</span>
 
-    public function getLastInsertId(){
-        //ID последней вставленной записи
-    }
-}
-</code></pre>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getLastInsertId</span><span class="p">(){</span>
+        <span class="c1">//ID последней вставленной записи</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>Этот простой пример показывает, как можно создать шлюз для реляционной
 базы данных. Я не стал приводить реализацию методов, т.к. пример
 довольно тривиальный да и реализация в данном контексте нас не очень

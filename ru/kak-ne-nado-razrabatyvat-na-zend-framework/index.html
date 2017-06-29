@@ -72,12 +72,11 @@ framework. Программист, который начал разрабаты�
 модели прямо в коде контроллера, что напрочь перечеркивает все
 преимущества MVC. Чтобы было понятно о чем речь приведу пример исходного
 кода:</p>
-<pre><code>:::php
-&lt;?php
-$model = new Model();
-$some_data = $model-&gt;fetchAll(array('field1 = ?' =&gt; 1, 'field2 = ?' =&gt; 0));
-$all_data = $model-&gt;fetchAll();
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nv">$model</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Model</span><span class="p">();</span>
+<span class="nv">$some_data</span> <span class="o">=</span> <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">fetchAll</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">'field1 = ?'</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'field2 = ?'</span> <span class="o">=&gt;</span> <span class="mi">0</span><span class="p">));</span>
+<span class="nv">$all_data</span> <span class="o">=</span> <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">fetchAll</span><span class="p">();</span>
+</pre></div>
 <p>Такой винегрет был в каждом файле контроллера, что очень мешало чтению
 кода и исправлению ошибок, постоянно возникали какие-то не очевидные
 зависимости, перезаписывались важные данные. Соответственно так делать
@@ -93,10 +92,9 @@ $all_data = $model-&gt;fetchAll();
 context-switch что представляет собой удобный способ изменения формата
 ответа. Если вы используете json то в методе init контроллера задать
 что-то вроде следующего:</p>
-<pre><code>:::php
-&lt;?php
-$this-&gt;_helper-&gt;AjaxContext()-&gt;addActionContext('ajax-handler', 'json')-&gt;initContext('json');
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_helper</span><span class="o">-&gt;</span><span class="na">AjaxContext</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">addActionContext</span><span class="p">(</span><span class="s1">'ajax-handler'</span><span class="p">,</span> <span class="s1">'json'</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">initContext</span><span class="p">(</span><span class="s1">'json'</span><span class="p">);</span>
+</pre></div>
 <p>Теперь все данные переданные во view в экшене ajax-handler будут
 перекодированы в формат json. Этот способ является более
 предпочтительным по сравнению с отключением view и ручным
@@ -113,23 +111,22 @@ $this-&gt;_helper-&gt;AjaxContext()-&gt;addActionContext('ajax-handler', 'json')
 например, если вы пишите добавление/удаление материалов из списка
 избранного и у вас есть js-функции вроде приведенных ниже, то вам стоит
 очень хорошо задуматься:</p>
-<pre><code>:::javascript
-function addObject(object_id, user_id) {  
-    if (user_id &gt; 0) {       
-        $.get('/realestate/favorite/oid/'+object_id+'/uid/'+user_id, function () {            
-            $("#addfavorite"+object_id).hide();
-        });
-    }
-}
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">addObject</span><span class="p">(</span><span class="nx">object_id</span><span class="p">,</span> <span class="nx">user_id</span><span class="p">)</span> <span class="p">{</span>  
+    <span class="k">if</span> <span class="p">(</span><span class="nx">user_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>       
+        <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'/realestate/favorite/oid/'</span><span class="o">+</span><span class="nx">object_id</span><span class="o">+</span><span class="s1">'/uid/'</span><span class="o">+</span><span class="nx">user_id</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>            
+            <span class="nx">$</span><span class="p">(</span><span class="s2">"#addfavorite"</span><span class="o">+</span><span class="nx">object_id</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-function removeObject(object_id, user_id) {
-    if (user_id &gt; 0) {
-        $.get('/profile/removefavorite/oid/'+object_id+'/uid/'+user_id, function () {
-            $("#removefavorite"+object_id).hide();
-        });
-    }
-}
-</code></pre>
+<span class="kd">function</span> <span class="nx">removeObject</span><span class="p">(</span><span class="nx">object_id</span><span class="p">,</span> <span class="nx">user_id</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">user_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'/profile/removefavorite/oid/'</span><span class="o">+</span><span class="nx">object_id</span><span class="o">+</span><span class="s1">'/uid/'</span><span class="o">+</span><span class="nx">user_id</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">$</span><span class="p">(</span><span class="s2">"#removefavorite"</span><span class="o">+</span><span class="nx">object_id</span><span class="p">).</span><span class="nx">hide</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>Как выяснилось потом на сервер-сайд user_id не проверялся на равенство
 идентификатору текущего пользователя и это печально...</p>
 <h3 id="ispolzovanie-vmesto-acl-ierarkhii-klassov-kontrollerov">Использование вместо ACL, иерархии классов контроллеров</h3>
@@ -139,21 +136,20 @@ function removeObject(object_id, user_id) {
 контроллеров. Т.е. создавался класс-родитель для контроллеров админки,
 класс для остальных контроллеров и в этом родительском классе
 выполнялось что-то вроде этого:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-public function preDispatch() {
-    // А вот пример глобальных переменных *fail*
-    if (!empty($_REQUEST['session'])) { 
-        session_id($_REQUEST['session']);
-    } else {
-        $auth = Zend_Auth::getInstance();
-        if (!$auth-&gt;hasIdentity()) {
-            $this-&gt;_redirect('backoffice/auth/login');
-        }
-    }
-}
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">preDispatch</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// А вот пример глобальных переменных *fail*</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">empty</span><span class="p">(</span><span class="nv">$_REQUEST</span><span class="p">[</span><span class="s1">'session'</span><span class="p">]))</span> <span class="p">{</span> 
+        <span class="nb">session_id</span><span class="p">(</span><span class="nv">$_REQUEST</span><span class="p">[</span><span class="s1">'session'</span><span class="p">]);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nv">$auth</span> <span class="o">=</span> <span class="nx">Zend_Auth</span><span class="o">::</span><span class="na">getInstance</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$auth</span><span class="o">-&gt;</span><span class="na">hasIdentity</span><span class="p">())</span> <span class="p">{</span>
+            <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_redirect</span><span class="p">(</span><span class="s1">'backoffice/auth/login'</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>Чем плох такой подход? Во-первых, очень сложным является
 перераспределение прав доступа. Во-вторых, тяжело поддерживать несколько
 ролей. Я могу долго продолжать :)</p>
@@ -163,49 +159,47 @@ public function preDispatch() {
 экшн/контроллере в процессе диспатчинга. Данный способ позволяет
 формировать права доступа в простом, легко изменяемом списке, вроде
 этого:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-//Добавляем роли
-$this-&gt;addRole('guest');
-$this-&gt;addRole('user', 'guest');
-$this-&gt;addRole('manager', 'user');
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="c1">//Добавляем роли</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">'guest'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">'user'</span><span class="p">,</span> <span class="s1">'guest'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addRole</span><span class="p">(</span><span class="s1">'manager'</span><span class="p">,</span> <span class="s1">'user'</span><span class="p">);</span>
 
-//Добавляем ресурсы
-$this-&gt;add(new Zend_Acl_Resource('guest_allow'));
-$this-&gt;add(new Zend_Acl_Resource('index/index'),'guest_allow');
-$this-&gt;add(new Zend_Acl_Resource('index/registration'),'guest_allow');
-$this-&gt;add(new Zend_Acl_Resource('error/error'),'guest_allow');
+<span class="c1">//Добавляем ресурсы</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'guest_allow'</span><span class="p">));</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'index/index'</span><span class="p">),</span><span class="s1">'guest_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'index/registration'</span><span class="p">),</span><span class="s1">'guest_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'error/error'</span><span class="p">),</span><span class="s1">'guest_allow'</span><span class="p">);</span>
 
-$this-&gt;add(new Zend_Acl_Resource('user_allow'));
-$this-&gt;add(new Zend_Acl_Resource('index/logout'),'user_allow');
-$this-&gt;add(new Zend_Acl_Resource('project/index'),'user_allow');
-$this-&gt;add(new Zend_Acl_Resource('task/index'),'user_allow');
-$this-&gt;add(new Zend_Acl_Resource('task/complete'),'user_allow');
-$this-&gt;add(new Zend_Acl_Resource('task/assigned'),'user_allow');
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'user_allow'</span><span class="p">));</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'index/logout'</span><span class="p">),</span><span class="s1">'user_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'project/index'</span><span class="p">),</span><span class="s1">'user_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'task/index'</span><span class="p">),</span><span class="s1">'user_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'task/complete'</span><span class="p">),</span><span class="s1">'user_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'task/assigned'</span><span class="p">),</span><span class="s1">'user_allow'</span><span class="p">);</span>
 
-$this-&gt;add(new Zend_Acl_Resource('manager_allow'));
-$this-&gt;add(new Zend_Acl_Resource('project/add'),'manager_allow');
-$this-&gt;add(new Zend_Acl_Resource('task/add'),'manager_allow');
-$this-&gt;add(new Zend_Acl_Resource('index/add-user'),'manager_allow');
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'manager_allow'</span><span class="p">));</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'project/add'</span><span class="p">),</span><span class="s1">'manager_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'task/add'</span><span class="p">),</span><span class="s1">'manager_allow'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Zend_Acl_Resource</span><span class="p">(</span><span class="s1">'index/add-user'</span><span class="p">),</span><span class="s1">'manager_allow'</span><span class="p">);</span>
 
-//Выставляем права, по-умолчанию всё запрещено
-$this-&gt;deny(null, null, null);
-$this-&gt;allow('guest', 'guest_allow', 'show');
-$this-&gt;allow('user','user_allow', 'show');
-$this-&gt;allow('manager','manager_allow', 'show');
-</code></pre>
+<span class="c1">//Выставляем права, по-умолчанию всё запрещено</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">deny</span><span class="p">(</span><span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">,</span> <span class="k">null</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">'guest'</span><span class="p">,</span> <span class="s1">'guest_allow'</span><span class="p">,</span> <span class="s1">'show'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">'user'</span><span class="p">,</span><span class="s1">'user_allow'</span><span class="p">,</span> <span class="s1">'show'</span><span class="p">);</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="na">allow</span><span class="p">(</span><span class="s1">'manager'</span><span class="p">,</span><span class="s1">'manager_allow'</span><span class="p">,</span> <span class="s1">'show'</span><span class="p">);</span>
+</pre></div>
 <h3 id="filtratsiia-dannykh-v-poliakh-formy-otvechaiushchikh-za-vvod-parolia">Фильтрация данных в полях формы отвечающих за ввод пароля</h3>
 <p>Никогда, никогда не фильтруйте данные которые поступают из поля ввода
 пароля! Это чревато долгими попытками найти причину, по которой
 пользователи не могут залогинится. В моем случае причиной было
 следующее:</p>
-<pre><code>:::php
-&lt;?php
-//...
-$f = new Zend_Filter_StripTags();
-$pwd = $f-&gt;filter($this-&gt;_request-&gt;getPost('pwd'));
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">//...</span>
+<span class="nv">$f</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Zend_Filter_StripTags</span><span class="p">();</span>
+<span class="nv">$pwd</span> <span class="o">=</span> <span class="nv">$f</span><span class="o">-&gt;</span><span class="na">filter</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_request</span><span class="o">-&gt;</span><span class="na">getPost</span><span class="p">(</span><span class="s1">'pwd'</span><span class="p">));</span>
+</pre></div>
 <p>Учитывая что пароли должны хранится в зашифрованном виде и никогда не
 должны выводится, наличие в них тегов, или пробелов, никаким образом не
 может привести к уязвимостям, соответственно и фильтрация ни к чему</p>
@@ -219,14 +213,13 @@ $pwd = $f-&gt;filter($this-&gt;_request-&gt;getPost('pwd'));
 <h3 id="ispolzovanie-tekstovykh-konstant-vmesto-logicheskikh-peremennykh">Использование текстовых констант вместо логических переменных</h3>
 <p>В завершении хочу рассказать про интересный способ замены логических
 переменных строками. В коде я нашел что-то вроде этого:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-if ($a &gt; $b)
-    $this-&gt;view-&gt;result = 'ok'
-else
-    $this-&gt;view-&gt;result = 'fail';
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$a</span> <span class="o">&gt;</span> <span class="nv">$b</span><span class="p">)</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">view</span><span class="o">-&gt;</span><span class="na">result</span> <span class="o">=</span> <span class="s1">'ok'</span>
+<span class="k">else</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">view</span><span class="o">-&gt;</span><span class="na">result</span> <span class="o">=</span> <span class="s1">'fail'</span><span class="p">;</span>
+</pre></div>
 <p>Здесь никакого дополнительного пояснения не требуется, я думаю последняя
 строка очень красноречиво делает это за меня :D</p>
 <h2 id="zakliuchenie_1">Заключение</h2>

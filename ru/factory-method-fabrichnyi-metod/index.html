@@ -84,58 +84,57 @@
     случае гневное письмо, а в худшем черепно-мозговую травму :)</li>
 </ul>
 <p>Рассмотрим упрощенный пример такого кода:</p>
-<pre><code>:::php
-&lt;?php
-define('RegForm', 1);
-define('AuthForm', 2);
-define('PostForm', 3);
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'RegForm'</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'AuthForm'</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+<span class="nb">define</span><span class="p">(</span><span class="s1">'PostForm'</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
 
-//Менеджер форм
-class FormManager{
-    protected $type;
+<span class="c1">//Менеджер форм</span>
+<span class="k">class</span> <span class="nc">FormManager</span><span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$type</span><span class="p">;</span>
 
-    public function __construct($type=1) {
-        $this-&gt;type = $type;
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nv">$type</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span> <span class="o">=</span> <span class="nv">$type</span><span class="p">;</span>
+    <span class="p">}</span>
 
-    public function getForm(){
-        switch ($this-&gt;type){
-            case RegForm:
-                return new RegForm();
-                break;
-            case AuthForm:
-                return new AuthForm();
-                break;
-            case PostForm:
-                return new PostForm();
-                break;
-        }
-    }
-}
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">(){</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">){</span>
+            <span class="k">case</span> <span class="nx">RegForm</span><span class="o">:</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nx">RegForm</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">AuthForm</span><span class="o">:</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nx">AuthForm</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">PostForm</span><span class="o">:</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nx">PostForm</span><span class="p">();</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-// Иерархия классов форм
-abstract class Form{
-    abstract public function generateForm();
-}
+<span class="c1">// Иерархия классов форм</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Form</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">();</span>
+<span class="p">}</span>
 
-class RegForm extends Form{
-    public function generateForm() {
-        echo "Generate registration form!";
-    }
-}
+<span class="k">class</span> <span class="nc">RegForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">"Generate registration form!"</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class AuthForm extends Form{
-    public function generateForm() {
-        echo "Generate authentication form!";
-    }
-}
+<span class="k">class</span> <span class="nc">AuthForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">"Generate authentication form!"</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class PostForm extends Form{
-    public function generateForm() {
-        echo "Generate posting form!";
-    }
-}
-</code></pre>
+<span class="k">class</span> <span class="nc">PostForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">"Generate posting form!"</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>В данном упрощенном примере рассматривается реализация менеджера форм,
 который в зависимости от переданного в конструктор параметра создает
 нужный класс формы. Как мы видим использование switch-конструкции здесь
@@ -153,54 +152,53 @@ class PostForm extends Form{
 <h2 id="realizatsiia">Реализация</h2>
 <p>Рассмотрим предыдущий пример улучшенный путём использования шаблона
 Factory Method:</p>
-<pre><code>:::php
-&lt;?php
-//Иерархия генерирующих классов
-abstract class FormManager{
-    abstract public function getForm();
-}
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">//Иерархия генерирующих классов</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">FormManager</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">();</span>
+<span class="p">}</span>
 
-class RegFormManager extends FormManager{
-    public function getForm() {
-        return new RegForm();
-    }
-}
+<span class="k">class</span> <span class="nc">RegFormManager</span> <span class="k">extends</span> <span class="nx">FormManager</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">RegForm</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class AuthFormManager extends FormManager{
-    public function getForm() {
-        return new AuthForm();
-    }
-}
+<span class="k">class</span> <span class="nc">AuthFormManager</span> <span class="k">extends</span> <span class="nx">FormManager</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">AuthForm</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class PostFormManager extends FormManager{
-    public function getForm() {
-        return new PostForm();
-    }
-}
+<span class="k">class</span> <span class="nc">PostFormManager</span> <span class="k">extends</span> <span class="nx">FormManager</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">PostForm</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-//Иерархия генерируемых классов
-abstract class Form{
-    abstract public function generateForm();
-}
+<span class="c1">//Иерархия генерируемых классов</span>
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Form</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">();</span>
+<span class="p">}</span>
 
-class RegForm extends Form{
-    public function generateForm() {
-        echo "Generate registration form!";
-    }
-}
+<span class="k">class</span> <span class="nc">RegForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">"Generate registration form!"</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class AuthForm extends Form{
-    public function generateForm() {
-        echo "Generate authentication form!";
-    }
-}
+<span class="k">class</span> <span class="nc">AuthForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">"Generate authentication form!"</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class PostForm extends Form{
-    public function generateForm() {
-        echo "Generate posting form!";
-    }
-}
-</code></pre>
+<span class="k">class</span> <span class="nc">PostForm</span> <span class="k">extends</span> <span class="nx">Form</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">generateForm</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">echo</span> <span class="s2">"Generate posting form!"</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>Здесь мы видим, что создается ещё одна иерархия классов, дочерних
 FormManager. Каждый класс в иерархии FormManager создает экземпляр
 определённого класса иерархии Form. Воспользовавшись рассматриваемым

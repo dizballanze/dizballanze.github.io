@@ -89,30 +89,27 @@
 срока), поэтому мы будем использовать модуль предназначенный для работы
 с memcached. Модуль имеет название memcached и доступен для установки
 через npm:</p>
-<pre><code>:::bash
-npm install memcached
-</code></pre>
+<div class="highlight"><pre><span></span>npm install memcached
+</pre></div>
 <p>Я подразумеваю, что вы уже установили и запустили memcacheDB, если нет,
 то вам <a href="http://memcachedb.googlecode.com/svn/trunk/INSTALL">сюда</a>. После установки модуля, мы сразу можем начать
 использовать его в наших программах на node.js. Попробуем подключится к
 БД:</p>
-<pre><code>:::javascript
-var Memcached = require('memcached');
-var memcached = new Memcached('127.0.0.1:21201');
-</code></pre>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Memcached</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'memcached'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">memcached</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcached</span><span class="p">(</span><span class="s1">'127.0.0.1:21201'</span><span class="p">);</span>
+</pre></div>
 <h2 id="pishem-hello-world">Пишем Hello World</h2>
 <p>Напишем скрипт, который сначала запишет значение в БД и затем считает
 его и выведет в консоль:</p>
-<pre><code>:::javascript
-var Memcached = require('memcached');
-var memcachedb = new Memcached('127.0.0.1:21201');
-memcachedb.set("test", "Hello world", 0, function(){
-    memcachedb.get("test", function(err, result){
-        if (err) throw err;
-        console.log(result); // Hello world
-    });
-});
-</code></pre>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">Memcached</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'memcached'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">memcachedb</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Memcached</span><span class="p">(</span><span class="s1">'127.0.0.1:21201'</span><span class="p">);</span>
+<span class="nx">memcachedb</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="s2">"Hello world"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
+    <span class="nx">memcachedb</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span> <span class="c1">// Hello world</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
 <p>Подробную информацию по функциям api можете получить <a href="https://github.com/3rd-Eden/node-memcached/blob/v0.0.1/README.md">здесь</a> и в
 <a href="https://github.com/3rd-Eden/node-memcached/tree/v0.0.1/examples">примерах</a>.</p>
 <p>На этом все. До новых постов!</p>

@@ -68,75 +68,73 @@
 поисковой системы нам нужно получить запрос, который передается как
 GET-параметр. Например, для google свойство referrer будет выглядеть
 примерно так:</p>
-<pre><code>:::text
-http://www.google.com.ua/search?source=ig&amp;hl=ru&amp;q=dizballanze
-</code></pre>
+<div class="highlight"><pre><span></span>http://www.google.com.ua/search?source=ig&amp;hl=ru&amp;q=dizballanze
+</pre></div>
 <p>Очевидно, что нас интересует значение параметра q. В итоге мы можем
 сделать вывод, что для получения информации о запросе нам нужно ключевое
 слово (для определения поисковой системы) и GET-параметр (для получения
 поискового запроса). Можем приступить к написанию. У меня получилось
 следующее:  </p>
-<pre><code>:::javascript
-function referer(){
-    engines = 
-    [
-        {start:'http://www.google.', query:'q', name:'google'},
-        {start:'http://yandex.', query:'text', name:'yandex'},
-        {start:'rambler.ru/search', query:'query', name:'rambler'},
-        {start:'http://go.mail.ru/', query:'q', name:'mailru', cp1251:true},
-        {start:'http://www.bing.com/', query:'q', name:'bing'},
-        {start:'search.yahoo.com/search', query:'p', name:'yahoo'},
-        {start:'http://ru.ask.com/', query:'q', name:'ask'},
-        {start:'http://search.qip.ru/search', query:'query', name:'qip'}
-    ];
+<div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nx">referer</span><span class="p">(){</span>
+    <span class="nx">engines</span> <span class="o">=</span> 
+    <span class="p">[</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'http://www.google.'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'q'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'google'</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'http://yandex.'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'text'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'yandex'</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'rambler.ru/search'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'query'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'rambler'</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'http://go.mail.ru/'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'q'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'mailru'</span><span class="p">,</span> <span class="nx">cp1251</span><span class="o">:</span><span class="kc">true</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'http://www.bing.com/'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'q'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'bing'</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'search.yahoo.com/search'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'p'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'yahoo'</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'http://ru.ask.com/'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'q'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'ask'</span><span class="p">},</span>
+        <span class="p">{</span><span class="nx">start</span><span class="o">:</span><span class="s1">'http://search.qip.ru/search'</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span><span class="s1">'query'</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span><span class="s1">'qip'</span><span class="p">}</span>
+    <span class="p">];</span>
 
-    var ref=document.referrer,req="",engine="", start, cp1251;
+    <span class="kd">var</span> <span class="nx">ref</span><span class="o">=</span><span class="nb">document</span><span class="p">.</span><span class="nx">referrer</span><span class="p">,</span><span class="nx">req</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span><span class="nx">engine</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="nx">start</span><span class="p">,</span> <span class="nx">cp1251</span><span class="p">;</span>
 
-    for (var i in engines){
-        if  (!engines.hasOwnProperty(i))
-            continue;
-        if (ref.indexOf(engines[i].start)==-1)
-            continue;
-        start = ref.indexOf('?' + engines[i].query + '=') 
-        if (start == -1){
-            start = ref.indexOf('&amp;' + engines[i].query + '=');
-            if (start == -1)
-                return false;
-        }
-        engine = engines[i].name;
-        req = engines[i].query;
-        cp1251 = engines[i].hasOwnProperty('cp1251');
-    }
-    if (!engine)
-        return false;
-    ref = ref.substr(start + req.length + 2);
-    var end = ref.indexOf('&amp;');
-    if (end != -1)
-            ref = ref.substr(0, end);
-    if (cp1251){
-        function win2unicode(str) {
-            var charmap   = unescape(
-            "%u0402%u0403%u201A%u0453%u201E%u2026%u2020%u2021%u20AC%u2030%u0409%u2039%u040A%u040C%u040B%u040F"+
-            "%u0452%u2018%u2019%u201C%u201D%u2022%u2013%u2014%u0000%u2122%u0459%u203A%u045A%u045C%u045B%u045F"+
-            "%u00A0%u040E%u045E%u0408%u00A4%u0490%u00A6%u00A7%u0401%u00A9%u0404%u00AB%u00AC%u00AD%u00AE%u0407"+
-            "%u00B0%u00B1%u0406%u0456%u0491%u00B5%u00B6%u00B7%u0451%u2116%u0454%u00BB%u0458%u0405%u0455%u0457")
-            var code2char = function(code) {
-               if(code &gt;= 0xC0 &amp;&amp; code &lt;= 0xFF) return String.fromCharCode(code - 0xC0 + 0x0410)
-               if(code &gt;= 0x80 &amp;&amp; code &lt;= 0xBF) return charmap.charAt(code - 0x80)
-               return String.fromCharCode(code)
-            }
-            var res = ""
-            for(var i = 0; i &lt; str.length; i++) res = res + code2char(str.charCodeAt(i))
-            return res
-        }
-        ref = unescape(ref);
-        ref = win2unicode(ref);
-    }else
-        ref = decodeURIComponent(ref);
-    ref = ref.replace(/[+]+/g, ' ')
-    return {"engine": engine, "query": ref};
-}
-</code></pre>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">engines</span><span class="p">){</span>
+        <span class="k">if</span>  <span class="p">(</span><span class="o">!</span><span class="nx">engines</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">i</span><span class="p">))</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">start</span><span class="p">)</span><span class="o">==-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="nx">start</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">'?'</span> <span class="o">+</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">query</span> <span class="o">+</span> <span class="s1">'='</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="p">(</span><span class="nx">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+            <span class="nx">start</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">'&amp;'</span> <span class="o">+</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">query</span> <span class="o">+</span> <span class="s1">'='</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">engine</span> <span class="o">=</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">name</span><span class="p">;</span>
+        <span class="nx">req</span> <span class="o">=</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">query</span><span class="p">;</span>
+        <span class="nx">cp1251</span> <span class="o">=</span> <span class="nx">engines</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">'cp1251'</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">engine</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="nx">ref</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="nx">start</span> <span class="o">+</span> <span class="nx">req</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">end</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">'&amp;'</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">end</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="nx">ref</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">end</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">cp1251</span><span class="p">){</span>
+        <span class="kd">function</span> <span class="nx">win2unicode</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">charmap</span>   <span class="o">=</span> <span class="nx">unescape</span><span class="p">(</span>
+            <span class="s2">"%u0402%u0403%u201A%u0453%u201E%u2026%u2020%u2021%u20AC%u2030%u0409%u2039%u040A%u040C%u040B%u040F"</span><span class="o">+</span>
+            <span class="s2">"%u0452%u2018%u2019%u201C%u201D%u2022%u2013%u2014%u0000%u2122%u0459%u203A%u045A%u045C%u045B%u045F"</span><span class="o">+</span>
+            <span class="s2">"%u00A0%u040E%u045E%u0408%u00A4%u0490%u00A6%u00A7%u0401%u00A9%u0404%u00AB%u00AC%u00AD%u00AE%u0407"</span><span class="o">+</span>
+            <span class="s2">"%u00B0%u00B1%u0406%u0456%u0491%u00B5%u00B6%u00B7%u0451%u2116%u0454%u00BB%u0458%u0405%u0455%u0457"</span><span class="p">)</span>
+            <span class="kd">var</span> <span class="nx">code2char</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span> <span class="p">{</span>
+               <span class="k">if</span><span class="p">(</span><span class="nx">code</span> <span class="o">&gt;=</span> <span class="mh">0xC0</span> <span class="o">&amp;&amp;</span> <span class="nx">code</span> <span class="o">&lt;=</span> <span class="mh">0xFF</span><span class="p">)</span> <span class="k">return</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">code</span> <span class="o">-</span> <span class="mh">0xC0</span> <span class="o">+</span> <span class="mh">0x0410</span><span class="p">)</span>
+               <span class="k">if</span><span class="p">(</span><span class="nx">code</span> <span class="o">&gt;=</span> <span class="mh">0x80</span> <span class="o">&amp;&amp;</span> <span class="nx">code</span> <span class="o">&lt;=</span> <span class="mh">0xBF</span><span class="p">)</span> <span class="k">return</span> <span class="nx">charmap</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="nx">code</span> <span class="o">-</span> <span class="mh">0x80</span><span class="p">)</span>
+               <span class="k">return</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="kd">var</span> <span class="nx">res</span> <span class="o">=</span> <span class="s2">""</span>
+            <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">str</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="nx">res</span> <span class="o">=</span> <span class="nx">res</span> <span class="o">+</span> <span class="nx">code2char</span><span class="p">(</span><span class="nx">str</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="nx">i</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nx">res</span>
+        <span class="p">}</span>
+        <span class="nx">ref</span> <span class="o">=</span> <span class="nx">unescape</span><span class="p">(</span><span class="nx">ref</span><span class="p">);</span>
+        <span class="nx">ref</span> <span class="o">=</span> <span class="nx">win2unicode</span><span class="p">(</span><span class="nx">ref</span><span class="p">);</span>
+    <span class="p">}</span><span class="k">else</span>
+        <span class="nx">ref</span> <span class="o">=</span> <span class="nb">decodeURIComponent</span><span class="p">(</span><span class="nx">ref</span><span class="p">);</span>
+    <span class="nx">ref</span> <span class="o">=</span> <span class="nx">ref</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/[+]+/g</span><span class="p">,</span> <span class="s1">' '</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"engine"</span><span class="o">:</span> <span class="nx">engine</span><span class="p">,</span> <span class="s2">"query"</span><span class="o">:</span> <span class="nx">ref</span><span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
 <p>В случае, если страница была загружена переходом по ссылке с одной из
 забитых поисковых систем мы получим объект содержащий имя поисковой
 системы и запрос. Иначе получим логическое false.</p>

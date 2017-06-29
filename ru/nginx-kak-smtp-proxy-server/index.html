@@ -69,27 +69,26 @@
 <p>Далее мы рассмотрим процесс настройки proxy-сервера и способы его взаимодействия с приложением.</p>
 <h2 id="nastroika">Настройка</h2>
 <p>Пример конфигурации SMTP proxy-сервера (должен быть определен или подключен в корне nginx.conf):</p>
-<p>```nginx
-mail {
-    auth_http  127.0.0.1:8000/auth;</p>
-<pre><code>starttls        on;
-ssl_certificate /etc/nginx/cert.pem;
-ssl_certificate_key /etc/nginx/key.pem;
-auth_http_header X-Auth-Key wow_so_secret;
+<div class="highlight"><pre><span></span><span class="k">mail</span> <span class="p">{</span>
+    <span class="kn">auth_http</span>  <span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">8000</span><span class="s">/auth</span><span class="p">;</span>
 
-# Generic port
-server {
-    server_name     debugmail;
-    listen          25;
-    protocol        smtp;
-    proxy           on;
-    proxy_pass_error_message on;
-    smtp_auth       login plain;
-    xclient         on;
-}
-</code></pre>
-<p>}
-```</p>
+    <span class="kn">starttls</span>        <span class="no">on</span><span class="p">;</span>
+    <span class="kn">ssl_certificate</span> <span class="s">/etc/nginx/cert.pem</span><span class="p">;</span>
+    <span class="kn">ssl_certificate_key</span> <span class="s">/etc/nginx/key.pem</span><span class="p">;</span>
+    <span class="kn">auth_http_header</span> <span class="s">X-Auth-Key</span> <span class="s">wow_so_secret</span><span class="p">;</span>
+
+    <span class="c1"># Generic port</span>
+    <span class="kn">server</span> <span class="p">{</span>
+        <span class="kn">server_name</span>     <span class="s">debugmail</span><span class="p">;</span>
+        <span class="kn">listen</span>          <span class="mi">25</span><span class="p">;</span>
+        <span class="kn">protocol</span>        <span class="s">smtp</span><span class="p">;</span>
+        <span class="kn">proxy</span>           <span class="no">on</span><span class="p">;</span>
+        <span class="kn">proxy_pass_error_message</span> <span class="no">on</span><span class="p">;</span>
+        <span class="kn">smtp_auth</span>       <span class="s">login</span> <span class="s">plain</span><span class="p">;</span>
+        <span class="kn">xclient</span>         <span class="no">on</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>Рассмотрим некоторые параметры:</p>
 <ul>
 <li><code>server_name</code> - имя сервера, которое используется в приветствии SMTP-сервера,</li>
@@ -129,16 +128,17 @@ server {
 <p>Nginx поддерживает <a href="http://www.postfix.org/XCLIENT_README.html">расширение XCLIENT</a>. Для активации данной возможности используется параметр <code>xclient: on</code>. </p>
 <p>После активации xclient на бекенд (SMTP-сервер) будет приходить команда примерно следующего вида: <code>XCLIENT &lt;attr1=value1&gt; &lt;attr2=value2&gt;</code>. Среди атрибутов команды можно выделить <code>LOGIN</code>, который (как вы наверное догадались) передает логин при помощи которого пользователь аутентифицировался.</p>
 <p>В <a href="http://debugmail.io/">Debug Mail</a> у нас пароль является идентификатором проекта, к которому нужно в итоге прикрепить письмо. Соответственно одного логина нам было недостаточно, для того, чтобы понять куда сохранять email. К счастью Nginx позволяет переопределить значение атрибута <code>LOGIN</code> передаваемого на бекенд. Для этого необходимо (в случае успешной проверки) возвращать дополнительный заголовок <code>Auth-User</code> от сервера аутентификации, например так:</p>
-<p><code>coffeescript
-res.set "Auth-Status", "OK"
-res.set "Auth-Server", settings.smtp_host
-res.set "Auth-Port", settings.smtp_port
-res.set "Auth-User", "#{login}##{password}"
-res.send 200</code></p>
+<div class="highlight"><pre><span></span><span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">"Auth-Status"</span><span class="p">,</span> <span class="s">"OK"</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">"Auth-Server"</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">smtp_host</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">"Auth-Port"</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">smtp_port</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">set</span> <span class="s">"Auth-User"</span><span class="p">,</span> <span class="s">"</span><span class="si">#{</span><span class="nx">login</span><span class="si">}</span><span class="s">#</span><span class="si">#{</span><span class="nx">password</span><span class="si">}</span><span class="s">"</span>
+<span class="nx">res</span><span class="p">.</span><span class="nx">send</span> <span class="mi">200</span>
+</pre></div>
 <h3 id="ssl-tls_1">SSL / TLS</h3>
 <p>Если вам нужно добавить поддержку ssl или tls, то в Nginx есть всё для этого. Для включения ssl необходимо задать параметр <code>ssl: on</code>. Если же вы предпочитаете TLS, то необходимо использовать параметр <code>starttls: on</code>, при этом использование TLS будет опциональным и будет зависеть от клиента. Чтобы сделать использование TLS обязательным нужно вместо <code>on</code> задать значение <code>only</code>.</p>
 <p>Для дальнейшей настройки нам потребуется сертификат и секретный ключ в формате PEM. Для примера сгенерируем self-signed сертификат (для реального проекта вам вероятно потребуется купить сертификат выданный сертификационным центром):</p>
-<p><code>openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes</code></p>
+<div class="highlight"><pre><span></span>openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 50 -nodes
+</pre></div>
 <p>Далее задаем пути к сертификату и ключу в настройках Nginx (параметры <code>ssl_certificate</code> и <code>ssl_certificate_key</code> соответственно).</p>
 <h3 id="ps">P.S.</h3>
 <p>Полная документация по всем параметрам смотрите на <a href="http://nginx.org/ru/docs/">официальном сайте Nginx</a>.</p>

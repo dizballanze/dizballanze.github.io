@@ -58,16 +58,15 @@
 <p>Всех с новым годом! Сегодня решил сделать краткую заметку по работе с
 multiple select в php. Думаю кому-нибудь пригодится.</p>
 <p>Для примера возьмем форму содержащую multiple select:</p>
-<pre><code>:::html
-&lt;form type="post" action=""&gt;
-&lt;select name="fruits" multiple&gt;
-    &lt;option value="1"&gt;apples&lt;/option&gt;
-    &lt;option value="2"&gt;oranges&lt;/option&gt;
-    &lt;option value="3"&gt;bananas&lt;/option&gt;
-&lt;/select&gt;
-&lt;input type="submit"&gt;
-&lt;/form&gt;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">form</span> <span class="na">type</span><span class="o">=</span><span class="s">"post"</span> <span class="na">action</span><span class="o">=</span><span class="s">""</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">select</span> <span class="na">name</span><span class="o">=</span><span class="s">"fruits"</span> <span class="na">multiple</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">"1"</span><span class="p">&gt;</span>apples<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">"2"</span><span class="p">&gt;</span>oranges<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">option</span> <span class="na">value</span><span class="o">=</span><span class="s">"3"</span><span class="p">&gt;</span>bananas<span class="p">&lt;/</span><span class="nt">option</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">select</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">input</span> <span class="na">type</span><span class="o">=</span><span class="s">"submit"</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">form</span><span class="p">&gt;</span>
+</pre></div>
 <p>В таком случае при множественном выделении элементов в обрабатывающий
 скрипт будет передаваться только один (последний выделенный) элемент.
 Для того чтобы получить все элементы достаточно заменить значение

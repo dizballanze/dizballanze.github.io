@@ -96,41 +96,40 @@ seo, но также помогает пользователям при полу
 <p>Рассмотрим пример создания маршрутов для ссылок форматов указанных выше.
 Для начала нужно сформировать маршруты, для этого напишем метод в файле
 bootstrap.php:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-public function _initRoute(){
-    // Получаем маршрут, по-умолчанию
-    $router = Zend_Controller_Front::getInstance()-&gt;getRouter();
-    // создаем пользовательские маршруты
-    // маршрут для статических страниц
-    $route_static = new Zend_Controller_Router_Route(
-            '/:page',
-            array(
-                'controller' =&gt; 'static',
-                'action' =&gt; 'index',
-                'page' =&gt; 'default-page-name'
-            ), 
-            array(
-                'page' =&gt; '[\w\-]+'
-            )
-    );
-    $router-&gt;addRoute('static', $route_static);
-    // маршрут для товаров
-    $route_goods = new Zend_Controller_Router_Route(
-            '/catalog/:category/:good/*',
-            array(
-                'controller' =&gt; 'goods',
-                'action' =&gt; 'show'
-            ), 
-            array(
-                'category' =&gt; '[\w\-]+',
-                'good' =&gt; '[\w\-]+'
-            )
-    );
-    $router-&gt;addRoute('goods', $route_goods);
-}
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">_initRoute</span><span class="p">(){</span>
+    <span class="c1">// Получаем маршрут, по-умолчанию</span>
+    <span class="nv">$router</span> <span class="o">=</span> <span class="nx">Zend_Controller_Front</span><span class="o">::</span><span class="na">getInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getRouter</span><span class="p">();</span>
+    <span class="c1">// создаем пользовательские маршруты</span>
+    <span class="c1">// маршрут для статических страниц</span>
+    <span class="nv">$route_static</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Zend_Controller_Router_Route</span><span class="p">(</span>
+            <span class="s1">'/:page'</span><span class="p">,</span>
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">'controller'</span> <span class="o">=&gt;</span> <span class="s1">'static'</span><span class="p">,</span>
+                <span class="s1">'action'</span> <span class="o">=&gt;</span> <span class="s1">'index'</span><span class="p">,</span>
+                <span class="s1">'page'</span> <span class="o">=&gt;</span> <span class="s1">'default-page-name'</span>
+            <span class="p">),</span> 
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">'page'</span> <span class="o">=&gt;</span> <span class="s1">'[\w\-]+'</span>
+            <span class="p">)</span>
+    <span class="p">);</span>
+    <span class="nv">$router</span><span class="o">-&gt;</span><span class="na">addRoute</span><span class="p">(</span><span class="s1">'static'</span><span class="p">,</span> <span class="nv">$route_static</span><span class="p">);</span>
+    <span class="c1">// маршрут для товаров</span>
+    <span class="nv">$route_goods</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Zend_Controller_Router_Route</span><span class="p">(</span>
+            <span class="s1">'/catalog/:category/:good/*'</span><span class="p">,</span>
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">'controller'</span> <span class="o">=&gt;</span> <span class="s1">'goods'</span><span class="p">,</span>
+                <span class="s1">'action'</span> <span class="o">=&gt;</span> <span class="s1">'show'</span>
+            <span class="p">),</span> 
+            <span class="k">array</span><span class="p">(</span>
+                <span class="s1">'category'</span> <span class="o">=&gt;</span> <span class="s1">'[\w\-]+'</span><span class="p">,</span>
+                <span class="s1">'good'</span> <span class="o">=&gt;</span> <span class="s1">'[\w\-]+'</span>
+            <span class="p">)</span>
+    <span class="p">);</span>
+    <span class="nv">$router</span><span class="o">-&gt;</span><span class="na">addRoute</span><span class="p">(</span><span class="s1">'goods'</span><span class="p">,</span> <span class="nv">$route_goods</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
 <p>Сначала мы получаем стандартный маршрутизатор и добавляем к нему
 пользовательские маршруты. В данном случае мы используем
 перезаписывающий маршрутизатор Zend_Controller_Router_Route. Первым
@@ -155,43 +154,38 @@ public function _initRoute(){
 использована нами в дальнейшем.</p>
 <p>Далее в коде действия для того чтобы получить значение переменной нам
 необходимо выполнить следующий код:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$page = $this-&gt;getRequest()-&gt;getParam('page');
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$page</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getRequest</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">getParam</span><span class="p">(</span><span class="s1">'page'</span><span class="p">);</span>
+</pre></div>
 <p>Также нам может потребоваться создание ссылок с использованием данного
 маршрутизатора. Для этого воспользуемся стандартным помощником вида url.</p>
-<pre><code>:::html+php
-&lt;a href="&lt;?php $this-&gt;url(array('page'=&gt;'about'), 'test'); ?&gt;"&gt;О проекте&lt;/a&gt;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"</span><span class="cp">&lt;?php</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">url</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">'page'</span><span class="o">=&gt;</span><span class="s1">'about'</span><span class="p">),</span> <span class="s1">'test'</span><span class="p">);</span> <span class="cp">?&gt;</span><span class="s">"</span><span class="p">&gt;</span>О проекте<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
 <p>Мы рассмотрели только один из маршрутизаторов используемых в Zend
 Framework. Подробнее можете прочитать в документации <a href="http://framework.zend.com/manual/ru/zend.controller.router.html">здесь</a>.</p>
 <h2 id="registry">Registry</h2>
 <p>Сейчас мы рассмотрим, как в ZF можно организовать удобный и быстрый
 доступ к константам из секции файла application.ini. Для начала зададим
 несколько констант:</p>
-<pre><code>:::ini
-[constants]paths.photo = "/photo/"paths.uploads = "/uploads/"paths.video = "/video/"secret_code = "key_for_check"
-</code></pre>
+<div class="highlight"><pre><span></span><span class="na">[constants]paths.photo</span> <span class="o">=</span> <span class="s">"/photo/"paths.uploads = "/uploads/"paths.video = "/video/"secret_code = "key_for_check"</span>
+</pre></div>
 <p>Код выше необходимо разместить в файле application.ini. Далее
 воспользуемся компонентом Zend_Registry, который реализует паттерн
 Registry, для того чтобы сделать наши константы доступными во всем
 проекте:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-public function _initConfig(){
-    Zend_Registry::set('constants',  new Zend_Config_Ini(APPLICATION_PATH . '/configs/application.ini', 'constants'));
-}
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">_initConfig</span><span class="p">(){</span>
+    <span class="nx">Zend_Registry</span><span class="o">::</span><span class="na">set</span><span class="p">(</span><span class="s1">'constants'</span><span class="p">,</span>  <span class="k">new</span> <span class="nx">Zend_Config_Ini</span><span class="p">(</span><span class="nx">APPLICATION_PATH</span> <span class="o">.</span> <span class="s1">'/configs/application.ini'</span><span class="p">,</span> <span class="s1">'constants'</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
 <p>Метод представленный выше нужно добавить в bootstrap.php. Далее, чтобы
 обратится к константе используем следующий код:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$path_photo = Zend_Registry::get('constants')-&gt;paths-&gt;photo;
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$path_photo</span> <span class="o">=</span> <span class="nx">Zend_Registry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">'constants'</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">paths</span><span class="o">-&gt;</span><span class="na">photo</span><span class="p">;</span>
+</pre></div>
   </div>
 </section>
         <footer id="contentinfo" class="body">

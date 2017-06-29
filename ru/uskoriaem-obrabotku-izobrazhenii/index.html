@@ -76,52 +76,43 @@
 реализует все необходимые мне функции и при этом достаточно проста в
 использовании и хорошо документирована. Для установки в debian
 необходимо выполнить:</p>
-<pre><code>:::bash
-apt-get install graphicsmagick
-</code></pre>
+<div class="highlight"><pre><span></span>apt-get install graphicsmagick
+</pre></div>
 <p>Запуск выполняется при помощи команды <strong>gm</strong>. Рассмотрим несколько
 примеров использования.</p>
 <h3 id="konvertirovanie-izobrazhenii">Конвертирование изображений.</h3>
-<pre><code>:::bash
-gm convert -quality 80 input.png output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -quality <span class="m">80</span> input.png output.jpg
+</pre></div>
 <p>Утилита выполнит конвертирование файла input.png в формат jpeg и
 сохранит как output.jpg. При помощи опции -quality выставляем качество
 выходного изображения в стандартной для jpeg форме.</p>
 <h3 id="resaizing">Ресайзинг</h3>
 <p>Ресайзинг с установленной шириной (300px) и автоматически выбранной
 высотой с сохранением соотношения сторон:</p>
-<pre><code>:::bash
-gm convert -resize 300 input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -resize <span class="m">300</span> input.jpg output.jpg
+</pre></div>
 <p>Ресайзинг с установленной высотой (200px) и автоматически выбранной
 шириной:</p>
-<pre><code>:::bash
-gm convert -resize x200 input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -resize x200 input.jpg output.jpg
+</pre></div>
 <p>Ресайзинг без сохранения пропорций:</p>
-<pre><code>:::bash
-gm convert -resize 300x200! input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -resize 300x200! input.jpg output.jpg
+</pre></div>
 <p>Ресайзинг с сохранением пропорций и вписыванием в заданный размер по
 большей стороне:</p>
-<pre><code>:::bash
-gm convert -resize 300x200 input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -resize 300x200 input.jpg output.jpg
+</pre></div>
 <p>Ресайзинг с сохранением пропорций и вписыванием в заданный размер по
 меньшей стороне:</p>
-<pre><code>:::bash
-gm convert -resize 300x200^ input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -resize 300x200^ input.jpg output.jpg
+</pre></div>
 <p>Ресайзинг с сохранением пропорций, вписыванием по меньшей стороне и
 обрезкой лишнего с центированием:</p>
-<pre><code>:::bash
-gm convert -resize 200x300^ -gravity center -crop 200x300+0+0 input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -resize 200x300^ -gravity center -crop 200x300+0+0 input.jpg output.jpg
+</pre></div>
 <h3 id="povorot">Поворот</h3>
-<pre><code>:::bash
-gm convert -rotate 90 input.jpg output.jpg
-</code></pre>
+<div class="highlight"><pre><span></span>gm convert -rotate <span class="m">90</span> input.jpg output.jpg
+</pre></div>
 <p>Поворачиваем изображение на 90 градусов. Также можно задавать
 отрицательные значения, чтобы поворачивать против часовой стрелки.</p>
 <p>Параметры можно комбинировать, что значительно упрощает выполнение
@@ -131,22 +122,64 @@ gm convert -rotate 90 input.jpg output.jpg
 решения (class.upload.php) и утилиты GraphicsMagick.</p>
 <h3 id="konvertirovanie-izobrazhenii_1">Конвертирование изображений</h3>
 <p>Конвертируем 40 Mb изображение из png в jpeg.</p>
-<p>&nbsp;           | Время (с)
-:----------------|:---------
-upload.class.php | 97.150
-GraphicsMagick   | 3.304</p>
+<table>
+<thead>
+<tr>
+<th align="left">&nbsp;</th>
+<th align="left">Время (с)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">upload.class.php</td>
+<td align="left">97.150</td>
+</tr>
+<tr>
+<td align="left">GraphicsMagick</td>
+<td align="left">3.304</td>
+</tr>
+</tbody>
+</table>
 <h3 id="rotatsiia-izobrazhenii">Ротация изображений</h3>
 <p>Поворачиваем изображение (jpeg файл 6.4 Mb) на 90 градусов.</p>
-<p>&nbsp;           | Время (с)
-:----------------|:---------
-upload.class.php | 162.750
-GraphicsMagick   | 2.6597</p>
+<table>
+<thead>
+<tr>
+<th align="left">&nbsp;</th>
+<th align="left">Время (с)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">upload.class.php</td>
+<td align="left">162.750</td>
+</tr>
+<tr>
+<td align="left">GraphicsMagick</td>
+<td align="left">2.6597</td>
+</tr>
+</tbody>
+</table>
 <h3 id="narezka-thumbnails">Нарезка thumbnails</h3>
 <p>Нарезка 5 thumbnails различной конфигурации из jpeg файла 6.4 Mb.</p>
-<p>&nbsp;           | Время (с)
-:----------------|:---------
-upload.class.php | 12.010
-GraphicsMagick   | 4.594</p>
+<table>
+<thead>
+<tr>
+<th align="left">&nbsp;</th>
+<th align="left">Время (с)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">upload.class.php</td>
+<td align="left">12.010</td>
+</tr>
+<tr>
+<td align="left">GraphicsMagick</td>
+<td align="left">4.594</td>
+</tr>
+</tbody>
+</table>
 <h2 id="vyvody_1">Выводы</h2>
 <p>Результаты теста вполне ожидаемы и из них можно сделать выводы, что
 обрабатывать изображения средствами php следуют только в крайних случая.

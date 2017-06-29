@@ -90,97 +90,96 @@
 принтер и браузер. Теперь собственно пример такой иерархии (без
 реализации, т.к. нас интересует только логические понятия, а не сам
 функционал):</p>
-<pre><code>:::php
-&lt;?php
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
 
-abstract class Paragraph{
-    abstract public function format($data);
-}
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Paragraph</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">format</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="p">}</span>
 
-abstract class Header{
-    abstract public function header_big($data);
-    abstract public function header_small($data);
-}
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Header</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">header_big</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">header_small</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="p">}</span>
 
-abstract class Lists{
-    abstract public function numeric($data);
-    abstract public function alpha($data);
-}
+<span class="k">abstract</span> <span class="k">class</span> <span class="nc">Lists</span><span class="p">{</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">numeric</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+    <span class="k">abstract</span> <span class="k">public</span> <span class="k">function</span> <span class="nf">alpha</span><span class="p">(</span><span class="nv">$data</span><span class="p">);</span>
+<span class="p">}</span>
 
-class PrintedParagraph extends Paragraph{
-    public function format($data){
-        // Some operations
-    }
-}
+<span class="k">class</span> <span class="nc">PrintedParagraph</span> <span class="k">extends</span> <span class="nx">Paragraph</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">format</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class PrintedHeader extends Header{
-    public function header_big($data){
-        // Some operations
-    }
-    public function header_small($data){
-        // Some operations
-    }
-}
+<span class="k">class</span> <span class="nc">PrintedHeader</span> <span class="k">extends</span> <span class="nx">Header</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_big</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_small</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class PrintedLists extends Lists {
-    public function numeric($data){
-        // Some operations
-    }
+<span class="k">class</span> <span class="nc">PrintedLists</span> <span class="k">extends</span> <span class="nx">Lists</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">numeric</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
 
-    public function alpha($data) {
-        // Some operations
-    }
-}
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">alpha</span><span class="p">(</span><span class="nv">$data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class BrowsedParagraph extends Paragraph{
-    public function format($data){
-        // Some operations
-    }
-}
+<span class="k">class</span> <span class="nc">BrowsedParagraph</span> <span class="k">extends</span> <span class="nx">Paragraph</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">format</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class BrowsedHeader extends Header{
-    public function header_big($data){
-        // Some operations
-    }
-    public function header_small($data){
-        // Some operations
-    }
-}
+<span class="k">class</span> <span class="nc">BrowsedHeader</span> <span class="k">extends</span> <span class="nx">Header</span><span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_big</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">header_small</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class BrowsedLists extends Lists {
-    public function numeric($data){
-        // Some operations
-    }
+<span class="k">class</span> <span class="nc">BrowsedLists</span> <span class="k">extends</span> <span class="nx">Lists</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">numeric</span><span class="p">(</span><span class="nv">$data</span><span class="p">){</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
 
-    public function alpha($data) {
-        // Some operations
-    }
-}
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">alpha</span><span class="p">(</span><span class="nv">$data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// Some operations</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-class DocumentPrototype {
-    protected $_paragraph;
-    protected $_header;
-    protected $_list;
+<span class="k">class</span> <span class="nc">DocumentPrototype</span> <span class="p">{</span>
+    <span class="k">protected</span> <span class="nv">$_paragraph</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$_header</span><span class="p">;</span>
+    <span class="k">protected</span> <span class="nv">$_list</span><span class="p">;</span>
 
-    public function __construct(Paragraph $paragraph, Header $header, Lists $list) {
-        $this-&gt;_paragraph = $paragraph;
-        $this-&gt;_header = $header;
-        $this-&gt;_list = $list;
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="fm">__construct</span><span class="p">(</span><span class="nx">Paragraph</span> <span class="nv">$paragraph</span><span class="p">,</span> <span class="nx">Header</span> <span class="nv">$header</span><span class="p">,</span> <span class="nx">Lists</span> <span class="nv">$list</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_paragraph</span> <span class="o">=</span> <span class="nv">$paragraph</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_header</span> <span class="o">=</span> <span class="nv">$header</span><span class="p">;</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_list</span> <span class="o">=</span> <span class="nv">$list</span><span class="p">;</span>
+    <span class="p">}</span>
 
-    public function getParagraph(){
-        return clone $this-&gt;_paragraph;
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getParagraph</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="k">clone</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_paragraph</span><span class="p">;</span>
+    <span class="p">}</span>
 
-    public function getHeader(){
-        return clone $this-&gt;_header;
-    }
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getHeader</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="k">clone</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_header</span><span class="p">;</span>
+    <span class="p">}</span>
 
-    public function getList(){
-        return clone $this-&gt;_list;
-    }
-}
-</code></pre>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">getList</span><span class="p">(){</span>
+        <span class="k">return</span> <span class="k">clone</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_list</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>Итак, что мы тут видим. У нас имеется 3 иерархии классов, которые
 позволяют форматировать различные элементы документа и нам необходимо
 создавать экземпляры этих классов в процессе работы программы,
@@ -190,36 +189,33 @@ class DocumentPrototype {
 вы видите данный класс принимает в конструкторе эталонные экземпляры
 классов-элементов документа и потом умеет создавать их копии при помощи
 соответствующих методов. Рассмотрим пример использования данного класса:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$document = new DocumentPrototype(new BrowsedParagraph(), new BrowsedHeader(), new BrowsedLists());
-$list = $document-&gt;getList();
-$list-&gt;numeric(array('first','second', 'third'));
-$header = $document-&gt;getHeader();
-$header-&gt;header_big('Test');
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$document</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DocumentPrototype</span><span class="p">(</span><span class="k">new</span> <span class="nx">BrowsedParagraph</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedHeader</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedLists</span><span class="p">());</span>
+<span class="nv">$list</span> <span class="o">=</span> <span class="nv">$document</span><span class="o">-&gt;</span><span class="na">getList</span><span class="p">();</span>
+<span class="nv">$list</span><span class="o">-&gt;</span><span class="na">numeric</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">'first'</span><span class="p">,</span><span class="s1">'second'</span><span class="p">,</span> <span class="s1">'third'</span><span class="p">));</span>
+<span class="nv">$header</span> <span class="o">=</span> <span class="nv">$document</span><span class="o">-&gt;</span><span class="na">getHeader</span><span class="p">();</span>
+<span class="nv">$header</span><span class="o">-&gt;</span><span class="na">header_big</span><span class="p">(</span><span class="s1">'Test'</span><span class="p">);</span>
+</pre></div>
 <p>Мы получаем возможность создавать объекты без поддержки дополнительных
 иерархий классов. Теперь давайте представим, что нам нужно создать
 документ у которого бы параграфы выводились так, как если бы они
 выводились на печать, а заголовки и списки, так, как на web-странице:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$document = new DocumentPrototype(new PrintedParagraph(), new BrowsedHeader(), new BrowsedLists());
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$document</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DocumentPrototype</span><span class="p">(</span><span class="k">new</span> <span class="nx">PrintedParagraph</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedHeader</span><span class="p">(),</span> <span class="k">new</span> <span class="nx">BrowsedLists</span><span class="p">());</span>
+</pre></div>
 <p>Всё довольно просто, мы всего лишь заменили один аргумент конструктора
 на другой и получили такой отличный результат. К примеру каждый из этих
 классов может принимать массив параметров в котором указываются какие-то
 настройки стиля отображения элементов, теперь нам для того что-бы скажем
 увеличить размер шрифта заголовка нужно всего лишь изменить эталонный
 объект следующим образом:</p>
-<pre><code>:::php
-&lt;?php
-// ...
-$header = new BrowsedHeader(array('font-size'=&gt;'200%'));
-$document = new DocumentPrototype(new PrintedParagraph(), $header, new BrowsedLists());
-</code></pre>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?php</span>
+<span class="c1">// ...</span>
+<span class="nv">$header</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BrowsedHeader</span><span class="p">(</span><span class="k">array</span><span class="p">(</span><span class="s1">'font-size'</span><span class="o">=&gt;</span><span class="s1">'200%'</span><span class="p">));</span>
+<span class="nv">$document</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DocumentPrototype</span><span class="p">(</span><span class="k">new</span> <span class="nx">PrintedParagraph</span><span class="p">(),</span> <span class="nv">$header</span><span class="p">,</span> <span class="k">new</span> <span class="nx">BrowsedLists</span><span class="p">());</span>
+</pre></div>
 <p>Вот таким простым способом мы увеличили размер шрифта всех заголовков
 документа.</p>
 <p>В подведении итогов перечислим преимущества паттерна Prototype:</p>

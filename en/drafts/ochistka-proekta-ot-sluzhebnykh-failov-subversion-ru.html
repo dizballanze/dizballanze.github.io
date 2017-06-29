@@ -59,9 +59,8 @@
 понадобится очистить дерево проекта от служебных файлов. SVN сохраняет
 свои служебные файлы в директориях .svn по всему проекту. Для того чтобы
 удалить все директории .svn нужно выполнить следующие команды:</p>
-<pre><code>:::bash
-cd /var/www/projectfind . -name .svn -exec rm -R {} \; -print
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nb">cd</span> /var/www/projectfind . -name .svn -exec rm -R <span class="o">{}</span> <span class="se">\;</span> -print
+</pre></div>
 <p>Я рекомендую выполнять удаление служебных файлов из копии проекта, если
 вы не уверены на 100% что не будете использовать svn в дальнейшем.</p>
   </div>

@@ -19,14 +19,14 @@
 неправильно интерпретировать загруженные пользователем файлы. Если у вас загруженные файлы отдаются напрямую
 web-сервером (например, Nginx, см. ниже), то также нужно настроить чтобы сервер отдавал этот заголовок.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;code&gt;nginx
-server {
-    # ...
-    location /media/ {
-        # ...
-        add_header X-Content-Type-Options nosniff;
-    }
-}&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;# ...&lt;/span&gt;
+    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/media/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="c1"&gt;# ...&lt;/span&gt;
+        &lt;span class="kn"&gt;add_header&lt;/span&gt; &lt;span class="s"&gt;X-Content-Type-Options&lt;/span&gt; &lt;span class="s"&gt;nosniff&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;SECURE_HSTS_SECONDS&lt;/code&gt; по-умолчанию отключен, добавляет заголовок &lt;code&gt;Strict-Transport-Security&lt;/code&gt;, который запрещает браузерам открывать сайт по
 нешифрованному HTTP на заданное количество секунд. Заголовок действует на весь домен, по-этому его можно включать, только если весь контент
@@ -39,12 +39,12 @@ HTTP также и все поддомены сайта.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;SECURE_SSL_REDIRECT&lt;/code&gt; - по-умолчанию отключен, при включении редиректит все HTTP запросы на HTTPS. Вероятно вам
 захочется делать этот редирект средствами web-сервера (например, Nginx):&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;code&gt;nginx
-server {
-    listen 80;
-    server_name  example.org;
-    rewrite ^ http://example.org$request_uri? permanent;
-}&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kn"&gt;listen&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kn"&gt;server_name&lt;/span&gt;  &lt;span class="s"&gt;example.org&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kn"&gt;rewrite&lt;/span&gt; &lt;span class="s"&gt;^&lt;/span&gt; &lt;span class="s"&gt;http://example.org&lt;/span&gt;&lt;span class="nv"&gt;$request_uri?&lt;/span&gt; &lt;span class="s"&gt;permanent&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;SECURE_REDIRECT_EXEMPT&lt;/code&gt; - по-умолчанию пустой список. URL адреса, соответствующие заданным в списке регулярным
 выражениям, не будут перенаправляться с HTTP на HTTPS, при включении &lt;code&gt;SECURE_SSL_REDIRECT&lt;/code&gt;.&lt;/li&gt;

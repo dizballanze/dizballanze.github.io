@@ -59,9 +59,8 @@
 Сегодня мы рассмотрим, как автоматизировать процесс компиляции CoffeeScript в javascript. Также настроим автоматическую перезагрузку приложения, после каждой новой компиляции.</p>
 <h1 id="ustanavlivaem-pakety">Устанавливаем пакеты</h1>
 <p>Для выполнения нашей цели необходимо установить несколько пакетов:</p>
-<pre><code>:::bash
-npm install coffee-script forever
-</code></pre>
+<div class="highlight"><pre><span></span>npm install coffee-script forever
+</pre></div>
 <p>Мы установили следующие пакеты</p>
 <ul>
 <li><code>coffee-script</code> - cli-утилита для компиляции CoffeeScript</li>
@@ -69,15 +68,14 @@ npm install coffee-script forever
 </ul>
 <h1 id="failovaia-struktura">Файловая структура</h1>
 <p>Всё приложение (файлы с расширением *.coffee) располагаем в отдельной поддиректории. Для скомпилированных файлов создаём дополнительную поддиректорию в корне проекта. Также важно чтобы временные файлы, файлы загруженные пользователями и т.д. находились в отдельной от приложения поддиректории. Т.е. получаем примерно следующую файловую структуру:</p>
-<pre><code>:::bash
-$ ls -1
+<div class="highlight"><pre><span></span>$ ls -1
 app
 compiled
 node_modules
 package.json
 README.md
 uploads
-</code></pre>
+</pre></div>
 <p>Где,</p>
 <ul>
 <li><code>app/</code> - приложение (файлы *.coffee)</li>
@@ -87,15 +85,13 @@ uploads
 <h1 id="kompiliruem-coffeescript">Компилируем CoffeeScript</h1>
 <p>Для того чтобы компилировать CoffeeScript в javascript необходимо использовать утилиту <code>coffee</code>. Она принимает ряд параметров, можете ознакомится с ней подробнее прочитав справочную информацию <code>coffee --help</code>.</p>
 <p>Утилита <code>coffee</code> позволяет следить за файловой системой и автоматически перекомпилировать изменённые файлы CoffeeScript. Для этого необходимо вызвать её со следующими параметрами:</p>
-<pre><code>:::bash
- coffee -w -o compiled/ app/
-</code></pre>
+<div class="highlight"><pre><span></span> coffee -w -o compiled/ app/
+</pre></div>
 <p>Где, флаг <code>-w</code> включает режим отслеживания, -o задаёт директорию, в которую сохраняются скомпилированные файлы, а последний параметр определяет целевую директорию приложения.</p>
 <h1 id="nastraivaem-avtomaticheskii-perezapusk-prilozheniia">Настраиваем автоматический перезапуск приложения</h1>
 <p>Для того чтобы автоматически перезапускать приложения, после перекомпиляции, воспользуемся утилитой <code>forever</code>.</p>
-<pre><code>:::bash
-forever -w --watchDirectory compiled/ --sourceDiDir compiled/ compiled/app.js
-</code></pre>
+<div class="highlight"><pre><span></span>forever -w --watchDirectory compiled/ --sourceDiDir compiled/ compiled/app.js
+</pre></div>
 <p>Рассмотрим параметры:</p>
 <ul>
 <li><code>-w</code> - включаем режим отслеживания</li>

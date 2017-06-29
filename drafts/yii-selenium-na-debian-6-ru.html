@@ -56,18 +56,16 @@
   <div class="entry-content">
     <p>Для функционального тестирования в Yii используется Selenium. На debian
 и ubuntu при запуске тестов выдается ошибка:</p>
-<pre><code>:::text
-Result is neither "true" nor "false": 'OR Server Exception: sessionId led to start new browser session: Browser not supported
-</code></pre>
+<div class="highlight"><pre><span></span>Result is neither "true" nor "false": 'OR Server Exception: sessionId led to start new browser session: Browser not supported
+</pre></div>
 <p>В попытках решить данную проблему были испробованы чуть меньше чем все
 версии selenium и огромное количество браузеров. Однако что бы я не
 делал результата это не давало. Как оказалось selenium не получает
 настройки от yii (protected/tests/phpunit.xml) и по-этому не знает какой
 браузер использовать. Для решения этой проблемы я установил браузер
 по-умолчанию при запуске selenium'а следующим образом:</p>
-<pre><code>:::bash
-DISPLAY=:0 java -jar selenium-server-standalone-2.20.0.jar -forcedBrowserMode "*googlechrome"
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nv">DISPLAY</span><span class="o">=</span>:0 java -jar selenium-server-standalone-2.20.0.jar -forcedBrowserMode <span class="s2">"*googlechrome"</span>
+</pre></div>
 <p>После этого все заработало, но очевидно только в том браузере который
 указан параметром forcedBrowserMode. Мне таким образом удалось запустить
 firefox и google chrome последних версий, на selenium rc 1.0.3 и

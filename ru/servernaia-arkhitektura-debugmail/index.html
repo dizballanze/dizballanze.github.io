@@ -102,20 +102,19 @@
 </ul>
 <h3 id="autentifikatsiia-polzovatelei">Аутентификация пользователей</h3>
 <p>Основной сложностью было реализовать аутентификацию клиентов, т.к. сессии, которые используются в основном приложении и REST API, здесь не доступны. Для решения этой проблемы была введена аутентификация при подписке на обновления проекта. Предпологается, что при инициализации подписки на уведомления клиент передает <code>user id</code>, <code>session id</code> и <code>token</code>. <code>token</code> является результатом выполнения хэш-функции к параметрам <code>user id</code>, <code>session id</code> и некоторого закрытого ключа. Чтобы реализовать такой механизм отлично подходят, т.н. <a href="http://faye.jcoglan.com/browser/extensions.html">extensions</a>, которые позволяют перехватывать сообщения и выполнять дополнительные действия (проверки, дополнительную обработку данных и тд.). В итоге получается примерно такой код:</p>
-<p>```javascript
-client.addExtension({
-  outgoing: function(message, callback) {
-    if (message.channel !== '/meta/subscribe')
-      return callback(message);</p>
-<pre><code>message.ext = message.ext || {};
-message.ext.uid = USER_ID;
-message.ext.sid = SESSION_ID;
-message.ext.token = PRIVATE_TOKEN;
-callback(message);
-</code></pre>
-<p>}
-});
-```</p>
+<div class="highlight"><pre><span></span><span class="nx">client</span><span class="p">.</span><span class="nx">addExtension</span><span class="p">({</span>
+  <span class="nx">outgoing</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">channel</span> <span class="o">!==</span> <span class="s1">'/meta/subscribe'</span><span class="p">)</span>
+      <span class="k">return</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span> <span class="o">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span> <span class="o">||</span> <span class="p">{};</span>
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">uid</span> <span class="o">=</span> <span class="nx">USER_ID</span><span class="p">;</span>
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">sid</span> <span class="o">=</span> <span class="nx">SESSION_ID</span><span class="p">;</span>
+    <span class="nx">message</span><span class="p">.</span><span class="nx">ext</span><span class="p">.</span><span class="nx">token</span> <span class="o">=</span> <span class="nx">PRIVATE_TOKEN</span><span class="p">;</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
 <p>Аналогичная система расширений на стороне сервера позволяет выполнять проверку и разрешать подписываться на обновления по проектам только тем пользователям, которые действительно имеют к ним доступ.</p>
 <h2 id="avtomaticheskoe-testirovanie_1">Автоматическое тестирование</h2>
 <p>Зачем нужно писать тесты я думаю объяснять не нужно. В данном проекте мы хотели добиться максимального покрытия кода тестами. Для этого практически весь код тестируется сразу на 2х уровнях, на функциональном и на модульном.</p>
@@ -124,19 +123,18 @@ callback(message);
 <li><a href="http://visionmedia.github.io/mocha/">mocha</a> - многофункциональный тестовый фреймворк, содержит все необходимые функции для структурирования, поиска, запуска, подсчета метрик, просмотра результатов выполнения тестов и тд. Поддерживает как синхронные так и асинхронные тесты и имеет широкие возможности для кастомизации процесса тестирования.</li>
 <li><a href="https://github.com/visionmedia/supertest">supertest</a> - модуль для выполнения функционального тестирования. Все что нужно для начала работы с supertest - передать ему экземпляр приложения express, после этого можно выполнять запросы к приложению и тестировать полученные ответы. Также supertest предоставляет удобный chaining api, типичный тест выглядит так:</li>
 </ul>
-<p>```javascript
-request(app)
-  .get('/user')
-  .set('Accept', 'application/json')
-  .expect(200)
-  .end(function(err, res){
-    if (err) return done(err);</p>
-<pre><code>// ... check something here ...
+<div class="highlight"><pre><span></span><span class="nx">request</span><span class="p">(</span><span class="nx">app</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">'/user'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">'Accept'</span><span class="p">,</span> <span class="s1">'application/json'</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">return</span> <span class="nx">done</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
 
-done()
-</code></pre>
-<p>});
-```</p>
+    <span class="c1">// ... check something here ...</span>
+
+    <span class="nx">done</span><span class="p">()</span>
+  <span class="p">});</span>
+</pre></div>
 <ul>
 <li><a href="https://github.com/visionmedia/should.js/">should.js</a> - это библиотека для удобного выполнения assertions. При инициализации библиотека перегружает встроенные объекты javascript, что позволяет использовать красивые конструкции вроде <code>user.should.have.property('company', 'wbtech')</code>. Предоставляет большое количество полезных фич, что делает написание тестов более приятным и быстрым процессом.</li>
 <li><a href="https://github.com/felixge/node-sandboxed-module">sandboxed-module</a> - модуль для <a href="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</a>. Позволяет загрузить модуль с подменой указанных модулей, а также локальных и глобальных переменных.</li>

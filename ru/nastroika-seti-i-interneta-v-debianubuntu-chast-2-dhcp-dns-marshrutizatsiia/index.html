@@ -71,14 +71,12 @@ DHCP-серверу. Получив запрос DHCP-сервер назнач�
 для этого необходимо отредактировать уже знакомый вам файл
 /etc/network/interfaces. В данном файле необходимо добавить строку на
 подобии следующей:</p>
-<pre><code>:::bash
-iface eth0 inet dhcp
-</code></pre>
+<div class="highlight"><pre><span></span>iface eth0 inet dhcp
+</pre></div>
 <p>Итак, для того что-бы вручную осуществить запрос к dhcp серверу на
 получение настроек необходимо выполнить следующую команду:</p>
-<pre><code>:::bash
-dhclient eth0
-</code></pre>
+<div class="highlight"><pre><span></span>dhclient eth0
+</pre></div>
 <p>Параметром команде dhclient мы передаем название сетевого интерфейса.
 После этого будет выполнена автоматическая настройка параметров.
 Зачастую параметры сети будут настраиваться автоматически при включении
@@ -88,9 +86,8 @@ dhclient eth0
 активации интерфейса.</p>
 <p>Иногда вам может потребоваться освободить занятый вашим компьютером
 адрес, для этого выполните следующую команду:</p>
-<pre><code>:::bash
-dhclient -r eth0
-</code></pre>
+<div class="highlight"><pre><span></span>dhclient -r eth0
+</pre></div>
 <h2 id="nastroika-dns">Настройка DNS</h2>
 <p>DNS (domain name system) - распределенная система отвечающая за
 установление соответствия между символьными и цифровыми адресами
@@ -98,12 +95,11 @@ dhclient -r eth0
 компьютерам в сети по простому символическому имени, которое намного
 проще запомнить чем ip-адрес. Для того что-бы узнать ip-адрес машины по
 её доменному имени необходимо воспользоваться командой host:</p>
-<pre><code>:::bash
-host www.google.com
-www.google.com is an alias for www.l.google.com.
-www.l.google.com has address 74.125.87.99
-www.l.google.com has address 74.125.87.104
-</code></pre>
+<div class="highlight"><pre><span></span>host www.google.com
+www.google.com is an <span class="nb">alias</span> <span class="k">for</span> www.l.google.com.
+www.l.google.com has address <span class="m">74</span>.125.87.99
+www.l.google.com has address <span class="m">74</span>.125.87.104
+</pre></div>
 <p>Как вы видите 74.125.87.104 ip-адрес всеми известной поисковой системы.
 И если вы наберете его в адресной строке своего браузера, то вы увидите
 что это google. Часто в локальных сетях есть свои dns-сервера, например
@@ -112,78 +108,71 @@ www.l.google.com has address 74.125.87.104
 ваша система могла корректно обращаться к нему, вам необходимо настроить
 параметры dns, добавив ip-адрес dns-сервера в конфигурационный файл.
 Итак, отредактируйте от пользователя root файл /etc/resolve.conf:</p>
-<pre><code>:::bash
-nameserver 10.32.0.1
-</code></pre>
+<div class="highlight"><pre><span></span>nameserver <span class="m">10</span>.32.0.1
+</pre></div>
 <p>Теперь ваша машина будет знать, что 10.32.0.1 - это сервер имён.</p>
 <h2 id="nastroika-parametrov-marshrutizatsii-shliuza">Настройка параметров маршрутизации (шлюза)</h2>
 <p>Для настройки маршрутизации воспользуемся утилитой route. Стандартной
 задачей является установка шлюза по-умолчанию, часто это бывает
 необходимо для настройки доступа к интернет. Для того чтобы установить
 стандартный шлюз (gateway) воспользуйтесь следующей командой:</p>
-<pre><code>::bash
-route add default gw 10.32.0.1
-</code></pre>
+<div class="highlight"><pre><span></span>route add default gw <span class="m">10</span>.32.0.1
+</pre></div>
 <p>Данной командой мы устанавливаем стандартный шлюз (10.32.0.1), который
 будет принимать пакеты из сети при отсутствии других доступных
 маршрутов. После настройки всех маршрутов можно проверить правильность
 роутинга при помощи следующей команды:</p>
-<pre><code>:::bash
-route
+<div class="highlight"><pre><span></span>route
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-localnet        *               255.255.252.0   U     0      0        0 eth0
-default         10.32.0.1     0.0.0.0         UG    0      0        0 eth0
-</code></pre>
+localnet        *               <span class="m">255</span>.255.252.0   U     <span class="m">0</span>      <span class="m">0</span>        <span class="m">0</span> eth0
+default         <span class="m">10</span>.32.0.1     <span class="m">0</span>.0.0.0         UG    <span class="m">0</span>      <span class="m">0</span>        <span class="m">0</span> eth0
+</pre></div>
 <p>Если вам нужно более детальная настройка маршрутизации, то я рекомендую
 вам прочитать справочное руководство к команде route.</p>
 <p>Эти настройки действительны только до следующей перезагрузки системы,
 для того, чтобы настройки устанавливались автоматически необходимо
 добавить в файл /etc/network/interface следующие строки(от пользователя
 root):</p>
-<pre><code>:::text
-gateway 10.32.0.1
-</code></pre>
+<div class="highlight"><pre><span></span>gateway 10.32.0.1
+</pre></div>
 <h2 id="proverka-soedineniia">Проверка соединения</h2>
 <p>После настройки сети полезно поверить работоспособность всех внесенных
 изменений. Для начала лучше перезагрузить сетевые параметры для этого
 выполните от root:</p>
-<pre><code>:::bash
-/etc/init.d/networking restart
-</code></pre>
+<div class="highlight"><pre><span></span>/etc/init.d/networking restart
+</pre></div>
 <p>Теперь можно проверить доступность какого-либо узла сети, для этого
 воспользуемся утилитой ping:</p>
-<pre><code>:::bash
-ping -c 4 10.32.0.1
-PING 10.32.0.1 (10.32.0.1) 56(84) bytes of data.
-64 bytes from 10.32.0.1: icmp_req=1 ttl=128 time=2.11 ms
-64 bytes from 10.32.0.1: icmp_req=2 ttl=128 time=1.86 ms
-64 bytes from 10.32.0.1: icmp_req=3 ttl=128 time=1.25 ms
-64 bytes from 10.32.0.1: icmp_req=4 ttl=128 time=2.00 ms
+<div class="highlight"><pre><span></span>ping -c <span class="m">4</span> <span class="m">10</span>.32.0.1
+PING <span class="m">10</span>.32.0.1 <span class="o">(</span><span class="m">10</span>.32.0.1<span class="o">)</span> <span class="m">56</span><span class="o">(</span><span class="m">84</span><span class="o">)</span> bytes of data.
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">1</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">2</span>.11 ms
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">2</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">1</span>.86 ms
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">3</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">1</span>.25 ms
+<span class="m">64</span> bytes from <span class="m">10</span>.32.0.1: <span class="nv">icmp_req</span><span class="o">=</span><span class="m">4</span> <span class="nv">ttl</span><span class="o">=</span><span class="m">128</span> <span class="nv">time</span><span class="o">=</span><span class="m">2</span>.00 ms
 
---- 10.32.0.1 ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3003ms
-rtt min/avg/max/mdev = 1.255/1.809/2.110/0.334 ms
-</code></pre>
+--- <span class="m">10</span>.32.0.1 ping statistics ---
+<span class="m">4</span> packets transmitted, <span class="m">4</span> received, <span class="m">0</span>% packet loss, <span class="nb">time</span> 3003ms
+rtt min/avg/max/mdev <span class="o">=</span> <span class="m">1</span>.255/1.809/2.110/0.334 ms
+</pre></div>
 <p>Данной командой я отправляю 4 эхо-пакета на узел 10.32.0.1. Сервер
 обязан ответить мне обратно, что он и делает. Команда выводит информацию
 по каждому пакету и в конце статистику по всем пакетам указывая время
 передачи, процент потерянных пакетов и тд.</p>
 <p>Для проверки параметров маршрутизации пакетов часто бывает удобно
 воспользоваться утилитой traceroute:</p>
-<pre><code>:::bash
-traceroute www.google.com
-traceroute to www.google.com (74.125.87.99), 30 hops max, 60 byte packets
- 1  ti.holl.net (10.32.0.1)  5.595 ms * *
- 2  192.168.1.1 (192.168.1.1)  7.374 ms  7.370 ms  7.842 ms
- 3  * * *
- 4  10.50.19.34 (10.50.19.34)  83.307 ms  87.352 ms  87.350 ms
- 5  82.207.106.42 (82.207.106.42)  136.875 ms  139.480 ms  139.478 ms
- 6  209.85.241.54 (209.85.241.54)  135.527 ms  129.398 ms  131.854 ms
- 7  72.14.239.14 (72.14.239.14)  136.508 ms  136.780 ms  136.592 ms
- 8  209.85.248.39 (209.85.248.39)  131.577 ms 209.85.248.41 (209.85.248.41)  138.317 ms  102.821 ms
- 9  72.14.232.221 (72.14.232.221)  100.853 ms  102.081 ms 72.14.238.101 (72.14.238.101)  106.566 ms
-10  hb-in-f99.1e100.net (74.125.87.99)  107.843 ms  114.659 ms  110.048 ms
-</code></pre>
+<div class="highlight"><pre><span></span>traceroute www.google.com
+traceroute to www.google.com <span class="o">(</span><span class="m">74</span>.125.87.99<span class="o">)</span>, <span class="m">30</span> hops max, <span class="m">60</span> byte packets
+ <span class="m">1</span>  ti.holl.net <span class="o">(</span><span class="m">10</span>.32.0.1<span class="o">)</span>  <span class="m">5</span>.595 ms * *
+ <span class="m">2</span>  <span class="m">192</span>.168.1.1 <span class="o">(</span><span class="m">192</span>.168.1.1<span class="o">)</span>  <span class="m">7</span>.374 ms  <span class="m">7</span>.370 ms  <span class="m">7</span>.842 ms
+ <span class="m">3</span>  * * *
+ <span class="m">4</span>  <span class="m">10</span>.50.19.34 <span class="o">(</span><span class="m">10</span>.50.19.34<span class="o">)</span>  <span class="m">83</span>.307 ms  <span class="m">87</span>.352 ms  <span class="m">87</span>.350 ms
+ <span class="m">5</span>  <span class="m">82</span>.207.106.42 <span class="o">(</span><span class="m">82</span>.207.106.42<span class="o">)</span>  <span class="m">136</span>.875 ms  <span class="m">139</span>.480 ms  <span class="m">139</span>.478 ms
+ <span class="m">6</span>  <span class="m">209</span>.85.241.54 <span class="o">(</span><span class="m">209</span>.85.241.54<span class="o">)</span>  <span class="m">135</span>.527 ms  <span class="m">129</span>.398 ms  <span class="m">131</span>.854 ms
+ <span class="m">7</span>  <span class="m">72</span>.14.239.14 <span class="o">(</span><span class="m">72</span>.14.239.14<span class="o">)</span>  <span class="m">136</span>.508 ms  <span class="m">136</span>.780 ms  <span class="m">136</span>.592 ms
+ <span class="m">8</span>  <span class="m">209</span>.85.248.39 <span class="o">(</span><span class="m">209</span>.85.248.39<span class="o">)</span>  <span class="m">131</span>.577 ms <span class="m">209</span>.85.248.41 <span class="o">(</span><span class="m">209</span>.85.248.41<span class="o">)</span>  <span class="m">138</span>.317 ms  <span class="m">102</span>.821 ms
+ <span class="m">9</span>  <span class="m">72</span>.14.232.221 <span class="o">(</span><span class="m">72</span>.14.232.221<span class="o">)</span>  <span class="m">100</span>.853 ms  <span class="m">102</span>.081 ms <span class="m">72</span>.14.238.101 <span class="o">(</span><span class="m">72</span>.14.238.101<span class="o">)</span>  <span class="m">106</span>.566 ms
+<span class="m">10</span>  hb-in-f99.1e100.net <span class="o">(</span><span class="m">74</span>.125.87.99<span class="o">)</span>  <span class="m">107</span>.843 ms  <span class="m">114</span>.659 ms  <span class="m">110</span>.048 ms
+</pre></div>
 <p>Данная команда подробно показывает маршрут прохождения пакета, отображая
 каждый узел через который проходит пакет и временные характеристики.
 Изучая отчёты данной команды можно выявлять ошибки маршрутизации,

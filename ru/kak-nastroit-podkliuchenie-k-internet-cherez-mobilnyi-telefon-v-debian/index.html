@@ -65,12 +65,10 @@
     компьютеру через usb кабель. В появившемся на экране телефона меню
     выбираем режим PC Suite.</p>
 <p>Посмотрим как на это отреагировала ОС. Для этого введём в консоль:</p>
-<pre><code>:::bash
-cat /var/log/messages
-</code></pre>
+<div class="highlight"><pre><span></span>cat /var/log/messages
+</pre></div>
 <p>Видим следующий вывод:</p>
-<pre><code>:::text
-Aug  1 08:30:43 DizballanzePC kernel: [  200.535814] usb 8-1: new high speed USB device using ehci_hcd and address 3
+<div class="highlight"><pre><span></span>Aug  1 08:30:43 DizballanzePC kernel: [  200.535814] usb 8-1: new high speed USB device using ehci_hcd and address 3
 Aug  1 08:30:43 DizballanzePC kernel: [  200.673679] usb 8-1: configuration #1 chosen from 1 choice
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678985] usb 8-1: New USB device found, idVendor=0421, idProduct=003a
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678989] usb 8-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
@@ -78,7 +76,7 @@ Aug  1 08:30:43 DizballanzePC kernel: [  200.678991] usb 8-1: Product: Nokia N96
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678993] usb 8-1: Manufacturer: Nokia
 Aug  1 08:30:43 DizballanzePC kernel: [  200.678995] usb 8-1: SerialNumber: 356406026032671
 Aug  1 08:30:43 DizballanzePC kernel: [  200.860753] cdc_acm 8-1:1.1: ttyACM0: USB ACM device
-</code></pre>
+</pre></div>
 <p>Как вы видите новое устройство определено ОС и доступно по адресу
 <code>/dev/ttyACM0</code>.</p>
 <p>Теперь мы знаем что соединение успешно установлено.</p>
@@ -87,31 +85,26 @@ Aug  1 08:30:43 DizballanzePC kernel: [  200.860753] cdc_acm 8-1:1.1: ttyACM0: U
 <p>Настраиваем параметры модема. Для дозвона мы будем использовать
     программу wvdial. Нужно убедится что она установлена в вашей
     системе. Для этого выполните следующую команду в консоль:</p>
-<pre><code>:::bash
-whereis wvdial
-</code></pre>
+<div class="highlight"><pre><span></span>whereis wvdial
+</pre></div>
 <p>Если команда сообщит вам месторасположение файлов программы, значит
 она уже установлена в вашей системе. Вот что выводит команда whereis
 на моём компьютере:</p>
-<pre><code>:::text
-wvdial: /usr/bin/wvdial /etc/wvdial.conf /etc/wvdial.conf~ /usr/share/man/man1/wvdial.1.gz
-</code></pre>
+<div class="highlight"><pre><span></span>wvdial: /usr/bin/wvdial /etc/wvdial.conf /etc/wvdial.conf~ /usr/share/man/man1/wvdial.1.gz
+</pre></div>
 <p>В случае если программа не установлена в вашей системе необходимо
 установить её самостоятельно. Для этого введите в консоль следующее:</p>
-<pre><code>:::bash
-apt-get install wvdial
-</code></pre>
+<div class="highlight"><pre><span></span>apt-get install wvdial
+</pre></div>
 <p>И программа установщик выполнит все необходимые действия.</p>
 <p>Теперь переходим непосредственно к настройке модема.</p>
 <p>Для этого открываем файл <code>/etc/wvdial.conf</code> в любом текстовом
 редакторе, предварительно войдя в систему как пользователь root.</p>
 <p>Вам необходимо удалить следующие строки кода:</p>
-<pre><code>:::text
-Modem Type = USB ModemModem = /dev/ttyACM0
-</code></pre>
+<div class="highlight"><pre><span></span>Modem Type = USB ModemModem = /dev/ttyACM0
+</pre></div>
 <p>А также вам необходимо добавить следующие строки в конец файла:</p>
-<pre><code>:::text
-New PPPD = yes
+<div class="highlight"><pre><span></span>New PPPD = yes
 Phone = *99***1#
 Username = MOVISTAR
 Password = MOVISTAR
@@ -123,7 +116,7 @@ Modem = /dev/ttyACM0
 
 [Dialer blz-scb]
 Modem = /dev/rfcomm0
-</code></pre>
+</pre></div>
 <p>Вместо acces.point введите имя точки доступа вашего оператора
 сотовой связи.</p>
 <p>Все необходимые настройки выполнены, теперь можно приступать
@@ -133,9 +126,8 @@ Modem = /dev/rfcomm0
 <p>Подключение к Интернет. Для того чтобы подключится к Интернет вам
     необходимо просто соединить кабелем компьютер и телефон, а потом
     написать от пользователя root:</p>
-<pre><code>:::bash
-wvdial usb-scb&amp;﻿
-</code></pre>
+<div class="highlight"><pre><span></span>wvdial usb-scb<span class="p">&amp;</span>﻿
+</pre></div>
 </li>
 </ol>
   </div>

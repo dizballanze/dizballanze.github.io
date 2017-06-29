@@ -85,19 +85,18 @@ url в настройках репозитория:</p>
 <p>Как настроить отправку запросов мы узнали, теперь необходимо реализовать
 обработчик запросов. Можно обрабатывать запросы в самом приложении или
 отдельно, вот небольшой пример на node.js:</p>
-<pre><code>:::javascript
-http = require('http')
-var exec = require('child_process').exec
-  , child;
-server = http.createServer(function(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end();
-    child = exec('/path/to/project/deploy.sh', function(error, out, err){
-        if (error) console.error(error);
-    });
-}).listen(8000, '0.0.0.0');
-console.log('Git monitor server is running at 0.0.0.0:8000');
-</code></pre>
+<div class="highlight"><pre><span></span><span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'http'</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">exec</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'child_process'</span><span class="p">).</span><span class="nx">exec</span>
+  <span class="p">,</span> <span class="nx">child</span><span class="p">;</span>
+<span class="nx">server</span> <span class="o">=</span> <span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">'Content-Type'</span><span class="o">:</span> <span class="s1">'text/plain'</span><span class="p">});</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+    <span class="nx">child</span> <span class="o">=</span> <span class="nx">exec</span><span class="p">(</span><span class="s1">'/path/to/project/deploy.sh'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">out</span><span class="p">,</span> <span class="nx">err</span><span class="p">){</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8000</span><span class="p">,</span> <span class="s1">'0.0.0.0'</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Git monitor server is running at 0.0.0.0:8000'</span><span class="p">);</span>
+</pre></div>
 <p>Здесь, при поступлении любого запроса, просто выполняется bash скрипт.
 При желании можно добавить дополнительные действия, например логировать
 запросы или добавить валидацию, чтобы запрос мог поступать только с
@@ -107,23 +106,22 @@ console.log('Git monitor server is running at 0.0.0.0:8000');
 <h2 id="primeniaem-izmeneniia_1">Применяем изменения</h2>
 <p>В обработчике запросов мы выполняем bash скрипт. Рассмотрим пример того,
 что может содержать такой скрипт:</p>
-<pre><code>:::bash
-#!/bin/bash
-cd /path/to/project/dir
-# update code
+<div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="nb">cd</span> /path/to/project/dir
+<span class="c1"># update code</span>
 git pull
-# activate virtualenv
-source ../bin/activate
-# install new packages with pip
+<span class="c1"># activate virtualenv</span>
+<span class="nb">source</span> ../bin/activate
+<span class="c1"># install new packages with pip</span>
 pip install -r ./requirements.txt
-# Sync db changes
+<span class="c1"># Sync db changes</span>
 app/manage.py syncdb
 app/manage.py migrate --all --merge
-# kill runserver
+<span class="c1"># kill runserver</span>
 killall python
 nohup app/manage.py 
-runserver 0.0.0.0:9000 &amp;
-</code></pre>
+runserver <span class="m">0</span>.0.0.0:9000 <span class="p">&amp;</span>
+</pre></div>
 <p>Итак, что здесь происходит:</p>
 <ul>
 <li>Переходим в директорию проекта</li>
@@ -137,13 +135,11 @@ runserver 0.0.0.0:9000 &amp;
 управление пакетами. При установке нового пакета необходимо добавить его
 в текстовый файл. Создать такой файл можно автоматически при помощи
 следующей команды:</p>
-<pre><code>:::text
-pip freeze &gt; requirements.txt
-</code></pre>
+<div class="highlight"><pre><span></span>pip freeze &gt; requirements.txt
+</pre></div>
 <p>Данная команда сформирует список всех установленных пакетов и также
 укажет их версии. Вот пример сгенерированного файла:</p>
-<pre><code>:::text
-Django==1.4.2
+<div class="highlight"><pre><span></span>Django==1.4.2
 PIL==1.1.7
 South==0.7.6
 argparse==1.2.1
@@ -153,11 +149,10 @@ mongoengine==0.7.5
 psycopg2==2.4.5
 pymongo==2.3
 python-dateutil==2.1
-</code></pre>
+</pre></div>
 <p>При выполнении нашего bash-скрипта будет вызвана команда:</p>
-<pre><code>:::text
-pip install -r ./requirements.txt
-</code></pre>
+<div class="highlight"><pre><span></span>pip install -r ./requirements.txt
+</pre></div>
 <p>Это приведет к установке всех пакетов, из списка в файле, которые ещё
 небыли установлены.</p>
 <p>Конечно, в зависимости от ваших потребностей, могут понадобится
@@ -168,51 +163,50 @@ pip install -r ./requirements.txt
 <p>Для того, чтобы перенаправлять запросы с 80 порта на runserver я
 использую nginx (ну не запускать же runserver от root'а :)). Пример
 конфигурации nginx:</p>
-<pre><code>:::nginx
-user www-data;
-worker_processes 4;
-pid /var/run/nginx.pid;
+<div class="highlight"><pre><span></span><span class="k">user</span> <span class="s">www-data</span><span class="p">;</span>
+<span class="k">worker_processes</span> <span class="mi">4</span><span class="p">;</span>
+<span class="k">pid</span> <span class="s">/var/run/nginx.pid</span><span class="p">;</span>
 
-events {
-    worker_connections 768;
-}
+<span class="k">events</span> <span class="p">{</span>
+    <span class="kn">worker_connections</span> <span class="mi">768</span><span class="p">;</span>
+<span class="p">}</span>
 
-http {
+<span class="k">http</span> <span class="p">{</span>
 
-    ##
-    # Basic Settings
-    ##
+    <span class="c1">##</span>
+    <span class="c1"># Basic Settings</span>
+    <span class="c1">##</span>
 
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
+    <span class="kn">sendfile</span> <span class="no">on</span><span class="p">;</span>
+    <span class="kn">tcp_nopush</span> <span class="no">on</span><span class="p">;</span>
+    <span class="kn">tcp_nodelay</span> <span class="no">on</span><span class="p">;</span>
+    <span class="kn">keepalive_timeout</span> <span class="mi">65</span><span class="p">;</span>
+    <span class="kn">types_hash_max_size</span> <span class="mi">2048</span><span class="p">;</span>
 
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
+    <span class="kn">include</span> <span class="s">/etc/nginx/mime.types</span><span class="p">;</span>
+    <span class="kn">default_type</span> <span class="s">application/octet-stream</span><span class="p">;</span>
 
-    ##
-    # Logging Settings
-    ##
+    <span class="c1">##</span>
+    <span class="c1"># Logging Settings</span>
+    <span class="c1">##</span>
 
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
+    <span class="kn">access_log</span> <span class="s">/var/log/nginx/access.log</span><span class="p">;</span>
+    <span class="kn">error_log</span> <span class="s">/var/log/nginx/error.log</span><span class="p">;</span>
 
-    ##
-    # Proxy Settings
-    ##
-    server {
-        listen *:80;
+    <span class="c1">##</span>
+    <span class="c1"># Proxy Settings</span>
+    <span class="c1">##</span>
+    <span class="kn">server</span> <span class="p">{</span>
+        <span class="kn">listen</span> <span class="s">*:80</span><span class="p">;</span>
 
-        location / {
-            proxy_pass  http://localhost:9000;
-            proxy_set_header    Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-    }
-}
-</code></pre>
+        <span class="kn">location</span> <span class="s">/</span> <span class="p">{</span>
+            <span class="kn">proxy_pass</span>  <span class="s">http://localhost:9000</span><span class="p">;</span>
+            <span class="kn">proxy_set_header</span>    <span class="s">Host</span> <span class="nv">$host</span><span class="p">;</span>
+            <span class="kn">proxy_set_header</span> <span class="s">X-Real-IP</span> <span class="nv">$remote_addr</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 <p>На этом все, пишите в комментариях, если я что-то упустил.</p>
   </div>
 </section>

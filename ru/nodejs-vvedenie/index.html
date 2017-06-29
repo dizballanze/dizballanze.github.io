@@ -70,26 +70,23 @@ HTTP протоколом, т.е. для нас web-разработчиков, 
 всем линуксоидам, которые когда-либо собирали что-нибудь из исходников.
 Итак, распаковываем архив, затем переходим в директорию с исходниками и
 выполняем:</p>
-<pre><code>:::bash
-./configure#make#make install
-</code></pre>
+<div class="highlight"><pre><span></span>./configure#make#make install
+</pre></div>
 <p>После этого можно проверить корректность установки, для этого
 выполните:<code>make test</code></p>
 <h2 id="hello-world">Hello world</h2>
 <p>Теперь напишем простой пример web-сервера, который отвечает "Hello
 World" на каждый запрос:</p>
-<pre><code>:::javascript
-var http = require('http'); //Подключаем модуль http
-http.createServer(function (req, res) { //Создаем сервер и устанавливаем обработчик на подключение
-  res.writeHead(200, {'Content-Type': 'text/plain'}); //Устанавливаем заголовок
-  res.end('Hello World\n'); // Вывод сообщения и завершение вывода
-}).listen(8124, "127.0.0.1"); // Заставляем сервер "слушать" 127.0.0.1:8124
-console.log('Server running at http://127.0.0.1:8124/'); //Выводим сообщение в консоль
-</code></pre>
+<div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'http'</span><span class="p">);</span> <span class="c1">//Подключаем модуль http</span>
+<span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Создаем сервер и устанавливаем обработчик на подключение</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">'Content-Type'</span><span class="o">:</span> <span class="s1">'text/plain'</span><span class="p">});</span> <span class="c1">//Устанавливаем заголовок</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="s1">'Hello World\n'</span><span class="p">);</span> <span class="c1">// Вывод сообщения и завершение вывода</span>
+<span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8124</span><span class="p">,</span> <span class="s2">"127.0.0.1"</span><span class="p">);</span> <span class="c1">// Заставляем сервер "слушать" 127.0.0.1:8124</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Server running at http://127.0.0.1:8124/'</span><span class="p">);</span> <span class="c1">//Выводим сообщение в консоль</span>
+</pre></div>
 <p>Для запуска нашего сервера выполняем:</p>
-<pre><code>:::bash
-node example.jsServer running at http://127.0.0.1:8124/
-</code></pre>
+<div class="highlight"><pre><span></span>node example.jsServer running at http://127.0.0.1:8124/
+</pre></div>
 <p>Что-бы проверить, что всё работает открываем в браузере
 http://127.0.0.1:8124 и получаем "Hello World" в ответ.</p>
 <p>Таким способом мы получаем работающий web-сервер в несколько строк кода.
