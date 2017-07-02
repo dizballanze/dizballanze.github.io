@@ -39,10 +39,10 @@ TAG_SAVE_AS = u'tag/{slug}/index.html'
 GITHUB_URL = 'https://github.com/dizballanze'
 TWITTER_USERNAME = 'dizballanze'
 
-MARKDOWN = {
-    'extra': {},
-    'toc': {}
-}
+# MARKDOWN = {
+    # 'extra': {},
+    # 'toc': {}
+# }
 
 # Uncomment following line if you want document-relative URLs when developing
 RELATIVE_URLS = True

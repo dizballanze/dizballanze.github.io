@@ -43,6 +43,33 @@ Open Source проекты:
  -  [Coment.me](http://coment.me/) - сервис для удобного создания скриншотов сайтов, их комментирования и шаринга
 
 
+Последние прочитанные книги:
+---------------------
+
+- "No bullshit guide to math and physics" Ivan Savov
+- "Mathematics: A Very Short Introduction" Timothy Gowers
+- "Extreme Programming Explained" Kent Beck
+- "Mastering Python Design Patterns" Sakis Kasampalis
+- "Mastering Linux Shell Scripting" Andrew Mallett
+- "Continuous Delivery and DevOps" Paul Swartout
+- "Domain-Driven Design. Tackling Complexity in the Heart of Software" Eric Evans
+- "Practical Vim: Edit Text at the Speed of Thought" Drew Neil
+- "Continuous Integration: Improving Software Quality and Reducing Risk" Paul M. Duvall, Steve Matyas, Andrew Glover
+- "Test-driven Development by Example" Kent Beck
+- "Building Microservices" Sam Newman
+- "Learn You Some Erlang for Great Good!" Fred Hebert
+- "Code Complete" Steve McConnell
+- "Introduction To Algorithms" Thomas H. Cormen
+- "Linux System Programming" Robert M. Love
+- "PostgreSQL: Up and Running" Regina Obe, Leo Hsu
+- "Beginning C" Horton, Ivor
+- "Using C on the UNIX System" Dave Curry
+- "APIs: A Strategy Guide" Dan Woods, Daniel Jacobson, Greg Brail
+- "Modern C" Jens Gustedt
+- "RESTful Web Services Cookbook" Subbu Allamaraju
+- "Nginx Module Extension" Usama Dar
+
+
 Online:
 --------
 
