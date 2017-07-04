@@ -670,8 +670,7 @@ class ArticlesListView(ListView):
 к самому `QuerySet`:
 
 ```python
-context['top_authors'] =\
-    Author.objects.order_by('-articles_count')[:20]
+context['top_authors'] = Author.objects.order_by('-articles_count')[:20]
 ```
 
 ![DDT - get top authors slice on queryset](/media/2017/6/ddt-top-authors-qs-slice.png)
