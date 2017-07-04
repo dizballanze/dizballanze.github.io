@@ -546,8 +546,7 @@ SQL запросом с <code>JOIN</code>:</p>
 <p>Т.е. вызвав <code>list</code> мы заставили <code>QuerySet</code> выполнить запрос к БД и вернуть нам список объектов, после чего уже к нему была
 применена операция обрезки. Для того, чтобы ограничение выборки происходило в SQL запросе, нужно применить slicing
 к самому <code>QuerySet</code>:</p>
-<div class="highlight"><pre><span></span><span class="n">context</span><span class="p">[</span><span class="s1">'top_authors'</span><span class="p">]</span> <span class="o">=</span>\
-    <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">'-articles_count'</span><span class="p">)[:</span><span class="mi">20</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><span class="n">context</span><span class="p">[</span><span class="s1">'top_authors'</span><span class="p">]</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">'-articles_count'</span><span class="p">)[:</span><span class="mi">20</span><span class="p">]</span>
 </pre></div>
 <p><img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"/></p>
 <p>Теперь размер выборки ограничивается в запросе: <code>...LIMIT 20</code>. Также видно, что отправка запроса

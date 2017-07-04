@@ -532,8 +532,7 @@ to add signals to update this field on data changes.</p>
 </ul>
 <p>Therefore by calling <code>list</code> we forced <code>QuerySet</code> to hit database and return a list of objects. Slicing was performed
 on the list, not on <code>QuerySet</code>. To limit authors in a SQL request we should apply slicing to <code>QuerySet</code> itself:</p>
-<div class="highlight"><pre><span></span><span class="n">context</span><span class="p">[</span><span class="s1">'top_authors'</span><span class="p">]</span> <span class="o">=</span>\
-    <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">'-articles_count'</span><span class="p">)[:</span><span class="mi">20</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><span class="n">context</span><span class="p">[</span><span class="s1">'top_authors'</span><span class="p">]</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">'-articles_count'</span><span class="p">)[:</span><span class="mi">20</span><span class="p">]</span>
 </pre></div>
 <p><img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"/></p>
 <p>As you can see, a size of a fetch is limited in the request: <code>...LIMIT 20</code>. Also, DDT shows that <code>QuerySet</code> deferred
