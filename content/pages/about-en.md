@@ -28,6 +28,7 @@ Open Source projects:
 -  [ngx_http_avatars_gen_module](https://github.com/dizballanze/ngx_http_avatars_gen_module) - generating avatars on-the-fly with Nginx.
 -  [hastable](https://github.com/dizballanze/hashtable) - async hash table server in C.
 -  [django-admin-env-notice](https://github.com/dizballanze/django-admin-env-notice) - package for visually distinguish environments in Django Admin
+-  [django-eraserhead](https://github.com/dizballanze/django-eraserhead) - provide hints to optimize database usage by deferring unused fields (and more)
 -  [django-migrations-graph](https://github.com/dizballanze/django-migrations-graph) - django-admin command to display migrations with dependencies.
 -  [do-latency](https://github.com/dizballanze/do-latency) - Digital Ocean regions latency checker.
 -  [planner](https://github.com/dizballanze/planner) - python package for drawing 2d plans of a buildings.
