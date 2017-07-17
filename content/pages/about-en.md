@@ -47,6 +47,7 @@ Some own projects made in WB-Tech:
 Last books I read
 ----------------
 
+- "Make Your Own Neural Network" Tariq Rashid
 - "No bullshit guide to math and physics" Ivan Savov
 - "Mathematics: A Very Short Introduction" Timothy Gowers
 - "Extreme Programming Explained" Kent Beck
@@ -73,7 +74,6 @@ Last books I read
 
 Online:
 --------
-
 
 - [github](https://github.com/dizballanze)
 - [email](mailto:dizballanze@gmail.com)

@@ -47,6 +47,7 @@ Open Source проекты:
 Последние прочитанные книги:
 ---------------------
 
+- "Make Your Own Neural Network" Tariq Rashid
 - "No bullshit guide to math and physics" Ivan Savov
 - "Mathematics: A Very Short Introduction" Timothy Gowers
 - "Extreme Programming Explained" Kent Beck
