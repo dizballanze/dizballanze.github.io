@@ -20,12 +20,34 @@ body, html {
   -webkit-text-size-adjust: none;
 }
 
+img.about-photo {
+    width: 250px;
+    float: right;
+}
+
+#menu {
+    margin-bottom: 50px;
+}
+
+#menu ul {
+    padding: 0;
+}
+
+#menu li {
+    display: inline;
+}
+
 @media only screen and (max-device-width: 414px) {
   body, p, ul {
     font-size: 16px;
     line-height: 24px;
   }
-
+  img.about-photo {
+    float: inherit;
+  }
+  #menu {
+    margin-bottom: 20px;
+  }
 }
 
 a:link    { color: blue; text-decoration: none;      }
@@ -39,9 +61,6 @@ h4 a { color: inherit !important }
 h5 a { color: inherit !important }
 h6 a { color: inherit !important }
 
-#menu li {
-    display: inline;
-}
 
 pre {
     font-family: 'PT Mono', monospace;
@@ -69,14 +88,6 @@ footer {
     margin-top: 50px;
     margin-bottom: 50px;
     text-align: center;
-}
-
-#menu {
-    margin-bottom: 50px;
-}
-
-#menu ul {
-    padding: 0;
 }
 
 .entry-title {
