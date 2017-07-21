@@ -4,9 +4,12 @@ Date: 2017-06-14 18:57
 Author: Admin
 Lang: en
 
+<img src="/media/ava_bw_small.jpg" class="about-photo">
+
 Hi, my name is Yuri Shikanov and I'am a software developer.
 
 I'm working at [WB-Tech](https://wbtech.pro/) from May 2011. My current position is Team Lead.
+
 
 Few technologies I worked with:
 ----------------------------------------

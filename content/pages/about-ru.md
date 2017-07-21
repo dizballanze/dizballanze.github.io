@@ -4,6 +4,8 @@ Date: 2010-11-25 16:32
 Author: Admin
 Lang: ru
 
+<img src="/media/ava_bw_small.jpg" class="about-photo">
+
 Здравствуйте! Меня зовут Шиканов Юрий и я web-разработчик.
 
 С мая 2011 года работаю в [WB-Tech](https://wbtech.pro/). На данный момент занимаю должность Team Lead.
