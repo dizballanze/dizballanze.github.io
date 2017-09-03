@@ -5,6 +5,13 @@ Category: python
 Tags: python, django
 Lang: en
 
+
+Other parts of this guide:
+
+-  [Part 1. Profiling and Django settings](/en/django-project-optimization-part-1)
+-  Part 2. Working with database
+-  [Part 3. Caching](/en/django-project-optimization-part-3/)
+
 Table of Contents:
 
 -   [Mass edit](#mass-edit)

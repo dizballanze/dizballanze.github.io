@@ -5,6 +5,13 @@ Category: python
 Tags: python, django
 Lang: ru
 
+
+Остальные статьи цикла:
+
+-  [Часть 1. Профилирование и настройки Django](/ru/django-project-optimization-part-1/)
+-  Часть 2. Работа с базой данных
+-  [Часть 3. Кэширование](/ru/django-project-optimization-part-3/)
+
 Содержание:
 
 -   [Массовые изменения](#massovye-izmeneniia)

@@ -7,12 +7,17 @@ Tags: python, django, performance, load testing
 Lang: en
 
 
+Other parts of this guide:
+
+-  Part 1. Profiling and Django settings
+-  [Part 2. Working with database](/en/django-project-optimization-part-2/)
+-  [Part 3. Caching](/en/django-project-optimization-part-3/)
+
 Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
 therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
 into performance problems. In this guide, I will try define potential problems and how to fix them.
 
 This is the first part of a series about Django performance optimization. It will cover profiling and Django settings.
-
 
 ## Profiling
 
