@@ -1,6 +1,6 @@
 Title: Django project optimization guide (part 3)
 Slug: django-project-optimization-part-3
-Date: 2017-08-03 13:53
+Date: 2017-09-18 09:00
 Category: python
 Tags: python, django
 Lang: en
@@ -12,10 +12,10 @@ Other parts of this guide:
 -  [Part 2. Working with database](/en/django-project-optimization-part-2/)
 -  Part 3. Caching
 
-In this part of the guide, I will cover the most valuable approach to achieve high performance - caching. In its essence
-caching is a process of placing most used data in faster storage to speed up access to them. It's important to understand
-that fast storage (i.e. memory) often has limited capacity. So we should use it only for data that will be often used with
-high probability.
+In this part of the guide, I will cover the most valuable approach to achieve high performance - caching.
+The essence of caching is that you place the most commonly used data to fast storage in order to speed up the access to them.
+It's important to understand that the fast storage (i.e. memory) often has limited capacity. So we should use it only for
+that data which will be often used.
 
 
 ## Django cache framework
@@ -33,9 +33,9 @@ CACHES = {
 
 Django has several built-in cache backends. Let's check some of them:
 
--  `DummyCache` - cache nothing, used in development or testing environments to temporary disable caching,
+-  `DummyCache` - caches nothing, is used in development or testing environments to temporary disable caching,
 -  `DatabaseCache` - stores cache in the database. Not very fast storage, but can be useful to store results of long
-calculation or difficult database queries.
+calculations or difficult database queries.
 -  `MemcachedCache` uses [Memcached](http://memcached.org/) as cache storage. You need to have Memcached server(s) to
 use this backend.
 
@@ -47,8 +47,8 @@ it in your project. You can install `django-redis` package and
 
 ### The per-site cache
 
-If you didn't have any highly changeable dynamic content on your project, you can solve cache problem simply - enable
-the per-site caching. You need to add few changes to your `settings.py` for this:
+If you don't have any dynamic content on your project, you can simply solve the cache problem - enabling
+the per-site caching. You need to add several changes to your `settings.py` for this:
 
 ```python
 MIDDLEWARE = [
@@ -69,10 +69,10 @@ CACHE_MIDDLEWARE_KEY_PREFIX = ''
 CACHE_MIDDLEWARE_SECONDS = 600
 ```
 
-As you can see, you should add middlewares in the beginning and the end of `MIDDLEWARE` list. After that, all GET and HEAD
+As you can see, you should add middlewares at the beginning and at the end of `MIDDLEWARE` list. After that, all GET and HEAD
 requests will be cached for `CACHE_MIDDLEWARE_SECONDS` seconds.
 
-You also can clear cache programmatically:
+You can also clear cache programmatically:
 
 ```python
 from django.core.cache import caches
@@ -80,7 +80,7 @@ cache = caches['default']  # `default` is a key from CACHES dict in settings.py
 ache.clear()
 ```
 
-Or you could clean cache directly in cache storage. An example for Redis:
+Or you can clean cache directly in the cache storage if necessary. An example for Redis:
 
 
 ```
@@ -89,7 +89,7 @@ $ redis-cli -n 1 FLUSHDB # 1 is a DB number specified in settings.py
 
 ###  The per-view caching
 
-In case if it's not appropriate to cache the whole site, you can enable caching only for specified views (i.e. most highly used).
+In case it's not appropriate to cache the whole site, you can enable caching only for specific views (i.e. most highly used).
 Django provides `cache_page` decorator for this:
 
 ```python
@@ -120,13 +120,13 @@ urlpatterns = [
 ]
 ```
 
-If part of page content changes based, for example, on authenticated user, then this approach won't work. To solve this
+If for example page content changes are based on authenticated user, then this approach won't work. To solve this
 problem you should use one of the approaches described below.
 
 ### Template fragment caching
 
-In the previous part of this guide, I described that QuerySet objects are lazy and SQL requests were delayed as far as possible.
-We can take advantage of this and cache template fragments, that let us avoid SQL requests for cache TTL. `cache` template
+In the previous part of this guide, I mentioned that QuerySet objects are lazy and SQL requests are delayed as long as possible.
+We can take the advantage of this and cache template fragments, that will let us to avoid SQL requests for cache TTL. `cache` template
 tag is provided for this:
 
 ```html
@@ -161,7 +161,7 @@ tag is provided for this:
 {% endcache %}
 ```
 
-A result of adding `cache` template tags to our template (before and after respectively):
+The result of adding `cache` template tags to our template (before and after respectively):
 
 ![django-templates-caching-results](/media/2017/8/templates-caching.png)
 
@@ -172,7 +172,7 @@ A result of adding `cache` template tags to our template (before and after respe
 -  optional additional variables which identify fragment by dynamic data,
 -  keyword `using='default'` argument, should correspond to a key in `CACHES` dict.
 
-For example, we need to cache template fragment separately for different users.
+For example, we need to cache each template fragment separately for different users.
 Let's provide an additional variable that identifies a user to `cache` template tag:
 
 ```html
@@ -181,7 +181,7 @@ Let's provide an additional variable that identifies a user to `cache` template 
 {% %}
 ```
 
-You even can provide several additional variables like this to create caching key based on a combination of their values.
+You can even provide several additional variables like this to create caching key based on a combination of their values.
 
 ### The low-level caching
 
@@ -207,18 +207,18 @@ class ArticlesListView(ListView):
 ```
 
 In this code fragment, we check whether authors count is in the cache by `authors_count` key. `cache.get` method returns
-not `None` value if the key exists in cache storage. In that case, we can use this value without any requests to the database.
-Otherwise, code requests authors count from the database and save it in the cache. In this way, we avoid database requests for
+not `None` value if the key exists in the cache storage. In that case, we can use this value without any requests to the database.
+Otherwise, code requests authors count from the database and saves it in the cache. In this way, we avoid database requests for
 a cache TTL. 
 
-Except database queries results, makes sense to cache results of complex calculation or requests to external services.
-It's important that data can change and cache will contain stale information. There are several approaches to minimize
+Besides database queries results, it makes sense to cache results of complex calculations or requests to external services.
+It's important to understand that data can change and cache will contain stale information. There are several approaches to minimize
 a chance to use stale data from cache:
 
 -  set up cache TTL to correspond frequency of data change,
 -  add cache invalidation.
 
-Cache invalidation should happen on events of data change. Let's check out how to add cache invalidation for authors count
+Cache invalidation should happen on data change. Let's check out how to add cache invalidation for authors count
 example:
 
 ```python
@@ -242,15 +242,15 @@ def author_post_save_handler(sender, **kwargs):
         clear_authors_count_cache()
 ```
 
-In this example were added 2 signal handlers on adding/deleting of authors. That makes possible to remove cache by
-`authors_count` key on authors count change that will lead to fetching of updated authors count from the database.
+In this example 2 signal handlers on adding/deleting of authors were added. That makes possible to remove cache by
+`authors_count` key on authors quantity change and the new number of authors will be fetched from the database.
 
 ## cached_property
 
-Besides of cache framework, Django provides an ability to cache methods invocations right in memory. This type of caching
-possible only for methods without arguments (besides of `self`) and it will live while the corresponding instance exists.
+Besides of cache framework, Django provides an ability to cache methods' invocations right in the process memory. This type of caching
+is possible only for methods without arguments (besides of `self`). This type of cache will live while the corresponding instance exists.
 
-`cached_property` is a decorator included in Django. Methods with this decorator also become properties. Let's check out
+`cached_property` is included Django decorator. Methods with this decorator also become properties. Let's check out
 an example:
 
 ```python
@@ -265,7 +265,7 @@ class Author(models.Model):
         return self.articles.count()
 ```
 
-Let's check how `article_count` property works with enabled SQL logging:
+Let's check how the `article_count` property works with enabled SQL logging:
 
 ```
 >>> from blog.models import Author
@@ -278,13 +278,13 @@ Let's check how `article_count` property works with enabled SQL logging:
 28
 ```
 
-As you can see, repeated access to `article_count` property doesn't cause any SQL requests. But if we create another
-instance of this `Author` class, this property won't be cached, before first access to it. That's because the cache is tied
+As you can see, repeated access to the `article_count` property doesn't cause any SQL requests. But if we create another
+instance of this `Author` class, this property won't be cached until first access to it. That's because the cache is tied
 to the specific instance of `Author` class.
 
 ## Cacheops
 
-[django-cacheops](https://github.com/Suor/django-cacheops) is a 3rd party package, that allows to quickly enable caching
+[django-cacheops](https://github.com/Suor/django-cacheops) is a 3rd party package, that allows you quickly enable caching
 of database requests almost without code changes. You can solve most of the caching cases just by setting up the package in
 `settings.py`.
 
@@ -308,10 +308,10 @@ CACHEOPS = {
 ```
 
 Just like that, we added caching of all databases requests from all models of `blog` application for 15 minutes.
-As a bonus cacheops provides automatic cache invalidation not only by time but also event-based by setting up
+As a bonus cacheops provides automatic cache invalidation for not only time-based but also event-based by setting up
 model signals of corresponding models.
 
-If necessary, you can setup caching more granularly and specify per model and per request type settings.
+If necessary, you can setup caching more accurate and specify it per model and per request type settings.
 Few examples:
 
 ```python
@@ -335,17 +335,17 @@ You should check out [cacheops' README](https://github.com/Suor/django-cacheops/
 
 ## HTTP caching
 
-If your project uses HTTP, you should consider using built-in to HTTP protocol cache capabilities. They allow caching
-results of safe requests (GET and HEAD) on a client (i.e. browser) and or intermediate proxy servers.
+If your project uses HTTP, you should consider using built-in cache capabilities in HTTP protocol. They allow cache
+results of safe requests (GET and HEAD) on a client (i.e. browser) and on intermediate proxy servers.
 
-Caching control is performed by HTTP headers. You can setup these headers by application or web server (Nginx, Apache, etc).
+Caching control is performed by HTTP headers. You can setup these headers in application or web server (Nginx, Apache, etc).
 
 Django provides several convenient middlewares and view decorators to control HTTP caching.
 
 ### Vary
 
-[`Vary`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header allows to specifying a list of header names,
-whose values will be used to create cache keys. Django provides view decorator
+The [`Vary`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary) header allows to specify a list of header names,
+which values will be used to create cache keys. Django provides view decorator
 [`vary_on_headers`](https://docs.djangoproject.com/en/1.11/topics/cache/#using-vary-headers) for control of this header.
 
 ```python
@@ -361,7 +361,7 @@ In this case, different cache keys will be used for different values of `User-Ag
 
 ### Cache-Control
 
-[`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) header is used to control
+The [`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) header is used to control
 how caching is performed.
 [`cache_control`](https://docs.djangoproject.com/en/1.11/topics/cache/#controlling-cache-using-other-headers)
 view decorator allows setting this header directives.
@@ -379,37 +379,37 @@ Let's check out some `Cache-Contol` directives:
 
 -  `public`, `private` - allows or forbids caching in public caches (proxy servers, etc). This is an important directive
 because it allows securing private content that should be available only for specific users.
--  `no-cache` - disables caching that makes client perform a request to the origin server.
--  `max-age` - time in seconds after that cache is considered stale.
+-  `no-cache` - disables caching that makes a client to perform a request to the origin server.
+-  `max-age` - after that time (in seconds) cache is considered stale.
 
 ### Last-Modified & Etag
 
-HTTP protocol provides more sophisticated caching capabilities which allow verifying data freshness by the server with
+HTTP protocol provides more complicated caching capabilities which allow verifying data freshness by the server with
 conditional requests. To make this capabilities work server should provide one or both of the following headers:
 
 -  `Last-Modified` - date and time of last resource modification,
 -  `Etag` - resource version identifier (hash or version number)
 
-After that, on following requests client should provide `If-Modified-Since` and `If-None-Match` headers.
-Server checks if the resource wasn't changed since the last request and return 304 response without the body.
-This allows performing repeated resource loading only if it was changed and save time and server resources by that.
+After that, client should provide `If-Modified-Since` and `If-None-Match` headers on following requests.
+Server checks if the resource wasn't changed since the last request and returns 304 response without the body.
+This allows to perform repeated resource that loads only if it was changed. In this way it saves time and server resources.
 
-Besides caching, described above capabilities is used to precondition checking in unsafe requests (POST, PUT, etc).
-But this goes beyond the topic of this guide.
+Besides caching, described capabilities are used to precondition checking in unsafe requests (POST, PUT, etc).
+But this is beyond the topic of this guide.
 
-Django provides several ways to control `ETag` and `Last-Modified` headers. The most simple one is to use
-`ConditionalGetMiddleware`. This middleware adds `Etag` header base on view response to all GET requests.
+Django provides several ways to control `ETag` and `Last-Modified` headers. The simplest one is to use
+`ConditionalGetMiddleware`. This middleware based on view response adds `Etag` header to all GET requests.
 Also, it checks request headers and returns 304 if the resource wasn't changed.
 
 This approach has several drawbacks:
 
--  middleware works on all views of the project, that isn't always necessary,
+-  middleware is applied to all views of the project, that sometimes isn't necessary,
 -  it generates full response to get resource version, that requires lots of server resources,
 -  it works only for GET requests.
 
-There is a more accurate approach, you should use `condition` view decorator, that allows specifying custom
-functions to generate `Etag` and/or `Last-Modified` headers. In this functions, you can use a more effective
-approach of detecting resource version. You can just request one field from the database without the need to generate
+There is more accurate approach, you should use `condition` view decorator, that allows specifying custom
+functions to generate `Etag` and/or `Last-Modified` headers. In this functions, you can use more effective
+approach of detecting resource version. You can just request one field from the database with no need to generate
 a full response.
 
 ```python
@@ -438,15 +438,15 @@ def author_page_view(request, username):
 
 `author_updated_at` function performs simple database request, that returns resource's last update date. This is more
 efficient than fetching all necessary data from the database and rendering a template. After any changes to author
-function return new date that will lead to cache invalidation.
+are done the function returns new date that will lead to cache invalidation.
 
 ## Static files caching
 
-You should cache static files to speed up repeated pages loading. This will stop browser from repeated loading of
+You should cache static files to speed up repeated pages loading. This will prevent browser from repeated loading of
 scripts, styles, images, etc.
 
-You likely won't serve static files by Django in a production environment, because it's slow and unsafe.
-Usually, web server is used for this task, i.e. Nginx. Let's check out how to set up caching of static with Nginx:
+Most likely you won't serve static files by Django in a production environment, because it's slow and unsafe.
+Usually, web server is used for this task, i.e. Nginx. Let's check out how to set up caching of static files with Nginx:
 
 ```nginx
 server {
@@ -469,7 +469,7 @@ Where,
 -  `/static/` base path to static files, it's the same place where `collectstatic` copies files,
 -  `/media/` base path to user generated files.
 
-In this case, we cached all static for 360 days. It's important that URL of static files are changed after files are
+In this case, we cache all static for 360 days. It's important that URL of static files are changed when files are
 changed. This will lead to loading of a new version of the file. You can use GET parameters with version numbers:
 `script.js?version=123`. But I prefer using [Django Compressor](https://django-compressor.readthedocs.io/en/latest/),
 that generates unique file names for all scripts and styles on each change.
