@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Оптимизация производительности Django проектов (часть 3)</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/ru/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/ru/about-me/">Автор</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/ru/django-project-optimization-part-3/" rel="bookmark"
+         title="Permalink to Оптимизация производительности Django проектов (часть 3)">Оптимизация производительности Django проектов (часть 3)</a></h2>
+    <time class="published" datetime="2017-08-03T13:53:00+03:00"><nobr>03 авг 2017</nobr></time>
+  </header>
+  <div class="entry-content">
+    <p>Остальные статьи цикла:</p>
+<ul>
+<li><a href="/ru/django-project-optimization-part-1/">Часть 1. Профилирование и настройки Django</a></li>
+<li><a href="/ru/django-project-optimization-part-2/">Часть 2. Работа с базой данных</a></li>
+<li>Часть 3. Кэширование</li>
+</ul>
+<p>В этой части серии мы рассмотрим важнейший подход к обеспечению высокой производительности - кэширование. Суть кэширования
+в том, чтобы размещать часто используемые данные в быстром хранилище для ускорения доступа к ним. Важно понять, что
+быстрое хранилище (например, оперативная память) часто имеет очень ограниченный объем и его нужно использовать для
+хранения только тех данных, которые с большой вероятностью будут запрошены.</p>
+<h2 id="kesh-freimvork-django">Кэш фреймворк Django</h2>
+<p>Django предоставляет ряд средств для кэширования из коробки. Хранилище кэша настраивается при помощи словаря <code>CACHES</code>
+в <code>settings.py</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"default"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"BACKEND"</span><span class="p">:</span> <span class="s2">"django.core.cache.backends.db.DatabaseCache"</span><span class="p">,</span>
+        <span class="s2">"LOCATION"</span><span class="p">:</span> <span class="s2">"my_cache_table"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>Django предоставляет несколько встроенных бекендов для кэша, рассмотрим некоторые из них:</p>
+<ul>
+<li><code>DummyCache</code> - ничего не кэширует, используется при разработке/тестировании, если нужно временно отключить кэширование,</li>
+<li><code>DatabaseCache</code> - хранит кэш в БД, не самый быстрый вариант, но может быть полезен для хранения результатов долгих
+вычислений или сложных SQL запросов,</li>
+<li><code>MemcachedCache</code> - использует <a href="http://memcached.org/">Memcached</a> в качестве хранилища, для использования этого бекенда
+вам понадобится поднять сервер(ы) Memcached.</li>
+</ul>
+<p>Для использования в продакшене лучше всего подходит <code>MemcachedCache</code> и в некоторых случаях может быть полезен <code>DatabaseCache</code>.
+Также Django позволяет использовать сторонние бекенды, например, удачным вариантом может быть использование Redis в
+качестве хранилища для кэша. Redis <a href="http://antirez.com/news/94">предоставляет больше возможностей</a> чем Memcached и вы
+скорее всего и так уже используете его в вашем проекте. Вы можете установить пакет <code>django-redis</code>
+и <a href="http://niwinz.github.io/django-redis/latest/#_configure_as_cache_backend">настроить</a> его как бекенд для вашего кэша.</p>
+<h3 id="keshirovanie-vsego-saita">Кэширование всего сайта</h3>
+<p>Если на вашем сайте нет динамического контента, который часто меняется, то вы можете решить проблему кэширования
+просто - включив кэширование всего сайта. Для этого нужно добавить несколько настроек в <code>settings.py</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">MIDDLEWARE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">'django.middleware.cache.UpdateCacheMiddleware'</span><span class="p">,</span>
+
+    <span class="c1"># place all other middlewares here</span>
+
+    <span class="s1">'django.middleware.cache.FetchFromCacheMiddleware'</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Key in `CACHES` dict</span>
+<span class="n">CACHE_MIDDLEWARE_ALIAS</span> <span class="o">=</span> <span class="s1">'default'</span>
+
+<span class="c1"># Additional prefix for cache keys</span>
+<span class="n">CACHE_MIDDLEWARE_KEY_PREFIX</span> <span class="o">=</span> <span class="s1">''</span>
+
+<span class="c1"># Cache key TTL in seconds</span>
+<span class="n">CACHE_MIDDLEWARE_SECONDS</span> <span class="o">=</span> <span class="mi">600</span>
+</pre></div>
+<p>После добавления показанных выше middleware первым и последним в списке, все GET и HEAD запросы будут кэшироваться на
+указанное в параметре <code>CACHE_MIDDLEWARE_SECONDS</code> время.</p>
+<p>При необходимости вы даже можете програмно сбрасывать кэш:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">caches</span>
+<span class="n">cache</span> <span class="o">=</span> <span class="n">caches</span><span class="p">[</span><span class="s1">'default'</span><span class="p">]</span>  <span class="c1"># `default` is a key from CACHES dict in settings.py</span>
+<span class="n">ache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+<p>Или можно сбросить кэш непосредственно в используемом хранилище. Например, для Redis:</p>
+<div class="highlight"><pre><span></span>$ redis-cli -n <span class="m">1</span> FLUSHDB <span class="c1"># 1 is a DB number specified in settings.py</span>
+</pre></div>
+<h3 id="keshirovanie-view">Кэширование view</h3>
+<p>Если в вашем случае не целесообразно кэшировать весь сайт, то вы можете включить кэширование только определенных view, которые
+создают наибольшую нагрузку. Для этого Django предоставляет декоратор <code>cache_page</code>:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_page</span>
+
+
+<span class="nd">@cache_page</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s1">'default'</span><span class="p">,</span> <span class="n">key_prefix</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Author</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+    <span class="n">show_articles_link</span> <span class="o">=</span> <span class="n">author</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span>
+        <span class="n">request</span><span class="p">,</span> <span class="s1">'blog/author.html'</span><span class="p">,</span>
+        <span class="n">context</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span> <span class="n">show_articles_link</span><span class="o">=</span><span class="n">show_articles_link</span><span class="p">))</span>
+</pre></div>
+<p><code>cache_page</code> принимает следующие параметры:</p>
+<ul>
+<li>первый обязательный аргумент задает TTL кэша в секундах,</li>
+<li><code>cache</code> - ключ в словаре <code>CACHES</code>,</li>
+<li><code>key_prefix</code> - префикс для ключей кэша.</li>
+</ul>
+<p>Также этот декоратор можно применить в <code>urls.py</code>, что удобно для Class-Based Views:</p>
+<div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">url</span><span class="p">(</span><span class="sa">r</span><span class="s1">'^$'</span><span class="p">,</span> <span class="n">cache_page</span><span class="p">(</span><span class="mi">600</span><span class="p">)(</span><span class="n">ArticlesListView</span><span class="o">.</span><span class="n">as_view</span><span class="p">()),</span> <span class="n">name</span><span class="o">=</span><span class="s1">'articles_list'</span><span class="p">),</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+<p>Если часть контента сайта меняется в зависимости, например, от того какой пользователь аутентифицирован, то такой подход
+не подойдет. Для решения этой проблемы можно воспользоваться одним из вариантов описанных ниже.</p>
+<h3 id="keshirovanie-chasti-shablona">Кэширование части шаблона</h3>
+<p>В предыдущей части этой серии статей было описано, что QuerySet объекты ленивые и SQL запросы не выполняются без
+крайней необходимости. Мы можем воспользоваться этим и закэшировать фрагменты шаблона, что позволит избежать SQL запросов
+на время жизни кэша. Для этого нужно воспользоваться тегом шаблона <code>cache</code>:</p>
+<div class="highlight"><pre><span></span>{% load cache %}
+
+<span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Articles list<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Authors count: {{ authors_count }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Top authors<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+
+{% cache 500 top_author %}
+<span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;</span>
+    {% for author in top_authors %}
+    <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>{{ author.username }} ({{ author.articles_count }})<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    {% endfor %}
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+{% endcache %}
+
+{% cache 500 articles_list %}
+{% for article in articles %}
+<span class="p">&lt;</span><span class="nt">article</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>{{ article.title }}<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">time</span><span class="p">&gt;</span>{{ article.created_at }}<span class="p">&lt;/</span><span class="nt">time</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Author: <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"{% url 'author_page' username=article.author.username %}"</span><span class="p">&gt;</span>{{ article.author.username }}<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Tags:
+    {% for tag in article.tags.all %}
+        {{ tag }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+<span class="p">&lt;/</span><span class="nt">article</span><span class="p">&gt;</span>
+{% endfor %}
+{% endcache %}
+</pre></div>
+<p>Результат добавления тегов <code>cache</code> в шаблон (до и после соответственно):</p>
+<p><img alt="django-templates-caching-results" src="/media/2017/8/templates-caching.png"/></p>
+<p><code>cache</code> принимает следующие аргументы:</p>
+<ul>
+<li>первый обязательный аргумент означает TTL кэша в секундах,</li>
+<li>обязательное название фрагмента,</li>
+<li>не обязательные дополнительные переменные, которые идентифицируют фрагмент по динамическим данным,</li>
+<li>ключевой параметр <code>using='default'</code>, должен соответствовать ключу словаря <code>CACHES</code> в <code>settings.py</code>.</li>
+</ul>
+<p>Например, если нужно, чтобы для каждого пользователя фрагмент кэшировался отдельно, то нужно передать в тег <code>cache</code>
+переменную которая идентифицирует пользователя:</p>
+<div class="highlight"><pre><span></span>{% cache 500 personal_articles_list request.user.username %}
+    <span class="c">&lt;!-- ... --&gt;</span>
+{% %}
+</pre></div>
+<p>При необходимости можно передавать несколько таких переменных для создания ключей на основе комбинации их значений.</p>
+<h3 id="nizkourovnevoe-keshirovanie">Низкоуровневое кэширование</h3>
+<p>Django предоставляет доступ к низкоуровневому API кэш фреймворка. Вы можете использовать его для
+сохранения/извлечения/удаления данных по определенному ключу в кэше. Рассмотрим небольшой пример:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">cache</span>
+
+<span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">authors_count</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'authors_count'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">authors_count</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">authors_count</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+            <span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'authors_count'</span><span class="p">,</span> <span class="n">authors_count</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s1">'authors_count'</span><span class="p">]</span> <span class="o">=</span> <span class="n">authors_count</span>
+        <span class="o">...</span>
+        <span class="k">return</span> <span class="n">context</span>
+</pre></div>
+<p>В этом фрагменте кода мы проверяем, есть ли в кэше количество авторов, которое должно быть по ключу <code>authors_count</code>.
+Если есть (<code>cache.get</code> вернул не <code>None</code>), то используем значение из кэша. Иначе запрашиваем значение из БД и сохраняем
+в кэш. Таким образом в течении времени жизни ключа в кэше мы больше не будем обращаться к БД.</p>
+<p>Кроме результатов запросов к БД, также есть смысл кэшировать результаты сложных вычислений или обращения к внешним сервисам.
+Важно при этом учитывать, что данные могут изменится и в кэше будет устаревшая информация. Для того, чтобы минимизировать
+вероятность использования устаревших данных из кэша нужно:</p>
+<ul>
+<li>настроить адекватное TTL для кэша, которое бы соответствовало частоте изменения кэшируемых данных,</li>
+<li>реализовать инвалидацию кэша.</li>
+</ul>
+<p>Инвалидация кеша должна происходить по событию изменения данных. Рассмотрим, как можно реализовать инвалидацию для примера
+с количеством авторов:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models.signals</span> <span class="kn">import</span> <span class="n">post_delete</span><span class="p">,</span> <span class="n">post_save</span>
+<span class="kn">from</span> <span class="nn">django.dispatch</span> <span class="kn">import</span> <span class="n">receiver</span>
+<span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">cache</span>
+
+
+<span class="k">def</span> <span class="nf">clear_authors_count_cache</span><span class="p">():</span>
+    <span class="n">cache</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">'authors_count'</span><span class="p">)</span>
+
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">post_delete</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">Author</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_post_delete_handler</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">clear_authors_count_cache</span><span class="p">()</span>
+
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">post_save</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">Author</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_post_save_handler</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'created'</span><span class="p">]:</span>
+        <span class="n">clear_authors_count_cache</span><span class="p">()</span>
+</pre></div>
+<p>Были добавлены 2 обработчика сигналов: создание и удаление автора. Теперь при изменении количества авторов
+значение в кэше по ключу <code>authors_count</code> будет сбрасываться и в view будет запрашиваться новое количество авторов из БД.</p>
+<h2 id="cached_property_1">cached_property</h2>
+<p>Кроме кэш фреймворка Django также предоставляет возможность кэшировать обращение к функции прямо в памяти процесса.
+Такой вид кэша возможен только для методов не принимающих никаких параметров кроме <code>self</code>. Такой кэш будет жить до тех
+пор пока существует соответствующий объект.</p>
+<p><code>cached_property</code> это декоратор входящий в Django. Результат применения его к методу, кроме кэширования, метод становится
+свойством и вызывается неявно без необходимости указания круглых скобок. Рассмотрим пример:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">db_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+    <span class="n">bio</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">articles_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+<p>Проверим как работает свойство <code>article_count</code> с включенным логированием SQL:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">blog.models</span> <span class="kn">import</span> <span class="n">Author</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+<span class="p">(</span><span class="mf">0.002</span><span class="p">)</span> <span class="n">SELECT</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"username"</span><span class="p">,</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"email"</span><span class="p">,</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"bio"</span> <span class="n">FROM</span> <span class="s2">"blog_author"</span> <span class="n">ORDER</span> <span class="n">BY</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"id"</span> <span class="n">ASC</span> <span class="n">LIMIT</span> <span class="mi">1</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">author</span><span class="o">.</span><span class="n">articles_count</span>
+<span class="p">(</span><span class="mf">0.001</span><span class="p">)</span> <span class="n">SELECT</span> <span class="n">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="n">AS</span> <span class="s2">"__count"</span> <span class="n">FROM</span> <span class="s2">"blog_article"</span> <span class="n">WHERE</span> <span class="s2">"blog_article"</span><span class="o">.</span><span class="s2">"author_id"</span> <span class="o">=</span> <span class="mi">142601</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">142601</span><span class="p">,)</span>
+<span class="mi">28</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">author</span><span class="o">.</span><span class="n">articles_count</span>
+<span class="mi">28</span>
+</pre></div>
+<p>Как вы видите, повторное обращение к свойству <code>article_count</code> не вызывает SQL запрос. Но если мы создадим еще один
+экземпляр автора, то в нем это свойство не будет закэшированно, до того как мы впервые к нему обратимся, т.к. кэш в
+данном случае привязан к экземпляру класса <code>Author</code>.</p>
+<h2 id="cacheops">Cacheops</h2>
+<p><a href="https://github.com/Suor/django-cacheops">django-cacheops</a> это сторонний пакет, который позволяет очень быстро внедрить
+кэширование запросов к БД практически не меняя код проекта. Большую часть случаев можно решить просто задав ряд
+настроек этого пакета в <code>settings.py</code>.</p>
+<p>Рассмотрим на примере простой вариант использования этого пакета. В качестве тестового проекта будем использовать 
+<a href="https://github.com/dizballanze/django-optimization-guide-2-sample">пример</a> из прошлой части  серии.</p>
+<p>Cacheops использует Redis в качестве хранилища кэша, в <code>settings.py</code> нужно указать параметры подключения к серверу Redis.</p>
+<div class="highlight"><pre><span></span><span class="n">CACHEOPS_REDIS</span> <span class="o">=</span> <span class="s2">"redis://localhost:6379/1"</span>
+
+<span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="s1">'cacheops'</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">CACHEOPS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'blog.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span><span class="o">*</span><span class="mi">15</span><span class="p">},</span>
+    <span class="s1">'*.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+<p>Вот так просто мы добавили кэширование всех запросов к моделям из приложения <code>blog</code> на 15 минут. При этом cacheops
+автоматически настраивает инвалидацию кэша не только по времени, но и по событиям обновления данных, при помощи сигналов
+соответствующих моделей.</p>
+<p>При необходимости можно настроить кэширование не только всех моделей приложения но и каждую модель отдельно и для разных
+запросов. Несколько примеров:</p>
+<div class="highlight"><pre><span></span><span class="n">CACHEOPS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'blog.author'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>  <span class="c1"># cache all queries to `Author` model for an hour</span>
+    <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'fetch'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">10</span><span class="p">},</span>  <span class="c1"># cache `Article` fetch queries for 10 minutes</span>
+    <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'get'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">},</span>  <span class="c1"># cache `Article` get queries for 15 minutes</span>
+    <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'count'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">},</span>  <span class="c1"># cache `Article` fetch queries for 3 hours</span>
+    <span class="s1">'*.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+<p>Кроме этого cacheops имеет ряд других функций, некоторые из них:</p>
+<ul>
+<li>ручное кэширование <code>Article.objects.filter(tag=2).cache()</code>,</li>
+<li>кэширование результатов выполнения функций с привязкой к модели и автоматической инвалидацией,</li>
+<li>кэширование view с привязкой к модели и автоматической инвалидацией,</li>
+<li>кэширование фрагментов шаблона и многое другое.</li>
+</ul>
+<p>Рекомендую ознакомится с <a href="https://github.com/Suor/django-cacheops/blob/master/README.rst">README cacheops</a> чтобы узнать
+подробности.</p>
+<h2 id="http-keshirovanie">HTTP кэширование</h2>
+<p>Если ваш проект использует HTTP, то кроме серверного кэширования вы также можете использовать встроенные в HTTP протокол
+механизмы кэширования. Они позволяют настроить кэширование результатов безопасных запросов (GET и HEAD) на клиенте
+(например, браузере) и на промежуточных прокси-серверах.</p>
+<p>Управление кэшированием осуществляется при помощи HTTP заголовков. Установку этих заголовков можно настроить в приложении
+или, например, на web-сервере (Nginx, Apache, etc).</p>
+<p>Django предоставляет middleware и несколько удобных декораторов для управления HTTP кэшем.</p>
+<h3 id="vary">Vary</h3>
+<p>Заголовок <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary"><code>Vary</code></a> позволяет задать список названий
+заголовков, значения в которых будут учитываться при создании ключа кэша. Django предоставляет view декоратор
+<a href="https://docs.djangoproject.com/en/1.11/topics/cache/#using-vary-headers"><code>vary_on_headers</code></a> для управления этим заголовком.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.vary</span> <span class="kn">import</span> <span class="n">vary_on_headers</span>
+
+
+<span class="nd">@vary_on_headers</span><span class="p">(</span><span class="s1">'User-Agent'</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>В данном случае, для разных значений заголовка <code>User-Agent</code> будут разные ключи кэша.</p>
+<h3 id="cache-control">Cache-Control</h3>
+<p>Заголовок <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control"><code>Cache-Control</code></a> позволяет задавать
+различные параметры управляющие механизмом кэширования. Для задания этого заголовка можно использовать встроенный 
+в Django view декортатор
+<a href="https://docs.djangoproject.com/en/1.11/topics/cache/#controlling-cache-using-other-headers"><code>cache_control</code></a>.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_control</span>
+
+
+<span class="nd">@cache_control</span><span class="p">(</span><span class="n">private</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">max_age</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>Рассмотрим некоторые директивы заголовка <code>Cache-Control</code>:</p>
+<ul>
+<li><code>public</code>, <code>private</code> - разрешает или запрещает кэширование в публичном кэше (прокси серверах и тд). Это важные директивы,
+которые позволяют обезопасить приватный контент, который должен быть доступен только определенным пользователям.</li>
+<li><code>no-cache</code> - отключает кэширование, что заставляет клиент делать запрос к серверу.</li>
+<li><code>max-age</code> - время в секундах, после которого считается, что контент устарел и его нужно запросить заново.</li>
+</ul>
+<h3 id="last-modified-etag">Last-Modified &amp; Etag</h3>
+<p>HTTP протокол предоставляет и более сложный механизм кэширования, который позволяет уточнять у сервера актуальна ли
+кэшированная версия контента при помощи условных запросов. Для работы этого механизма сервер должен отдавать следующие
+заголовки (один из них или оба):</p>
+<ul>
+<li><code>Last-Modified</code> - дата и время последнего изменения ресурса.</li>
+<li><code>Etag</code> - идентификатор версии ресурса (уникальный хэш или номер версии).</li>
+</ul>
+<p>После этого при повторном обращении к ресурсу клиент должен использовать заголовки <code>If-Modified-Since</code> и <code>If-None-Match</code>
+соответственно. В таком случае, если ресурс не изменился (исходя из значений Etag и/или Last-Modified), то сервер
+вернет статус 304 без тела ответа. Это позволяет выполнять повторную загрузку ресурса только в том случае, если он изменился
+и тем самым съекономить время и ресурсы сервера.</p>
+<p>Кроме кэширования, описанные выше заголовки применяются для проверки предусловий в запросах изменяющих ресурс (POST, PUT и тд).
+Но обсуждение этого вопроса выходит за рамки данной статьи.</p>
+<p>Django предоставляет несколько способов задания заголовков <code>Etag</code> и <code>Last-Modified</code>. Самый простой способ - использование
+<code>ConditionalGetMiddleware</code>. Этот middleware добавляет заголовок <code>Etag</code>, на основе ответа view, ко всем
+GET запросам приложения. Также он проверяет заголовки запроса и возвращает 304, если ресурс не изменился.</p>
+<p>Этот подход имеет ряд недостатков:</p>
+<ul>
+<li>middleware применяется сразу ко всем view проекта, что не всегда нужно,</li>
+<li>для проверки актуальности ресурса необходимо сгенерировать полный ответ view,</li>
+<li>работает только для GET запросов.</li>
+</ul>
+<p>Для тонкой настройки нужно применять декоратор <code>condition</code>, который позволяет задавать кастомные функции для
+генерации заголовков <code>Etag</code> и/или <code>Last-Modified</code>. В этих функциях можно реализовать более экономный способ определения
+версии ресурса, например, на основе поля в БД, без необходимости генерации полного ответа view.</p>
+<div class="highlight"><pre><span></span><span class="c1"># models.py</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+
+<span class="c1"># views.py</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.http</span> <span class="kn">import</span> <span class="n">condition</span>
+
+
+<span class="k">def</span> <span class="nf">author_updated_at</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s1">'updated_at'</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">updated_at</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">updated_at</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+
+<span class="nd">@condition</span><span class="p">(</span><span class="n">last_modified_func</span><span class="o">=</span><span class="n">author_updated_at</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>В функции <code>author_updated_at</code> выполняется простой запрос БД, который возвращает дату последнего обновления ресурса,
+что требует значительно меньше ресурсов чем получение всех нужных данных для view из БД и рендеринг шаблона.
+При этом при изменении автора функция вернет новую дату, что приведет к инвалидации кэша.</p>
+<h2 id="keshirovanie-staticheskikh-failov_1">Кэширование статических файлов</h2>
+<p>Для  ускорения повторной загрузки страниц рекомендуется включить кэширование статических файлов, чтобы браузер повторно
+не запрашивал те же скрипты, стили, картинки и тд.</p>
+<p>В продакшн окружении вы скорее всего не будете отдавать статические файлы через Django, т.к. это медленно и не безопасно.
+Для этой задачи обычно используется Nginx или другой web-сервер. Рассмотрим как настроить кэширование статики на примере Nginx:</p>
+<div class="highlight"><pre><span></span><span class="k">server</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+
+    <span class="kn">location</span> <span class="s">/static/</span> <span class="p">{</span>
+        <span class="kn">expires</span> <span class="s">360d</span><span class="p">;</span>
+        <span class="kn">alias</span> <span class="s">/home/www/proj/static/</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kn">location</span> <span class="s">/media/</span> <span class="p">{</span>
+        <span class="kn">expires</span> <span class="s">360d</span><span class="p">;</span>
+        <span class="kn">alias</span> <span class="s">/home/www/proj/media/</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>Где,</p>
+<ul>
+<li><code>/static/</code> это базовый путь к статическим файлам, куда, в том числе, копируются файлы при выполнении <code>collectstatic</code>,</li>
+<li><code>/media/</code> базовый путь к файлам загружаемым пользователями.</li>
+</ul>
+<p>В данном примере мы кэшируем всю статику на 360 дней. Важно, чтобы при изменении какого-либо статического файла, его
+URL также изменялся, что приведет к загрузке новой версии файла. Для этого можно добавлять GET параметры к файлам с
+номером версии: <code>script.js?version=123</code>. Но мне больше нравится использовать
+<a href="https://django-compressor.readthedocs.io/en/latest/">Django Compressor</a>, который кроме всего прочего, генерирует
+уникальное имя для скриптов и стилей при их изменении.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

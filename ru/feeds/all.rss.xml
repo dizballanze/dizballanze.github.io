@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>Tech blog by @dizballanze</title><link>/ru/</link><description></description><lastBuildDate>Thu, 29 Jun 2017 17:02:00 +0300</lastBuildDate><item><title>Django project optimization guide (part 2)</title><link>/ru/../en/django-project-optimization-part-2/</link><description>&lt;p&gt;Table of Contents:&lt;/p&gt;
+<rss version="2.0"><channel><title>Tech blog by @dizballanze</title><link>/ru/</link><description></description><lastBuildDate>Mon, 18 Sep 2017 09:00:00 +0300</lastBuildDate><item><title>Django project optimization guide (part 3)</title><link>/ru/../en/django-project-optimization-part-3/</link><description>&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 3. Caching&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this part of the guide, I will cover the most valuable approach to achieve high performance - caching.
+The essence of caching is that you place the most commonly used data …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Mon, 18 Sep 2017 09:00:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-09-18:/ru/../en/django-project-optimization-part-3/</guid><category>python</category><category>django</category></item><item><title>Оптимизация производительности Django проектов (часть 3)</title><link>/ru/django-project-optimization-part-3/</link><description>&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-1/"&gt;Часть 1. Профилирование и настройки Django&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Часть 3. Кэширование&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;В этой части серии мы рассмотрим важнейший подход к обеспечению высокой производительности - кэширование. Суть кэширования
+в том, чтобы размещать часто используемые данные в быстром хранилище для ускорения доступа к ним. Важно понять …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Thu, 03 Aug 2017 13:53:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-08-03:/ru/django-project-optimization-part-3/</guid><category>python</category><category>django</category></item><item><title>Django project optimization guide (part 2)</title><link>/ru/../en/django-project-optimization-part-2/</link><description>&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 2. Working with database&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Table of Contents:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#mass-edit"&gt;Mass edit&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#mass-insertion"&gt;Mass insertion&lt;/a&gt;&lt;/li&gt;
@@ -13,11 +33,13 @@
 &lt;li&gt;&lt;a href="#retrieving-of-related-objects"&gt;Retrieving of related objects&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#defer-fields-retrieving"&gt;Defer fields retrieving&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#database-indexes"&gt;Database indexes&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#count vs exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#Lazy QuerySet"&gt;Lazy QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count …&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Thu, 29 Jun 2017 17:02:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-29:/ru/../en/django-project-optimization-part-2/</guid><category>python</category><category>django</category></item><item><title>Оптимизация производительности Django проектов (часть 2)</title><link>/ru/django-project-optimization-part-2/</link><description>&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-1/"&gt;Часть 1. Профилирование и настройки Django&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Часть 2. Работа с базой данных&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;This is the second part of Django project optimization series. The first part was …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Thu, 29 Jun 2017 17:02:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-29:/ru/../en/django-project-optimization-part-2/</guid><category>python</category><category>django</category></item><item><title>Оптимизация производительности Django проектов (часть 2)</title><link>/ru/django-project-optimization-part-2/</link><description>&lt;p&gt;Содержание:&lt;/p&gt;
+&lt;p&gt;Содержание:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#massovye-izmeneniia"&gt;Массовые изменения&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#massovaia-vstavka"&gt;Массовая вставка&lt;/a&gt;&lt;/li&gt;
@@ -32,20 +54,26 @@
 &lt;li&gt;&lt;a href="#ogranichenie-polei-v-vyborkakh"&gt;Ограничение полей в выборках&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#indeksy-bd"&gt;Индексы БД&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#lenivyi-queryset"&gt;Ленивый QuerySet&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
-&lt;a href="/ru/django-project-optimization-part-1/"&gt;здесь&lt;/a&gt; и рассказывает …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Tue, 27 Jun 2017 16:00:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-27:/ru/django-project-optimization-part-2/</guid><category>python</category><category>django</category></item><item><title>Middleware для обеспечения безопасности в Django</title><link>/ru/django-security-middleware/</link><description>&lt;p&gt;Django предоставляет защитные механизмы от различных атак, но не все они включены по-умолчанию. В этом посте
+&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count …&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Yuri Shikanov</dc:creator><pubDate>Tue, 27 Jun 2017 16:00:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-27:/ru/django-project-optimization-part-2/</guid><category>python</category><category>django</category></item><item><title>Middleware для обеспечения безопасности в Django</title><link>/ru/django-security-middleware/</link><description>&lt;p&gt;Django предоставляет защитные механизмы от различных атак, но не все они включены по-умолчанию. В этом посте
 я хочу рассмотреть какие возможности по защите предоставляет Django и как их использовать.&lt;/p&gt;
 &lt;h1 id="djangomiddlewaresecuritysecuritymiddleware"&gt;django.middleware.security.SecurityMiddleware&lt;/h1&gt;
 &lt;p&gt;Этот middleware включен по-умолчанию и должен быть самым первым в списке, для того чтобы злонамеренные запросы
-блокировались …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 21 Jun 2017 15:08:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-21:/ru/django-security-middleware/</guid></item><item><title>Оптимизация производительности Django проектов (часть 1)</title><link>/ru/django-project-optimization-part-1/</link><description>&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+блокировались …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 21 Jun 2017 15:08:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-21:/ru/django-security-middleware/</guid></item><item><title>Оптимизация производительности Django проектов (часть 1)</title><link>/ru/django-project-optimization-part-1/</link><description>&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Часть 1. Профилирование и настройки Django&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
 батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
-растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
-рассказать о том с какими проблемами …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/ru/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item><item><title>Django project optimization guide (part 1)</title><link>/ru/../en/django-project-optimization-part-1/</link><description>&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
-therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
-into performance problems. In this guide, I will try define …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/ru/../en/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item><item><title>Применение Nginx + Lua для обработки контактной формы</title><link>/ru/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/</link><description>&lt;p&gt;&lt;img alt="lua" src="/media/2015/6/lua.jpg"/&gt;&lt;/p&gt;
+растет и набирает …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/ru/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item><item><title>Django project optimization guide (part 1)</title><link>/ru/../en/django-project-optimization-part-1/</link><description>&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/ru/../en/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item><item><title>Применение Nginx + Lua для обработки контактной формы</title><link>/ru/primenenie-nginx-lua-dlia-obrabotki-prostykh-form/</link><description>&lt;p&gt;&lt;img alt="lua" src="/media/2015/6/lua.jpg"/&gt;&lt;/p&gt;
 &lt;p&gt;Бывает, что нужно развернуть простой, почти полностью статический сайт. И все что мешает ограничится одним Nginx - это 
 простая контактная форма, которая должна только отправлять полученные данные по почте. Конечно можно прикрутить стороннее 
 решение, вроде Google Forms, но такие сторонние решения не всегда хорошо кастомизируются. Разворачивать какой-то свой бекенд 

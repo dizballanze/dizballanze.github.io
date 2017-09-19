@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Admin</title><link href="/en/" rel="alternate"></link><link href="http://dizballanze.com/feeds/admin.atom.xml" rel="self"></link><id>/en/</id><updated>2017-06-14T16:47:00+03:00</updated><entry><title>Django project optimization guide (part 1)</title><link href="/en/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/en/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
-therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
-into performance problems. In this guide, I will try define …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Admin</title><link href="/en/" rel="alternate"></link><link href="http://dizballanze.com/feeds/admin.atom.xml" rel="self"></link><id>/en/</id><updated>2017-06-14T16:47:00+03:00</updated><entry><title>Django project optimization guide (part 1)</title><link href="/en/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/en/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
 therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
 into performance problems. In this guide, I will try define potential problems and how to fix them.&lt;/p&gt;
 &lt;p&gt;This is the first part of a series about Django performance optimization. It will cover profiling and Django settings.&lt;/p&gt;

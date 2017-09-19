@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>Tech blog by @dizballanze - Admin</title><link>/</link><description></description><lastBuildDate>Wed, 14 Jun 2017 16:47:00 +0300</lastBuildDate><item><title>Django project optimization guide (part 1)</title><link>/django-project-optimization-part-1/</link><description>&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
-therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
-into performance problems. In this guide, I will try define …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item></channel></rss>
+<rss version="2.0"><channel><title>Tech blog by @dizballanze - Admin</title><link>/</link><description></description><lastBuildDate>Wed, 14 Jun 2017 16:47:00 +0300</lastBuildDate><item><title>Django project optimization guide (part 1)</title><link>/django-project-optimization-part-1/</link><description>&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Wed, 14 Jun 2017 16:47:00 +0300</pubDate><guid isPermaLink="false">tag:None,2017-06-14:/django-project-optimization-part-1/</guid><category>python</category><category>django</category><category>performance</category><category>load testing</category></item></channel></rss>

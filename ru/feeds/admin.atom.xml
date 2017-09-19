@@ -68,10 +68,21 @@ HTTP также и все поддомены сайта.&lt;/li&gt;
 &lt;h2 id="djangomiddlewareclickjackingxframeoptionsmiddleware"&gt;django.middleware.clickjacking.XFrameOptionsMiddleware&lt;/h2&gt;
 &lt;p&gt;При включении данный middleware добавляет заголовок &lt;code&gt;X-Frame-Options: SAMEORIGIN&lt;/code&gt;, который запрещает современным браузерам
 загружать сайт в (i)frame на сайтах с другим доменом. Также можно запретить подключение сайта со всех доменов используя
-переменную &lt;code&gt;X_FRAME_OPTIONS = 'DENY'&lt;/code&gt;.&lt;/p&gt;</content></entry><entry><title>Оптимизация производительности Django проектов (часть 1)</title><link href="/ru/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/ru/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+переменную &lt;code&gt;X_FRAME_OPTIONS = 'DENY'&lt;/code&gt;.&lt;/p&gt;</content></entry><entry><title>Оптимизация производительности Django проектов (часть 1)</title><link href="/ru/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/ru/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Часть 1. Профилирование и настройки Django&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
 батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
-растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
-рассказать о том с какими проблемами …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+растет и набирает …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Часть 1. Профилирование и настройки Django&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
 батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
 растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
 рассказать о том с какими проблемами вы можете столкнуться и как их решить.&lt;/p&gt;

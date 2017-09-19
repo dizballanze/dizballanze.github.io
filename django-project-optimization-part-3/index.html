@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Django project optimization guide (part 3)</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/django-project-optimization-part-3/" rel="bookmark"
+         title="Permalink to Django project optimization guide (part 3)">Django project optimization guide (part 3)</a></h2>
+    <time class="published" datetime="2017-09-18T09:00:00+03:00"><nobr>18 Sep 2017</nobr></time>
+  </header>
+  <div class="entry-content">
+    <p>Other parts of this guide:</p>
+<ul>
+<li><a href="/en/django-project-optimization-part-1">Part 1. Profiling and Django settings</a></li>
+<li><a href="/en/django-project-optimization-part-2/">Part 2. Working with database</a></li>
+<li>Part 3. Caching</li>
+</ul>
+<p>In this part of the guide, I will cover the most valuable approach to achieve high performance - caching.
+The essence of caching is that you place the most commonly used data to fast storage in order to speed up the access to them.
+It's important to understand that the fast storage (i.e. memory) often has limited capacity. So we should use it only for
+that data which will be often used.</p>
+<h2 id="django-cache-framework">Django cache framework</h2>
+<p>Django has different built-in cache features. Cache storage can be set up with <code>CACHES</code> dict in <code>settings.py</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">CACHES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"default"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"BACKEND"</span><span class="p">:</span> <span class="s2">"django.core.cache.backends.db.DatabaseCache"</span><span class="p">,</span>
+        <span class="s2">"LOCATION"</span><span class="p">:</span> <span class="s2">"my_cache_table"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>Django has several built-in cache backends. Let's check some of them:</p>
+<ul>
+<li><code>DummyCache</code> - caches nothing, is used in development or testing environments to temporary disable caching,</li>
+<li><code>DatabaseCache</code> - stores cache in the database. Not very fast storage, but can be useful to store results of long
+calculations or difficult database queries.</li>
+<li><code>MemcachedCache</code> uses <a href="http://memcached.org/">Memcached</a> as cache storage. You need to have Memcached server(s) to
+use this backend.</li>
+</ul>
+<p><code>MemcachedCache</code> is the most suitable backend for production usage. <code>DatabaseCache</code> also can be useful in specific cases.
+Also, Django supports 3rd-party backends, for example, Redis can be a good option as cache backend. Redis
+provides <a href="http://antirez.com/news/94">more features</a> than Memcached and it's quite possible that you're already using
+it in your project. You can install <code>django-redis</code> package and
+<a href="http://niwinz.github.io/django-redis/latest/#_configure_as_cache_backend">configure</a> it as a cache backend.</p>
+<h3 id="the-per-site-cache">The per-site cache</h3>
+<p>If you don't have any dynamic content on your project, you can simply solve the cache problem - enabling
+the per-site caching. You need to add several changes to your <code>settings.py</code> for this:</p>
+<div class="highlight"><pre><span></span><span class="n">MIDDLEWARE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">'django.middleware.cache.UpdateCacheMiddleware'</span><span class="p">,</span>
+
+    <span class="c1"># place all other middlewares here</span>
+
+    <span class="s1">'django.middleware.cache.FetchFromCacheMiddleware'</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Key in `CACHES` dict</span>
+<span class="n">CACHE_MIDDLEWARE_ALIAS</span> <span class="o">=</span> <span class="s1">'default'</span>
+
+<span class="c1"># Additional prefix for cache keys</span>
+<span class="n">CACHE_MIDDLEWARE_KEY_PREFIX</span> <span class="o">=</span> <span class="s1">''</span>
+
+<span class="c1"># Cache key TTL in seconds</span>
+<span class="n">CACHE_MIDDLEWARE_SECONDS</span> <span class="o">=</span> <span class="mi">600</span>
+</pre></div>
+<p>As you can see, you should add middlewares at the beginning and at the end of <code>MIDDLEWARE</code> list. After that, all GET and HEAD
+requests will be cached for <code>CACHE_MIDDLEWARE_SECONDS</code> seconds.</p>
+<p>You can also clear cache programmatically:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">caches</span>
+<span class="n">cache</span> <span class="o">=</span> <span class="n">caches</span><span class="p">[</span><span class="s1">'default'</span><span class="p">]</span>  <span class="c1"># `default` is a key from CACHES dict in settings.py</span>
+<span class="n">ache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+<p>Or you can clean cache directly in the cache storage if necessary. An example for Redis:</p>
+<div class="highlight"><pre><span></span>$ redis-cli -n <span class="m">1</span> FLUSHDB <span class="c1"># 1 is a DB number specified in settings.py</span>
+</pre></div>
+<h3 id="the-per-view-caching">The per-view caching</h3>
+<p>In case it's not appropriate to cache the whole site, you can enable caching only for specific views (i.e. most highly used).
+Django provides <code>cache_page</code> decorator for this:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_page</span>
+
+
+<span class="nd">@cache_page</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s1">'default'</span><span class="p">,</span> <span class="n">key_prefix</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Author</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+    <span class="n">show_articles_link</span> <span class="o">=</span> <span class="n">author</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span>
+        <span class="n">request</span><span class="p">,</span> <span class="s1">'blog/author.html'</span><span class="p">,</span>
+        <span class="n">context</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span> <span class="n">show_articles_link</span><span class="o">=</span><span class="n">show_articles_link</span><span class="p">))</span>
+</pre></div>
+<p><code>cache_page</code> accepts following arguments:</p>
+<ul>
+<li>first, required argument is a time-to-live of cache in seconds,</li>
+<li><code>cache</code> - key from <code>CACHES</code> dict,</li>
+<li><code>key_prefix</code> - cache key prefix.</li>
+</ul>
+<p>Also, you can apply this decorator in <code>urls.py</code>, that is convenient for Class-Based Views:</p>
+<div class="highlight"><pre><span></span><span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">url</span><span class="p">(</span><span class="sa">r</span><span class="s1">'^$'</span><span class="p">,</span> <span class="n">cache_page</span><span class="p">(</span><span class="mi">600</span><span class="p">)(</span><span class="n">ArticlesListView</span><span class="o">.</span><span class="n">as_view</span><span class="p">()),</span> <span class="n">name</span><span class="o">=</span><span class="s1">'articles_list'</span><span class="p">),</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+<p>If for example page content changes are based on authenticated user, then this approach won't work. To solve this
+problem you should use one of the approaches described below.</p>
+<h3 id="template-fragment-caching">Template fragment caching</h3>
+<p>In the previous part of this guide, I mentioned that QuerySet objects are lazy and SQL requests are delayed as long as possible.
+We can take the advantage of this and cache template fragments, that will let us to avoid SQL requests for cache TTL. <code>cache</code> template
+tag is provided for this:</p>
+<div class="highlight"><pre><span></span>{% load cache %}
+
+<span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>Articles list<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Authors count: {{ authors_count }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>Top authors<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+
+{% cache 500 top_author %}
+<span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;</span>
+    {% for author in top_authors %}
+    <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>{{ author.username }} ({{ author.articles_count }})<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+    {% endfor %}
+<span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+{% endcache %}
+
+{% cache 500 articles_list %}
+{% for article in articles %}
+<span class="p">&lt;</span><span class="nt">article</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>{{ article.title }}<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">time</span><span class="p">&gt;</span>{{ article.created_at }}<span class="p">&lt;/</span><span class="nt">time</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Author: <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"{% url 'author_page' username=article.author.username %}"</span><span class="p">&gt;</span>{{ article.author.username }}<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Tags:
+    {% for tag in article.tags.all %}
+        {{ tag }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+<span class="p">&lt;/</span><span class="nt">article</span><span class="p">&gt;</span>
+{% endfor %}
+{% endcache %}
+</pre></div>
+<p>The result of adding <code>cache</code> template tags to our template (before and after respectively):</p>
+<p><img alt="django-templates-caching-results" src="/media/2017/8/templates-caching.png"/></p>
+<p><code>cache</code> accepts following arguments:</p>
+<ul>
+<li>first required argument is a TTL of cache,</li>
+<li>the second required argument is a fragment name,</li>
+<li>optional additional variables which identify fragment by dynamic data,</li>
+<li>keyword <code>using='default'</code> argument, should correspond to a key in <code>CACHES</code> dict.</li>
+</ul>
+<p>For example, we need to cache each template fragment separately for different users.
+Let's provide an additional variable that identifies a user to <code>cache</code> template tag:</p>
+<div class="highlight"><pre><span></span>{% cache 500 personal_articles_list request.user.username %}
+    <span class="c">&lt;!-- ... --&gt;</span>
+{% %}
+</pre></div>
+<p>You can even provide several additional variables like this to create caching key based on a combination of their values.</p>
+<h3 id="the-low-level-caching">The low-level caching</h3>
+<p>Django provides access to the low-level caching API. You can use it to save/extract/delete data by specified cache key.
+Let's check out a small example:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">cache</span>
+
+<span class="k">class</span> <span class="nc">ArticlesListView</span><span class="p">(</span><span class="n">ListView</span><span class="p">):</span>
+
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">authors_count</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'authors_count'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">authors_count</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">authors_count</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+            <span class="n">cache</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'authors_count'</span><span class="p">,</span> <span class="n">authors_count</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s1">'authors_count'</span><span class="p">]</span> <span class="o">=</span> <span class="n">authors_count</span>
+        <span class="o">...</span>
+        <span class="k">return</span> <span class="n">context</span>
+</pre></div>
+<p>In this code fragment, we check whether authors count is in the cache by <code>authors_count</code> key. <code>cache.get</code> method returns
+not <code>None</code> value if the key exists in the cache storage. In that case, we can use this value without any requests to the database.
+Otherwise, code requests authors count from the database and saves it in the cache. In this way, we avoid database requests for
+a cache TTL. </p>
+<p>Besides database queries results, it makes sense to cache results of complex calculations or requests to external services.
+It's important to understand that data can change and cache will contain stale information. There are several approaches to minimize
+a chance to use stale data from cache:</p>
+<ul>
+<li>set up cache TTL to correspond frequency of data change,</li>
+<li>add cache invalidation.</li>
+</ul>
+<p>Cache invalidation should happen on data change. Let's check out how to add cache invalidation for authors count
+example:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.db.models.signals</span> <span class="kn">import</span> <span class="n">post_delete</span><span class="p">,</span> <span class="n">post_save</span>
+<span class="kn">from</span> <span class="nn">django.dispatch</span> <span class="kn">import</span> <span class="n">receiver</span>
+<span class="kn">from</span> <span class="nn">django.core.cache</span> <span class="kn">import</span> <span class="n">cache</span>
+
+
+<span class="k">def</span> <span class="nf">clear_authors_count_cache</span><span class="p">():</span>
+    <span class="n">cache</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">'authors_count'</span><span class="p">)</span>
+
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">post_delete</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">Author</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_post_delete_handler</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">clear_authors_count_cache</span><span class="p">()</span>
+
+
+<span class="nd">@receiver</span><span class="p">(</span><span class="n">post_save</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">Author</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_post_save_handler</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'created'</span><span class="p">]:</span>
+        <span class="n">clear_authors_count_cache</span><span class="p">()</span>
+</pre></div>
+<p>In this example 2 signal handlers on adding/deleting of authors were added. That makes possible to remove cache by
+<code>authors_count</code> key on authors quantity change and the new number of authors will be fetched from the database.</p>
+<h2 id="cached_property_1">cached_property</h2>
+<p>Besides of cache framework, Django provides an ability to cache methods' invocations right in the process memory. This type of caching
+is possible only for methods without arguments (besides of <code>self</code>). This type of cache will live while the corresponding instance exists.</p>
+<p><code>cached_property</code> is included Django decorator. Methods with this decorator also become properties. Let's check out
+an example:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">db_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">email</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">EmailField</span><span class="p">()</span>
+    <span class="n">bio</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">articles_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">articles</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+<p>Let's check how the <code>article_count</code> property works with enabled SQL logging:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">blog.models</span> <span class="kn">import</span> <span class="n">Author</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">author</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+<span class="p">(</span><span class="mf">0.002</span><span class="p">)</span> <span class="n">SELECT</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"username"</span><span class="p">,</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"email"</span><span class="p">,</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"bio"</span> <span class="n">FROM</span> <span class="s2">"blog_author"</span> <span class="n">ORDER</span> <span class="n">BY</span> <span class="s2">"blog_author"</span><span class="o">.</span><span class="s2">"id"</span> <span class="n">ASC</span> <span class="n">LIMIT</span> <span class="mi">1</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">author</span><span class="o">.</span><span class="n">articles_count</span>
+<span class="p">(</span><span class="mf">0.001</span><span class="p">)</span> <span class="n">SELECT</span> <span class="n">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="n">AS</span> <span class="s2">"__count"</span> <span class="n">FROM</span> <span class="s2">"blog_article"</span> <span class="n">WHERE</span> <span class="s2">"blog_article"</span><span class="o">.</span><span class="s2">"author_id"</span> <span class="o">=</span> <span class="mi">142601</span><span class="p">;</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="mi">142601</span><span class="p">,)</span>
+<span class="mi">28</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">author</span><span class="o">.</span><span class="n">articles_count</span>
+<span class="mi">28</span>
+</pre></div>
+<p>As you can see, repeated access to the <code>article_count</code> property doesn't cause any SQL requests. But if we create another
+instance of this <code>Author</code> class, this property won't be cached until first access to it. That's because the cache is tied
+to the specific instance of <code>Author</code> class.</p>
+<h2 id="cacheops">Cacheops</h2>
+<p><a href="https://github.com/Suor/django-cacheops">django-cacheops</a> is a 3rd party package, that allows you quickly enable caching
+of database requests almost without code changes. You can solve most of the caching cases just by setting up the package in
+<code>settings.py</code>.</p>
+<p>Let's check an example of simple cacheops usage. As a test project, I will use the
+<a href="https://github.com/dizballanze/django-optimization-guide-2-sample">sample project</a> from the previous part of this guide.</p>
+<p>Cacheops is using Redis as a cache storage, so we need to setup Redis connection parameters in <code>settings.py</code>.</p>
+<div class="highlight"><pre><span></span><span class="n">CACHEOPS_REDIS</span> <span class="o">=</span> <span class="s2">"redis://localhost:6379/1"</span>
+
+<span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="s1">'cacheops'</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">CACHEOPS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'blog.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span><span class="o">*</span><span class="mi">15</span><span class="p">},</span>
+    <span class="s1">'*.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span><span class="o">*</span><span class="mi">60</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+<p>Just like that, we added caching of all databases requests from all models of <code>blog</code> application for 15 minutes.
+As a bonus cacheops provides automatic cache invalidation for not only time-based but also event-based by setting up
+model signals of corresponding models.</p>
+<p>If necessary, you can setup caching more accurate and specify it per model and per request type settings.
+Few examples:</p>
+<div class="highlight"><pre><span></span><span class="n">CACHEOPS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'blog.author'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>  <span class="c1"># cache all queries to `Author` model for an hour</span>
+    <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'fetch'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">10</span><span class="p">},</span>  <span class="c1"># cache `Article` fetch queries for 10 minutes</span>
+    <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'get'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">},</span>  <span class="c1"># cache `Article` get queries for 15 minutes</span>
+    <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'count'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">},</span>  <span class="c1"># cache `Article` fetch queries for 3 hours</span>
+    <span class="s1">'*.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+<p>Besides that, cacheops also has several useful features:</p>
+<ul>
+<li>manual caching by <code>QuerySet</code> method: <code>Article.objects.filter(tag=2).cache()</code>,</li>
+<li>function results caching with bounding to models and automatic invalidation,</li>
+<li>views caching with models bounding and automatic invalidation,</li>
+<li>template fragments caching and more.</li>
+</ul>
+<p>You should check out <a href="https://github.com/Suor/django-cacheops/blob/master/README.rst">cacheops' README</a> for details.</p>
+<h2 id="http-caching">HTTP caching</h2>
+<p>If your project uses HTTP, you should consider using built-in cache capabilities in HTTP protocol. They allow cache
+results of safe requests (GET and HEAD) on a client (i.e. browser) and on intermediate proxy servers.</p>
+<p>Caching control is performed by HTTP headers. You can setup these headers in application or web server (Nginx, Apache, etc).</p>
+<p>Django provides several convenient middlewares and view decorators to control HTTP caching.</p>
+<h3 id="vary">Vary</h3>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary"><code>Vary</code></a> header allows to specify a list of header names,
+which values will be used to create cache keys. Django provides view decorator
+<a href="https://docs.djangoproject.com/en/1.11/topics/cache/#using-vary-headers"><code>vary_on_headers</code></a> for control of this header.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.vary</span> <span class="kn">import</span> <span class="n">vary_on_headers</span>
+
+
+<span class="nd">@vary_on_headers</span><span class="p">(</span><span class="s1">'User-Agent'</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>In this case, different cache keys will be used for different values of <code>User-Agent</code> header.</p>
+<h3 id="cache-control">Cache-Control</h3>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control"><code>Cache-Control</code></a> header is used to control
+how caching is performed.
+<a href="https://docs.djangoproject.com/en/1.11/topics/cache/#controlling-cache-using-other-headers"><code>cache_control</code></a>
+view decorator allows setting this header directives.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.views.decorators.cache</span> <span class="kn">import</span> <span class="n">cache_control</span>
+
+
+<span class="nd">@cache_control</span><span class="p">(</span><span class="n">private</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">max_age</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p>Let's check out some <code>Cache-Contol</code> directives:</p>
+<ul>
+<li><code>public</code>, <code>private</code> - allows or forbids caching in public caches (proxy servers, etc). This is an important directive
+because it allows securing private content that should be available only for specific users.</li>
+<li><code>no-cache</code> - disables caching that makes a client to perform a request to the origin server.</li>
+<li><code>max-age</code> - after that time (in seconds) cache is considered stale.</li>
+</ul>
+<h3 id="last-modified-etag">Last-Modified &amp; Etag</h3>
+<p>HTTP protocol provides more complicated caching capabilities which allow verifying data freshness by the server with
+conditional requests. To make this capabilities work server should provide one or both of the following headers:</p>
+<ul>
+<li><code>Last-Modified</code> - date and time of last resource modification,</li>
+<li><code>Etag</code> - resource version identifier (hash or version number)</li>
+</ul>
+<p>After that, client should provide <code>If-Modified-Since</code> and <code>If-None-Match</code> headers on following requests.
+Server checks if the resource wasn't changed since the last request and returns 304 response without the body.
+This allows to perform repeated resource that loads only if it was changed. In this way it saves time and server resources.</p>
+<p>Besides caching, described capabilities are used to precondition checking in unsafe requests (POST, PUT, etc).
+But this is beyond the topic of this guide.</p>
+<p>Django provides several ways to control <code>ETag</code> and <code>Last-Modified</code> headers. The simplest one is to use
+<code>ConditionalGetMiddleware</code>. This middleware based on view response adds <code>Etag</code> header to all GET requests.
+Also, it checks request headers and returns 304 if the resource wasn't changed.</p>
+<p>This approach has several drawbacks:</p>
+<ul>
+<li>middleware is applied to all views of the project, that sometimes isn't necessary,</li>
+<li>it generates full response to get resource version, that requires lots of server resources,</li>
+<li>it works only for GET requests.</li>
+</ul>
+<p>There is more accurate approach, you should use <code>condition</code> view decorator, that allows specifying custom
+functions to generate <code>Etag</code> and/or <code>Last-Modified</code> headers. In this functions, you can use more effective
+approach of detecting resource version. You can just request one field from the database with no need to generate
+a full response.</p>
+<div class="highlight"><pre><span></span><span class="c1"># models.py</span>
+
+<span class="k">class</span> <span class="nc">Author</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+
+<span class="c1"># views.py</span>
+<span class="kn">from</span> <span class="nn">django.views.decorators.http</span> <span class="kn">import</span> <span class="n">condition</span>
+
+
+<span class="k">def</span> <span class="nf">author_updated_at</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">Author</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span><span class="o">.</span><span class="n">values_list</span><span class="p">(</span><span class="s1">'updated_at'</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">updated_at</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">updated_at</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+
+<span class="nd">@condition</span><span class="p">(</span><span class="n">last_modified_func</span><span class="o">=</span><span class="n">author_updated_at</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">author_page_view</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+<p><code>author_updated_at</code> function performs simple database request, that returns resource's last update date. This is more
+efficient than fetching all necessary data from the database and rendering a template. After any changes to author
+are done the function returns new date that will lead to cache invalidation.</p>
+<h2 id="static-files-caching_1">Static files caching</h2>
+<p>You should cache static files to speed up repeated pages loading. This will prevent browser from repeated loading of
+scripts, styles, images, etc.</p>
+<p>Most likely you won't serve static files by Django in a production environment, because it's slow and unsafe.
+Usually, web server is used for this task, i.e. Nginx. Let's check out how to set up caching of static files with Nginx:</p>
+<div class="highlight"><pre><span></span><span class="k">server</span> <span class="p">{</span>
+    <span class="c1"># ...</span>
+
+    <span class="kn">location</span> <span class="s">/static/</span> <span class="p">{</span>
+        <span class="kn">expires</span> <span class="s">360d</span><span class="p">;</span>
+        <span class="kn">alias</span> <span class="s">/home/www/proj/static/</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kn">location</span> <span class="s">/media/</span> <span class="p">{</span>
+        <span class="kn">expires</span> <span class="s">360d</span><span class="p">;</span>
+        <span class="kn">alias</span> <span class="s">/home/www/proj/media/</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>Where,</p>
+<ul>
+<li><code>/static/</code> base path to static files, it's the same place where <code>collectstatic</code> copies files,</li>
+<li><code>/media/</code> base path to user generated files.</li>
+</ul>
+<p>In this case, we cache all static for 360 days. It's important that URL of static files are changed when files are
+changed. This will lead to loading of a new version of the file. You can use GET parameters with version numbers:
+<code>script.js?version=123</code>. But I prefer using <a href="https://django-compressor.readthedocs.io/en/latest/">Django Compressor</a>,
+that generates unique file names for all scripts and styles on each change.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

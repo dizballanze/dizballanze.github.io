@@ -1,5 +1,779 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2017-06-29T17:02:00+03:00</updated><entry><title>Django project optimization guide (part 2)</title><link href="/django-project-optimization-part-2/" rel="alternate"></link><published>2017-06-29T17:02:00+03:00</published><updated>2017-06-29T17:02:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-06-29:/django-project-optimization-part-2/</id><summary type="html">&lt;p&gt;Table of Contents:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2017-09-18T09:00:00+03:00</updated><entry><title>Django project optimization guide (part 3)</title><link href="/django-project-optimization-part-3/" rel="alternate"></link><published>2017-09-18T09:00:00+03:00</published><updated>2017-09-18T09:00:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-09-18:/django-project-optimization-part-3/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 3. Caching&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this part of the guide, I will cover the most valuable approach to achieve high performance - caching.
+The essence of caching is that you place the most commonly used data …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 3. Caching&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this part of the guide, I will cover the most valuable approach to achieve high performance - caching.
+The essence of caching is that you place the most commonly used data to fast storage in order to speed up the access to them.
+It's important to understand that the fast storage (i.e. memory) often has limited capacity. So we should use it only for
+that data which will be often used.&lt;/p&gt;
+&lt;h2 id="django-cache-framework"&gt;Django cache framework&lt;/h2&gt;
+&lt;p&gt;Django has different built-in cache features. Cache storage can be set up with &lt;code&gt;CACHES&lt;/code&gt; dict in &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHES&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s2"&gt;"default"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s2"&gt;"BACKEND"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"django.core.cache.backends.db.DatabaseCache"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s2"&gt;"LOCATION"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"my_cache_table"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Django has several built-in cache backends. Let's check some of them:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;DummyCache&lt;/code&gt; - caches nothing, is used in development or testing environments to temporary disable caching,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DatabaseCache&lt;/code&gt; - stores cache in the database. Not very fast storage, but can be useful to store results of long
+calculations or difficult database queries.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MemcachedCache&lt;/code&gt; uses &lt;a href="http://memcached.org/"&gt;Memcached&lt;/a&gt; as cache storage. You need to have Memcached server(s) to
+use this backend.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;MemcachedCache&lt;/code&gt; is the most suitable backend for production usage. &lt;code&gt;DatabaseCache&lt;/code&gt; also can be useful in specific cases.
+Also, Django supports 3rd-party backends, for example, Redis can be a good option as cache backend. Redis
+provides &lt;a href="http://antirez.com/news/94"&gt;more features&lt;/a&gt; than Memcached and it's quite possible that you're already using
+it in your project. You can install &lt;code&gt;django-redis&lt;/code&gt; package and
+&lt;a href="http://niwinz.github.io/django-redis/latest/#_configure_as_cache_backend"&gt;configure&lt;/a&gt; it as a cache backend.&lt;/p&gt;
+&lt;h3 id="the-per-site-cache"&gt;The per-site cache&lt;/h3&gt;
+&lt;p&gt;If you don't have any dynamic content on your project, you can simply solve the cache problem - enabling
+the per-site caching. You need to add several changes to your &lt;code&gt;settings.py&lt;/code&gt; for this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;MIDDLEWARE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="s1"&gt;'django.middleware.cache.UpdateCacheMiddleware'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# place all other middlewares here&lt;/span&gt;
+
+    &lt;span class="s1"&gt;'django.middleware.cache.FetchFromCacheMiddleware'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Key in `CACHES` dict&lt;/span&gt;
+&lt;span class="n"&gt;CACHE_MIDDLEWARE_ALIAS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'default'&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Additional prefix for cache keys&lt;/span&gt;
+&lt;span class="n"&gt;CACHE_MIDDLEWARE_KEY_PREFIX&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;''&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Cache key TTL in seconds&lt;/span&gt;
+&lt;span class="n"&gt;CACHE_MIDDLEWARE_SECONDS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;600&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As you can see, you should add middlewares at the beginning and at the end of &lt;code&gt;MIDDLEWARE&lt;/code&gt; list. After that, all GET and HEAD
+requests will be cached for &lt;code&gt;CACHE_MIDDLEWARE_SECONDS&lt;/code&gt; seconds.&lt;/p&gt;
+&lt;p&gt;You can also clear cache programmatically:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.core.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;caches&lt;/span&gt;
+&lt;span class="n"&gt;cache&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;caches&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'default'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;# `default` is a key from CACHES dict in settings.py&lt;/span&gt;
+&lt;span class="n"&gt;ache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;clear&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or you can clean cache directly in the cache storage if necessary. An example for Redis:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ redis-cli -n &lt;span class="m"&gt;1&lt;/span&gt; FLUSHDB &lt;span class="c1"&gt;# 1 is a DB number specified in settings.py&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id="the-per-view-caching"&gt;The per-view caching&lt;/h3&gt;
+&lt;p&gt;In case it's not appropriate to cache the whole site, you can enable caching only for specific views (i.e. most highly used).
+Django provides &lt;code&gt;cache_page&lt;/code&gt; decorator for this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache_page&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@cache_page&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;600&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;'default'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;key_prefix&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;''&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;author&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;get_object_or_404&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;show_articles_link&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exists&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;render&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'blog/author.html'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;show_articles_link&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;show_articles_link&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cache_page&lt;/code&gt; accepts following arguments:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;first, required argument is a time-to-live of cache in seconds,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cache&lt;/code&gt; - key from &lt;code&gt;CACHES&lt;/code&gt; dict,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key_prefix&lt;/code&gt; - cache key prefix.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Also, you can apply this decorator in &lt;code&gt;urls.py&lt;/code&gt;, that is convenient for Class-Based Views:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;urlpatterns&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;r&lt;/span&gt;&lt;span class="s1"&gt;'^$'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cache_page&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;600&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;ArticlesListView&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;as_view&lt;/span&gt;&lt;span class="p"&gt;()),&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;'articles_list'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If for example page content changes are based on authenticated user, then this approach won't work. To solve this
+problem you should use one of the approaches described below.&lt;/p&gt;
+&lt;h3 id="template-fragment-caching"&gt;Template fragment caching&lt;/h3&gt;
+&lt;p&gt;In the previous part of this guide, I mentioned that QuerySet objects are lazy and SQL requests are delayed as long as possible.
+We can take the advantage of this and cache template fragments, that will let us to avoid SQL requests for cache TTL. &lt;code&gt;cache&lt;/code&gt; template
+tag is provided for this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;{% load cache %}
+
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Articles list&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Authors count: {{ authors_count }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Top authors&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+
+{% cache 500 top_author %}
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;ul&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    {% for author in top_authors %}
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;li&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ author.username }} ({{ author.articles_count }})&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;li&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    {% endfor %}
+&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;ul&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+{% endcache %}
+
+{% cache 500 articles_list %}
+{% for article in articles %}
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;article&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ article.title }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;time&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ article.created_at }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;time&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Author: &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;a&lt;/span&gt; &lt;span class="na"&gt;href&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;"{% url 'author_page' username=article.author.username %}"&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ article.author.username }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;a&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Tags:
+    {% for tag in article.tags.all %}
+        {{ tag }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;article&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+{% endfor %}
+{% endcache %}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The result of adding &lt;code&gt;cache&lt;/code&gt; template tags to our template (before and after respectively):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="django-templates-caching-results" src="/media/2017/8/templates-caching.png"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cache&lt;/code&gt; accepts following arguments:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;first required argument is a TTL of cache,&lt;/li&gt;
+&lt;li&gt;the second required argument is a fragment name,&lt;/li&gt;
+&lt;li&gt;optional additional variables which identify fragment by dynamic data,&lt;/li&gt;
+&lt;li&gt;keyword &lt;code&gt;using='default'&lt;/code&gt; argument, should correspond to a key in &lt;code&gt;CACHES&lt;/code&gt; dict.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For example, we need to cache each template fragment separately for different users.
+Let's provide an additional variable that identifies a user to &lt;code&gt;cache&lt;/code&gt; template tag:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;{% cache 500 personal_articles_list request.user.username %}
+    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
+{% %}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can even provide several additional variables like this to create caching key based on a combination of their values.&lt;/p&gt;
+&lt;h3 id="the-low-level-caching"&gt;The low-level caching&lt;/h3&gt;
+&lt;p&gt;Django provides access to the low-level caching API. You can use it to save/extract/delete data by specified cache key.
+Let's check out a small example:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.core.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ArticlesListView&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ListView&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+
+    &lt;span class="o"&gt;...&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;get_context_data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;context&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;super&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_context_data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;authors_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;authors_count&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;authors_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;authors_count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;authors_count&lt;/span&gt;
+        &lt;span class="o"&gt;...&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this code fragment, we check whether authors count is in the cache by &lt;code&gt;authors_count&lt;/code&gt; key. &lt;code&gt;cache.get&lt;/code&gt; method returns
+not &lt;code&gt;None&lt;/code&gt; value if the key exists in the cache storage. In that case, we can use this value without any requests to the database.
+Otherwise, code requests authors count from the database and saves it in the cache. In this way, we avoid database requests for
+a cache TTL. &lt;/p&gt;
+&lt;p&gt;Besides database queries results, it makes sense to cache results of complex calculations or requests to external services.
+It's important to understand that data can change and cache will contain stale information. There are several approaches to minimize
+a chance to use stale data from cache:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;set up cache TTL to correspond frequency of data change,&lt;/li&gt;
+&lt;li&gt;add cache invalidation.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Cache invalidation should happen on data change. Let's check out how to add cache invalidation for authors count
+example:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.db.models.signals&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;post_delete&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;post_save&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.dispatch&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;receiver&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.core.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;clear_authors_count_cache&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delete&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@receiver&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;post_delete&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_post_delete_handler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;clear_authors_count_cache&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@receiver&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;post_save&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_post_save_handler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'created'&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+        &lt;span class="n"&gt;clear_authors_count_cache&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this example 2 signal handlers on adding/deleting of authors were added. That makes possible to remove cache by
+&lt;code&gt;authors_count&lt;/code&gt; key on authors quantity change and the new number of authors will be fetched from the database.&lt;/p&gt;
+&lt;h2 id="cached_property_1"&gt;cached_property&lt;/h2&gt;
+&lt;p&gt;Besides of cache framework, Django provides an ability to cache methods' invocations right in the process memory. This type of caching
+is possible only for methods without arguments (besides of &lt;code&gt;self&lt;/code&gt;). This type of cache will live while the corresponding instance exists.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cached_property&lt;/code&gt; is included Django decorator. Methods with this decorator also become properties. Let's check out
+an example:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Model&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+
+    &lt;span class="n"&gt;username&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CharField&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;max_length&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;db_index&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;email&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;EmailField&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;bio&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;TextField&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@cached_property&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;articles_count&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let's check how the &lt;code&gt;article_count&lt;/code&gt; property works with enabled SQL logging:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;blog.models&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.002&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;SELECT&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"id"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"username"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"email"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"bio"&lt;/span&gt; &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt; &lt;span class="n"&gt;ORDER&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"id"&lt;/span&gt; &lt;span class="n"&gt;ASC&lt;/span&gt; &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles_count&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;SELECT&lt;/span&gt; &lt;span class="n"&gt;COUNT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;"__count"&lt;/span&gt; &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="s2"&gt;"blog_article"&lt;/span&gt; &lt;span class="n"&gt;WHERE&lt;/span&gt; &lt;span class="s2"&gt;"blog_article"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"author_id"&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;142601&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;142601&lt;/span&gt;&lt;span class="p"&gt;,)&lt;/span&gt;
+&lt;span class="mi"&gt;28&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles_count&lt;/span&gt;
+&lt;span class="mi"&gt;28&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As you can see, repeated access to the &lt;code&gt;article_count&lt;/code&gt; property doesn't cause any SQL requests. But if we create another
+instance of this &lt;code&gt;Author&lt;/code&gt; class, this property won't be cached until first access to it. That's because the cache is tied
+to the specific instance of &lt;code&gt;Author&lt;/code&gt; class.&lt;/p&gt;
+&lt;h2 id="cacheops"&gt;Cacheops&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://github.com/Suor/django-cacheops"&gt;django-cacheops&lt;/a&gt; is a 3rd party package, that allows you quickly enable caching
+of database requests almost without code changes. You can solve most of the caching cases just by setting up the package in
+&lt;code&gt;settings.py&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Let's check an example of simple cacheops usage. As a test project, I will use the
+&lt;a href="https://github.com/dizballanze/django-optimization-guide-2-sample"&gt;sample project&lt;/a&gt; from the previous part of this guide.&lt;/p&gt;
+&lt;p&gt;Cacheops is using Redis as a cache storage, so we need to setup Redis connection parameters in &lt;code&gt;settings.py&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHEOPS_REDIS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;"redis://localhost:6379/1"&lt;/span&gt;
+
+&lt;span class="n"&gt;INSTALLED_APPS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+    &lt;span class="s1"&gt;'cacheops'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="n"&gt;CACHEOPS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.*'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="s1"&gt;'*.*'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Just like that, we added caching of all databases requests from all models of &lt;code&gt;blog&lt;/code&gt; application for 15 minutes.
+As a bonus cacheops provides automatic cache invalidation for not only time-based but also event-based by setting up
+model signals of corresponding models.&lt;/p&gt;
+&lt;p&gt;If necessary, you can setup caching more accurate and specify it per model and per request type settings.
+Few examples:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHEOPS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.author'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache all queries to `Author` model for an hour&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.article'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'fetch'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache `Article` fetch queries for 10 minutes&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.article'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'get'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache `Article` get queries for 15 minutes&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.article'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'count'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache `Article` fetch queries for 3 hours&lt;/span&gt;
+    &lt;span class="s1"&gt;'*.*'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Besides that, cacheops also has several useful features:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;manual caching by &lt;code&gt;QuerySet&lt;/code&gt; method: &lt;code&gt;Article.objects.filter(tag=2).cache()&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;function results caching with bounding to models and automatic invalidation,&lt;/li&gt;
+&lt;li&gt;views caching with models bounding and automatic invalidation,&lt;/li&gt;
+&lt;li&gt;template fragments caching and more.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You should check out &lt;a href="https://github.com/Suor/django-cacheops/blob/master/README.rst"&gt;cacheops' README&lt;/a&gt; for details.&lt;/p&gt;
+&lt;h2 id="http-caching"&gt;HTTP caching&lt;/h2&gt;
+&lt;p&gt;If your project uses HTTP, you should consider using built-in cache capabilities in HTTP protocol. They allow cache
+results of safe requests (GET and HEAD) on a client (i.e. browser) and on intermediate proxy servers.&lt;/p&gt;
+&lt;p&gt;Caching control is performed by HTTP headers. You can setup these headers in application or web server (Nginx, Apache, etc).&lt;/p&gt;
+&lt;p&gt;Django provides several convenient middlewares and view decorators to control HTTP caching.&lt;/p&gt;
+&lt;h3 id="vary"&gt;Vary&lt;/h3&gt;
+&lt;p&gt;The &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary"&gt;&lt;code&gt;Vary&lt;/code&gt;&lt;/a&gt; header allows to specify a list of header names,
+which values will be used to create cache keys. Django provides view decorator
+&lt;a href="https://docs.djangoproject.com/en/1.11/topics/cache/#using-vary-headers"&gt;&lt;code&gt;vary_on_headers&lt;/code&gt;&lt;/a&gt; for control of this header.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.vary&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;vary_on_headers&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@vary_on_headers&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'User-Agent'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this case, different cache keys will be used for different values of &lt;code&gt;User-Agent&lt;/code&gt; header.&lt;/p&gt;
+&lt;h3 id="cache-control"&gt;Cache-Control&lt;/h3&gt;
+&lt;p&gt;The &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control"&gt;&lt;code&gt;Cache-Control&lt;/code&gt;&lt;/a&gt; header is used to control
+how caching is performed.
+&lt;a href="https://docs.djangoproject.com/en/1.11/topics/cache/#controlling-cache-using-other-headers"&gt;&lt;code&gt;cache_control&lt;/code&gt;&lt;/a&gt;
+view decorator allows setting this header directives.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache_control&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@cache_control&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;private&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;max_age&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;3600&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let's check out some &lt;code&gt;Cache-Contol&lt;/code&gt; directives:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;public&lt;/code&gt;, &lt;code&gt;private&lt;/code&gt; - allows or forbids caching in public caches (proxy servers, etc). This is an important directive
+because it allows securing private content that should be available only for specific users.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;no-cache&lt;/code&gt; - disables caching that makes a client to perform a request to the origin server.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;max-age&lt;/code&gt; - after that time (in seconds) cache is considered stale.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="last-modified-etag"&gt;Last-Modified &amp;amp; Etag&lt;/h3&gt;
+&lt;p&gt;HTTP protocol provides more complicated caching capabilities which allow verifying data freshness by the server with
+conditional requests. To make this capabilities work server should provide one or both of the following headers:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Last-Modified&lt;/code&gt; - date and time of last resource modification,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Etag&lt;/code&gt; - resource version identifier (hash or version number)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;After that, client should provide &lt;code&gt;If-Modified-Since&lt;/code&gt; and &lt;code&gt;If-None-Match&lt;/code&gt; headers on following requests.
+Server checks if the resource wasn't changed since the last request and returns 304 response without the body.
+This allows to perform repeated resource that loads only if it was changed. In this way it saves time and server resources.&lt;/p&gt;
+&lt;p&gt;Besides caching, described capabilities are used to precondition checking in unsafe requests (POST, PUT, etc).
+But this is beyond the topic of this guide.&lt;/p&gt;
+&lt;p&gt;Django provides several ways to control &lt;code&gt;ETag&lt;/code&gt; and &lt;code&gt;Last-Modified&lt;/code&gt; headers. The simplest one is to use
+&lt;code&gt;ConditionalGetMiddleware&lt;/code&gt;. This middleware based on view response adds &lt;code&gt;Etag&lt;/code&gt; header to all GET requests.
+Also, it checks request headers and returns 304 if the resource wasn't changed.&lt;/p&gt;
+&lt;p&gt;This approach has several drawbacks:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;middleware is applied to all views of the project, that sometimes isn't necessary,&lt;/li&gt;
+&lt;li&gt;it generates full response to get resource version, that requires lots of server resources,&lt;/li&gt;
+&lt;li&gt;it works only for GET requests.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;There is more accurate approach, you should use &lt;code&gt;condition&lt;/code&gt; view decorator, that allows specifying custom
+functions to generate &lt;code&gt;Etag&lt;/code&gt; and/or &lt;code&gt;Last-Modified&lt;/code&gt; headers. In this functions, you can use more effective
+approach of detecting resource version. You can just request one field from the database with no need to generate
+a full response.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# models.py&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Model&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+    &lt;span class="n"&gt;updated_at&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;DateTimeField&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;auto_now&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="c1"&gt;# views.py&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.http&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;condition&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_updated_at&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;updated_at&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values_list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'updated_at'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;flat&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;updated_at&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;updated_at&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@condition&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last_modified_func&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;author_updated_at&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;author_updated_at&lt;/code&gt; function performs simple database request, that returns resource's last update date. This is more
+efficient than fetching all necessary data from the database and rendering a template. After any changes to author
+are done the function returns new date that will lead to cache invalidation.&lt;/p&gt;
+&lt;h2 id="static-files-caching_1"&gt;Static files caching&lt;/h2&gt;
+&lt;p&gt;You should cache static files to speed up repeated pages loading. This will prevent browser from repeated loading of
+scripts, styles, images, etc.&lt;/p&gt;
+&lt;p&gt;Most likely you won't serve static files by Django in a production environment, because it's slow and unsafe.
+Usually, web server is used for this task, i.e. Nginx. Let's check out how to set up caching of static files with Nginx:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;# ...&lt;/span&gt;
+
+    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/static/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="kn"&gt;expires&lt;/span&gt; &lt;span class="s"&gt;360d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="kn"&gt;alias&lt;/span&gt; &lt;span class="s"&gt;/home/www/proj/static/&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/media/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="kn"&gt;expires&lt;/span&gt; &lt;span class="s"&gt;360d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="kn"&gt;alias&lt;/span&gt; &lt;span class="s"&gt;/home/www/proj/media/&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Where,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;/static/&lt;/code&gt; base path to static files, it's the same place where &lt;code&gt;collectstatic&lt;/code&gt; copies files,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/media/&lt;/code&gt; base path to user generated files.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this case, we cache all static for 360 days. It's important that URL of static files are changed when files are
+changed. This will lead to loading of a new version of the file. You can use GET parameters with version numbers:
+&lt;code&gt;script.js?version=123&lt;/code&gt;. But I prefer using &lt;a href="https://django-compressor.readthedocs.io/en/latest/"&gt;Django Compressor&lt;/a&gt;,
+that generates unique file names for all scripts and styles on each change.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Оптимизация производительности Django проектов (часть 3)</title><link href="/../ru/django-project-optimization-part-3/" rel="alternate"></link><published>2017-08-03T13:53:00+03:00</published><updated>2017-08-03T13:53:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-08-03:/../ru/django-project-optimization-part-3/</id><summary type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-1/"&gt;Часть 1. Профилирование и настройки Django&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Часть 3. Кэширование&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;В этой части серии мы рассмотрим важнейший подход к обеспечению высокой производительности - кэширование. Суть кэширования
+в том, чтобы размещать часто используемые данные в быстром хранилище для ускорения доступа к ним. Важно понять …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-1/"&gt;Часть 1. Профилирование и настройки Django&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Часть 3. Кэширование&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;В этой части серии мы рассмотрим важнейший подход к обеспечению высокой производительности - кэширование. Суть кэширования
+в том, чтобы размещать часто используемые данные в быстром хранилище для ускорения доступа к ним. Важно понять, что
+быстрое хранилище (например, оперативная память) часто имеет очень ограниченный объем и его нужно использовать для
+хранения только тех данных, которые с большой вероятностью будут запрошены.&lt;/p&gt;
+&lt;h2 id="kesh-freimvork-django"&gt;Кэш фреймворк Django&lt;/h2&gt;
+&lt;p&gt;Django предоставляет ряд средств для кэширования из коробки. Хранилище кэша настраивается при помощи словаря &lt;code&gt;CACHES&lt;/code&gt;
+в &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHES&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s2"&gt;"default"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="s2"&gt;"BACKEND"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"django.core.cache.backends.db.DatabaseCache"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s2"&gt;"LOCATION"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"my_cache_table"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Django предоставляет несколько встроенных бекендов для кэша, рассмотрим некоторые из них:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;DummyCache&lt;/code&gt; - ничего не кэширует, используется при разработке/тестировании, если нужно временно отключить кэширование,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DatabaseCache&lt;/code&gt; - хранит кэш в БД, не самый быстрый вариант, но может быть полезен для хранения результатов долгих
+вычислений или сложных SQL запросов,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MemcachedCache&lt;/code&gt; - использует &lt;a href="http://memcached.org/"&gt;Memcached&lt;/a&gt; в качестве хранилища, для использования этого бекенда
+вам понадобится поднять сервер(ы) Memcached.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Для использования в продакшене лучше всего подходит &lt;code&gt;MemcachedCache&lt;/code&gt; и в некоторых случаях может быть полезен &lt;code&gt;DatabaseCache&lt;/code&gt;.
+Также Django позволяет использовать сторонние бекенды, например, удачным вариантом может быть использование Redis в
+качестве хранилища для кэша. Redis &lt;a href="http://antirez.com/news/94"&gt;предоставляет больше возможностей&lt;/a&gt; чем Memcached и вы
+скорее всего и так уже используете его в вашем проекте. Вы можете установить пакет &lt;code&gt;django-redis&lt;/code&gt;
+и &lt;a href="http://niwinz.github.io/django-redis/latest/#_configure_as_cache_backend"&gt;настроить&lt;/a&gt; его как бекенд для вашего кэша.&lt;/p&gt;
+&lt;h3 id="keshirovanie-vsego-saita"&gt;Кэширование всего сайта&lt;/h3&gt;
+&lt;p&gt;Если на вашем сайте нет динамического контента, который часто меняется, то вы можете решить проблему кэширования
+просто - включив кэширование всего сайта. Для этого нужно добавить несколько настроек в &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;MIDDLEWARE&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="s1"&gt;'django.middleware.cache.UpdateCacheMiddleware'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+
+    &lt;span class="c1"&gt;# place all other middlewares here&lt;/span&gt;
+
+    &lt;span class="s1"&gt;'django.middleware.cache.FetchFromCacheMiddleware'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Key in `CACHES` dict&lt;/span&gt;
+&lt;span class="n"&gt;CACHE_MIDDLEWARE_ALIAS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'default'&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Additional prefix for cache keys&lt;/span&gt;
+&lt;span class="n"&gt;CACHE_MIDDLEWARE_KEY_PREFIX&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;''&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Cache key TTL in seconds&lt;/span&gt;
+&lt;span class="n"&gt;CACHE_MIDDLEWARE_SECONDS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;600&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;После добавления показанных выше middleware первым и последним в списке, все GET и HEAD запросы будут кэшироваться на
+указанное в параметре &lt;code&gt;CACHE_MIDDLEWARE_SECONDS&lt;/code&gt; время.&lt;/p&gt;
+&lt;p&gt;При необходимости вы даже можете програмно сбрасывать кэш:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.core.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;caches&lt;/span&gt;
+&lt;span class="n"&gt;cache&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;caches&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'default'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;# `default` is a key from CACHES dict in settings.py&lt;/span&gt;
+&lt;span class="n"&gt;ache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;clear&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Или можно сбросить кэш непосредственно в используемом хранилище. Например, для Redis:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ redis-cli -n &lt;span class="m"&gt;1&lt;/span&gt; FLUSHDB &lt;span class="c1"&gt;# 1 is a DB number specified in settings.py&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id="keshirovanie-view"&gt;Кэширование view&lt;/h3&gt;
+&lt;p&gt;Если в вашем случае не целесообразно кэшировать весь сайт, то вы можете включить кэширование только определенных view, которые
+создают наибольшую нагрузку. Для этого Django предоставляет декоратор &lt;code&gt;cache_page&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache_page&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@cache_page&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;600&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;'default'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;key_prefix&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;''&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;author&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;get_object_or_404&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;show_articles_link&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exists&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;render&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'blog/author.html'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;dict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;show_articles_link&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;show_articles_link&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cache_page&lt;/code&gt; принимает следующие параметры:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;первый обязательный аргумент задает TTL кэша в секундах,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;cache&lt;/code&gt; - ключ в словаре &lt;code&gt;CACHES&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key_prefix&lt;/code&gt; - префикс для ключей кэша.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Также этот декоратор можно применить в &lt;code&gt;urls.py&lt;/code&gt;, что удобно для Class-Based Views:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;urlpatterns&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;r&lt;/span&gt;&lt;span class="s1"&gt;'^$'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cache_page&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;600&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="n"&gt;ArticlesListView&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;as_view&lt;/span&gt;&lt;span class="p"&gt;()),&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;'articles_list'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Если часть контента сайта меняется в зависимости, например, от того какой пользователь аутентифицирован, то такой подход
+не подойдет. Для решения этой проблемы можно воспользоваться одним из вариантов описанных ниже.&lt;/p&gt;
+&lt;h3 id="keshirovanie-chasti-shablona"&gt;Кэширование части шаблона&lt;/h3&gt;
+&lt;p&gt;В предыдущей части этой серии статей было описано, что QuerySet объекты ленивые и SQL запросы не выполняются без
+крайней необходимости. Мы можем воспользоваться этим и закэшировать фрагменты шаблона, что позволит избежать SQL запросов
+на время жизни кэша. Для этого нужно воспользоваться тегом шаблона &lt;code&gt;cache&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;{% load cache %}
+
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Articles list&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h1&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Authors count: {{ authors_count }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Top authors&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+
+{% cache 500 top_author %}
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;ul&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    {% for author in top_authors %}
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;li&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ author.username }} ({{ author.articles_count }})&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;li&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    {% endfor %}
+&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;ul&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+{% endcache %}
+
+{% cache 500 articles_list %}
+{% for article in articles %}
+&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;article&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ article.title }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;h2&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;time&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ article.created_at }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;time&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Author: &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;a&lt;/span&gt; &lt;span class="na"&gt;href&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;"{% url 'author_page' username=article.author.username %}"&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;{{ article.author.username }}&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;a&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nt"&gt;p&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;Tags:
+    {% for tag in article.tags.all %}
+        {{ tag }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+&lt;span class="p"&gt;&amp;lt;/&lt;/span&gt;&lt;span class="nt"&gt;article&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt;
+{% endfor %}
+{% endcache %}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Результат добавления тегов &lt;code&gt;cache&lt;/code&gt; в шаблон (до и после соответственно):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="django-templates-caching-results" src="/media/2017/8/templates-caching.png"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cache&lt;/code&gt; принимает следующие аргументы:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;первый обязательный аргумент означает TTL кэша в секундах,&lt;/li&gt;
+&lt;li&gt;обязательное название фрагмента,&lt;/li&gt;
+&lt;li&gt;не обязательные дополнительные переменные, которые идентифицируют фрагмент по динамическим данным,&lt;/li&gt;
+&lt;li&gt;ключевой параметр &lt;code&gt;using='default'&lt;/code&gt;, должен соответствовать ключу словаря &lt;code&gt;CACHES&lt;/code&gt; в &lt;code&gt;settings.py&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Например, если нужно, чтобы для каждого пользователя фрагмент кэшировался отдельно, то нужно передать в тег &lt;code&gt;cache&lt;/code&gt;
+переменную которая идентифицирует пользователя:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;{% cache 500 personal_articles_list request.user.username %}
+    &lt;span class="c"&gt;&amp;lt;!-- ... --&amp;gt;&lt;/span&gt;
+{% %}
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;При необходимости можно передавать несколько таких переменных для создания ключей на основе комбинации их значений.&lt;/p&gt;
+&lt;h3 id="nizkourovnevoe-keshirovanie"&gt;Низкоуровневое кэширование&lt;/h3&gt;
+&lt;p&gt;Django предоставляет доступ к низкоуровневому API кэш фреймворка. Вы можете использовать его для
+сохранения/извлечения/удаления данных по определенному ключу в кэше. Рассмотрим небольшой пример:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.core.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;ArticlesListView&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ListView&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+
+    &lt;span class="o"&gt;...&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;get_context_data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;context&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;super&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_context_data&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;authors_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;authors_count&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;authors_count&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+            &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;authors_count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;authors_count&lt;/span&gt;
+        &lt;span class="o"&gt;...&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;В этом фрагменте кода мы проверяем, есть ли в кэше количество авторов, которое должно быть по ключу &lt;code&gt;authors_count&lt;/code&gt;.
+Если есть (&lt;code&gt;cache.get&lt;/code&gt; вернул не &lt;code&gt;None&lt;/code&gt;), то используем значение из кэша. Иначе запрашиваем значение из БД и сохраняем
+в кэш. Таким образом в течении времени жизни ключа в кэше мы больше не будем обращаться к БД.&lt;/p&gt;
+&lt;p&gt;Кроме результатов запросов к БД, также есть смысл кэшировать результаты сложных вычислений или обращения к внешним сервисам.
+Важно при этом учитывать, что данные могут изменится и в кэше будет устаревшая информация. Для того, чтобы минимизировать
+вероятность использования устаревших данных из кэша нужно:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;настроить адекватное TTL для кэша, которое бы соответствовало частоте изменения кэшируемых данных,&lt;/li&gt;
+&lt;li&gt;реализовать инвалидацию кэша.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Инвалидация кеша должна происходить по событию изменения данных. Рассмотрим, как можно реализовать инвалидацию для примера
+с количеством авторов:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.db.models.signals&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;post_delete&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;post_save&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.dispatch&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;receiver&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.core.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;clear_authors_count_cache&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;cache&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;delete&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'authors_count'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@receiver&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;post_delete&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_post_delete_handler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;clear_authors_count_cache&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@receiver&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;post_save&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_post_save_handler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;**&lt;/span&gt;&lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'created'&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+        &lt;span class="n"&gt;clear_authors_count_cache&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Были добавлены 2 обработчика сигналов: создание и удаление автора. Теперь при изменении количества авторов
+значение в кэше по ключу &lt;code&gt;authors_count&lt;/code&gt; будет сбрасываться и в view будет запрашиваться новое количество авторов из БД.&lt;/p&gt;
+&lt;h2 id="cached_property_1"&gt;cached_property&lt;/h2&gt;
+&lt;p&gt;Кроме кэш фреймворка Django также предоставляет возможность кэшировать обращение к функции прямо в памяти процесса.
+Такой вид кэша возможен только для методов не принимающих никаких параметров кроме &lt;code&gt;self&lt;/code&gt;. Такой кэш будет жить до тех
+пор пока существует соответствующий объект.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cached_property&lt;/code&gt; это декоратор входящий в Django. Результат применения его к методу, кроме кэширования, метод становится
+свойством и вызывается неявно без необходимости указания круглых скобок. Рассмотрим пример:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Model&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+
+    &lt;span class="n"&gt;username&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CharField&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;max_length&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;64&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;db_index&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;email&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;EmailField&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;bio&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;TextField&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="nd"&gt;@cached_property&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;articles_count&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Проверим как работает свойство &lt;code&gt;article_count&lt;/code&gt; с включенным логированием SQL:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;blog.models&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.002&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;SELECT&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"id"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"username"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"email"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"bio"&lt;/span&gt; &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt; &lt;span class="n"&gt;ORDER&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt; &lt;span class="s2"&gt;"blog_author"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"id"&lt;/span&gt; &lt;span class="n"&gt;ASC&lt;/span&gt; &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles_count&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.001&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;SELECT&lt;/span&gt; &lt;span class="n"&gt;COUNT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;"__count"&lt;/span&gt; &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="s2"&gt;"blog_article"&lt;/span&gt; &lt;span class="n"&gt;WHERE&lt;/span&gt; &lt;span class="s2"&gt;"blog_article"&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;"author_id"&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;142601&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;142601&lt;/span&gt;&lt;span class="p"&gt;,)&lt;/span&gt;
+&lt;span class="mi"&gt;28&lt;/span&gt;
+&lt;span class="o"&gt;&amp;gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;articles_count&lt;/span&gt;
+&lt;span class="mi"&gt;28&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Как вы видите, повторное обращение к свойству &lt;code&gt;article_count&lt;/code&gt; не вызывает SQL запрос. Но если мы создадим еще один
+экземпляр автора, то в нем это свойство не будет закэшированно, до того как мы впервые к нему обратимся, т.к. кэш в
+данном случае привязан к экземпляру класса &lt;code&gt;Author&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="cacheops"&gt;Cacheops&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://github.com/Suor/django-cacheops"&gt;django-cacheops&lt;/a&gt; это сторонний пакет, который позволяет очень быстро внедрить
+кэширование запросов к БД практически не меняя код проекта. Большую часть случаев можно решить просто задав ряд
+настроек этого пакета в &lt;code&gt;settings.py&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Рассмотрим на примере простой вариант использования этого пакета. В качестве тестового проекта будем использовать 
+&lt;a href="https://github.com/dizballanze/django-optimization-guide-2-sample"&gt;пример&lt;/a&gt; из прошлой части  серии.&lt;/p&gt;
+&lt;p&gt;Cacheops использует Redis в качестве хранилища кэша, в &lt;code&gt;settings.py&lt;/code&gt; нужно указать параметры подключения к серверу Redis.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHEOPS_REDIS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;"redis://localhost:6379/1"&lt;/span&gt;
+
+&lt;span class="n"&gt;INSTALLED_APPS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+    &lt;span class="s1"&gt;'cacheops'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="n"&gt;CACHEOPS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.*'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="s1"&gt;'*.*'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Вот так просто мы добавили кэширование всех запросов к моделям из приложения &lt;code&gt;blog&lt;/code&gt; на 15 минут. При этом cacheops
+автоматически настраивает инвалидацию кэша не только по времени, но и по событиям обновления данных, при помощи сигналов
+соответствующих моделей.&lt;/p&gt;
+&lt;p&gt;При необходимости можно настроить кэширование не только всех моделей приложения но и каждую модель отдельно и для разных
+запросов. Несколько примеров:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;CACHEOPS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.author'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache all queries to `Author` model for an hour&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.article'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'fetch'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache `Article` fetch queries for 10 minutes&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.article'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'get'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache `Article` get queries for 15 minutes&lt;/span&gt;
+    &lt;span class="s1"&gt;'blog.article'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'ops'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'count'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;  &lt;span class="c1"&gt;# cache `Article` fetch queries for 3 hours&lt;/span&gt;
+    &lt;span class="s1"&gt;'*.*'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;'timeout'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;60&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Кроме этого cacheops имеет ряд других функций, некоторые из них:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ручное кэширование &lt;code&gt;Article.objects.filter(tag=2).cache()&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;кэширование результатов выполнения функций с привязкой к модели и автоматической инвалидацией,&lt;/li&gt;
+&lt;li&gt;кэширование view с привязкой к модели и автоматической инвалидацией,&lt;/li&gt;
+&lt;li&gt;кэширование фрагментов шаблона и многое другое.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Рекомендую ознакомится с &lt;a href="https://github.com/Suor/django-cacheops/blob/master/README.rst"&gt;README cacheops&lt;/a&gt; чтобы узнать
+подробности.&lt;/p&gt;
+&lt;h2 id="http-keshirovanie"&gt;HTTP кэширование&lt;/h2&gt;
+&lt;p&gt;Если ваш проект использует HTTP, то кроме серверного кэширования вы также можете использовать встроенные в HTTP протокол
+механизмы кэширования. Они позволяют настроить кэширование результатов безопасных запросов (GET и HEAD) на клиенте
+(например, браузере) и на промежуточных прокси-серверах.&lt;/p&gt;
+&lt;p&gt;Управление кэшированием осуществляется при помощи HTTP заголовков. Установку этих заголовков можно настроить в приложении
+или, например, на web-сервере (Nginx, Apache, etc).&lt;/p&gt;
+&lt;p&gt;Django предоставляет middleware и несколько удобных декораторов для управления HTTP кэшем.&lt;/p&gt;
+&lt;h3 id="vary"&gt;Vary&lt;/h3&gt;
+&lt;p&gt;Заголовок &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Vary"&gt;&lt;code&gt;Vary&lt;/code&gt;&lt;/a&gt; позволяет задать список названий
+заголовков, значения в которых будут учитываться при создании ключа кэша. Django предоставляет view декоратор
+&lt;a href="https://docs.djangoproject.com/en/1.11/topics/cache/#using-vary-headers"&gt;&lt;code&gt;vary_on_headers&lt;/code&gt;&lt;/a&gt; для управления этим заголовком.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.vary&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;vary_on_headers&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@vary_on_headers&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'User-Agent'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;В данном случае, для разных значений заголовка &lt;code&gt;User-Agent&lt;/code&gt; будут разные ключи кэша.&lt;/p&gt;
+&lt;h3 id="cache-control"&gt;Cache-Control&lt;/h3&gt;
+&lt;p&gt;Заголовок &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control"&gt;&lt;code&gt;Cache-Control&lt;/code&gt;&lt;/a&gt; позволяет задавать
+различные параметры управляющие механизмом кэширования. Для задания этого заголовка можно использовать встроенный 
+в Django view декортатор
+&lt;a href="https://docs.djangoproject.com/en/1.11/topics/cache/#controlling-cache-using-other-headers"&gt;&lt;code&gt;cache_control&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.cache&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cache_control&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@cache_control&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;private&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;max_age&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;3600&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Рассмотрим некоторые директивы заголовка &lt;code&gt;Cache-Control&lt;/code&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;public&lt;/code&gt;, &lt;code&gt;private&lt;/code&gt; - разрешает или запрещает кэширование в публичном кэше (прокси серверах и тд). Это важные директивы,
+которые позволяют обезопасить приватный контент, который должен быть доступен только определенным пользователям.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;no-cache&lt;/code&gt; - отключает кэширование, что заставляет клиент делать запрос к серверу.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;max-age&lt;/code&gt; - время в секундах, после которого считается, что контент устарел и его нужно запросить заново.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="last-modified-etag"&gt;Last-Modified &amp;amp; Etag&lt;/h3&gt;
+&lt;p&gt;HTTP протокол предоставляет и более сложный механизм кэширования, который позволяет уточнять у сервера актуальна ли
+кэшированная версия контента при помощи условных запросов. Для работы этого механизма сервер должен отдавать следующие
+заголовки (один из них или оба):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Last-Modified&lt;/code&gt; - дата и время последнего изменения ресурса.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Etag&lt;/code&gt; - идентификатор версии ресурса (уникальный хэш или номер версии).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;После этого при повторном обращении к ресурсу клиент должен использовать заголовки &lt;code&gt;If-Modified-Since&lt;/code&gt; и &lt;code&gt;If-None-Match&lt;/code&gt;
+соответственно. В таком случае, если ресурс не изменился (исходя из значений Etag и/или Last-Modified), то сервер
+вернет статус 304 без тела ответа. Это позволяет выполнять повторную загрузку ресурса только в том случае, если он изменился
+и тем самым съекономить время и ресурсы сервера.&lt;/p&gt;
+&lt;p&gt;Кроме кэширования, описанные выше заголовки применяются для проверки предусловий в запросах изменяющих ресурс (POST, PUT и тд).
+Но обсуждение этого вопроса выходит за рамки данной статьи.&lt;/p&gt;
+&lt;p&gt;Django предоставляет несколько способов задания заголовков &lt;code&gt;Etag&lt;/code&gt; и &lt;code&gt;Last-Modified&lt;/code&gt;. Самый простой способ - использование
+&lt;code&gt;ConditionalGetMiddleware&lt;/code&gt;. Этот middleware добавляет заголовок &lt;code&gt;Etag&lt;/code&gt;, на основе ответа view, ко всем
+GET запросам приложения. Также он проверяет заголовки запроса и возвращает 304, если ресурс не изменился.&lt;/p&gt;
+&lt;p&gt;Этот подход имеет ряд недостатков:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;middleware применяется сразу ко всем view проекта, что не всегда нужно,&lt;/li&gt;
+&lt;li&gt;для проверки актуальности ресурса необходимо сгенерировать полный ответ view,&lt;/li&gt;
+&lt;li&gt;работает только для GET запросов.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Для тонкой настройки нужно применять декоратор &lt;code&gt;condition&lt;/code&gt;, который позволяет задавать кастомные функции для
+генерации заголовков &lt;code&gt;Etag&lt;/code&gt; и/или &lt;code&gt;Last-Modified&lt;/code&gt;. В этих функциях можно реализовать более экономный способ определения
+версии ресурса, например, на основе поля в БД, без необходимости генерации полного ответа view.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# models.py&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Author&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Model&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+    &lt;span class="n"&gt;updated_at&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;DateTimeField&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;auto_now&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="c1"&gt;# views.py&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;django.views.decorators.http&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;condition&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_updated_at&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;updated_at&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Author&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values_list&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'updated_at'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;flat&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;updated_at&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;updated_at&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;None&lt;/span&gt;
+
+
+&lt;span class="nd"&gt;@condition&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last_modified_func&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;author_updated_at&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;author_page_view&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;В функции &lt;code&gt;author_updated_at&lt;/code&gt; выполняется простой запрос БД, который возвращает дату последнего обновления ресурса,
+что требует значительно меньше ресурсов чем получение всех нужных данных для view из БД и рендеринг шаблона.
+При этом при изменении автора функция вернет новую дату, что приведет к инвалидации кэша.&lt;/p&gt;
+&lt;h2 id="keshirovanie-staticheskikh-failov_1"&gt;Кэширование статических файлов&lt;/h2&gt;
+&lt;p&gt;Для  ускорения повторной загрузки страниц рекомендуется включить кэширование статических файлов, чтобы браузер повторно
+не запрашивал те же скрипты, стили, картинки и тд.&lt;/p&gt;
+&lt;p&gt;В продакшн окружении вы скорее всего не будете отдавать статические файлы через Django, т.к. это медленно и не безопасно.
+Для этой задачи обычно используется Nginx или другой web-сервер. Рассмотрим как настроить кэширование статики на примере Nginx:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;server&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;# ...&lt;/span&gt;
+
+    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/static/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="kn"&gt;expires&lt;/span&gt; &lt;span class="s"&gt;360d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="kn"&gt;alias&lt;/span&gt; &lt;span class="s"&gt;/home/www/proj/static/&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="kn"&gt;location&lt;/span&gt; &lt;span class="s"&gt;/media/&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="kn"&gt;expires&lt;/span&gt; &lt;span class="s"&gt;360d&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="kn"&gt;alias&lt;/span&gt; &lt;span class="s"&gt;/home/www/proj/media/&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Где,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;/static/&lt;/code&gt; это базовый путь к статическим файлам, куда, в том числе, копируются файлы при выполнении &lt;code&gt;collectstatic&lt;/code&gt;,&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/media/&lt;/code&gt; базовый путь к файлам загружаемым пользователями.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;В данном примере мы кэшируем всю статику на 360 дней. Важно, чтобы при изменении какого-либо статического файла, его
+URL также изменялся, что приведет к загрузке новой версии файла. Для этого можно добавлять GET параметры к файлам с
+номером версии: &lt;code&gt;script.js?version=123&lt;/code&gt;. Но мне больше нравится использовать
+&lt;a href="https://django-compressor.readthedocs.io/en/latest/"&gt;Django Compressor&lt;/a&gt;, который кроме всего прочего, генерирует
+уникальное имя для скриптов и стилей при их изменении.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Django project optimization guide (part 2)</title><link href="/django-project-optimization-part-2/" rel="alternate"></link><published>2017-06-29T17:02:00+03:00</published><updated>2017-06-29T17:02:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-06-29:/django-project-optimization-part-2/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 2. Working with database&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Table of Contents:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#mass-edit"&gt;Mass edit&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#mass-insertion"&gt;Mass insertion&lt;/a&gt;&lt;/li&gt;
@@ -13,11 +787,13 @@
 &lt;li&gt;&lt;a href="#retrieving-of-related-objects"&gt;Retrieving of related objects&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#defer-fields-retrieving"&gt;Defer fields retrieving&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#database-indexes"&gt;Database indexes&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#count vs exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#Lazy QuerySet"&gt;Lazy QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count …&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Part 2. Working with database&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;This is the second part of Django project optimization series. The first part was …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Table of Contents:&lt;/p&gt;
+&lt;p&gt;Table of Contents:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#mass-edit"&gt;Mass edit&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#mass-insertion"&gt;Mass insertion&lt;/a&gt;&lt;/li&gt;
@@ -499,7 +1275,13 @@ on the list, not on &lt;code&gt;QuerySet&lt;/code&gt;. To limit authors in a SQL
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"/&gt;&lt;/p&gt;
 &lt;p&gt;As you can see, a size of a fetch is limited in the request: &lt;code&gt;...LIMIT 20&lt;/code&gt;. Also, DDT shows that &lt;code&gt;QuerySet&lt;/code&gt; deferred
-hitting the DB until template rendering.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Оптимизация производительности Django проектов (часть 2)</title><link href="/../ru/django-project-optimization-part-2/" rel="alternate"></link><published>2017-06-27T16:00:00+03:00</published><updated>2017-06-27T16:00:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-06-27:/../ru/django-project-optimization-part-2/</id><summary type="html">&lt;p&gt;Содержание:&lt;/p&gt;
+hitting the DB until template rendering.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Оптимизация производительности Django проектов (часть 2)</title><link href="/../ru/django-project-optimization-part-2/" rel="alternate"></link><published>2017-06-27T16:00:00+03:00</published><updated>2017-06-27T16:00:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-06-27:/../ru/django-project-optimization-part-2/</id><summary type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-1/"&gt;Часть 1. Профилирование и настройки Django&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Часть 2. Работа с базой данных&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Содержание:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#massovye-izmeneniia"&gt;Массовые изменения&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#massovaia-vstavka"&gt;Массовая вставка&lt;/a&gt;&lt;/li&gt;
@@ -514,11 +1296,13 @@ hitting the DB until template rendering.&lt;/p&gt;</content><category term="pyth
 &lt;li&gt;&lt;a href="#ogranichenie-polei-v-vyborkakh"&gt;Ограничение полей в выборках&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#indeksy-bd"&gt;Индексы БД&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#lenqs-vs-qscount"&gt;len(qs) vs qs.count&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count vs exists&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#lenivyi-queryset"&gt;Ленивый QuerySet&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#count-vs-exists"&gt;count …&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-1/"&gt;Часть 1. Профилирование и настройки Django&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Часть 2. Работа с базой данных&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Это продолжение серии статей про оптимизацию Django приложений. Первая часть доступна
-&lt;a href="/ru/django-project-optimization-part-1/"&gt;здесь&lt;/a&gt; и рассказывает …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Содержание:&lt;/p&gt;
+&lt;p&gt;Содержание:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="#massovye-izmeneniia"&gt;Массовые изменения&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#massovaia-vstavka"&gt;Массовая вставка&lt;/a&gt;&lt;/li&gt;
@@ -1014,9 +1798,20 @@ SQL запросом с &lt;code&gt;JOIN&lt;/code&gt;:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;img alt="DDT - get top authors slice on queryset" src="/media/2017/6/ddt-top-authors-qs-slice.png"/&gt;&lt;/p&gt;
 &lt;p&gt;Теперь размер выборки ограничивается в запросе: &lt;code&gt;...LIMIT 20&lt;/code&gt;. Также видно, что отправка запроса
-к БД была отложена до итерации по циклу в шаблоне.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Django project optimization guide (part 1)</title><link href="/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
-therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
-into performance problems. In this guide, I will try define …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+к БД была отложена до итерации по циклу в шаблоне.&lt;/p&gt;</content><category term="python"></category><category term="django"></category></entry><entry><title>Django project optimization guide (part 1)</title><link href="/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
+therefore reduces the price of it. When a project becomes large and …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/en/django-project-optimization-part-3/"&gt;Part 3. Caching&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django is a powerful framework used in many great projects. It provides many batteries, that speed up development and
 therefore reduces the price of it. When a project becomes large and is used by many users you inevitably will run
 into performance problems. In this guide, I will try define potential problems and how to fix them.&lt;/p&gt;
 &lt;p&gt;This is the first part of a series about Django performance optimization. It will cover profiling and Django settings.&lt;/p&gt;
@@ -1204,10 +1999,21 @@ To set up Redis as cache backend you need to use third-party package, e.g. &lt;c
 &lt;p&gt;Check the list of middlewares (&lt;code&gt;MIDDLEWARE&lt;/code&gt; in &lt;code&gt;settings.py&lt;/code&gt;). Make sure you need all of them and remove unneeded.
 Django calls each middleware for each processed request, so there can be significant overhead.&lt;/p&gt;
 &lt;p&gt;If you have custom middleware, that is used only in the segment of requests, you could try to move this functionality
-to view mixin or decorator. So other endpoints will not have an overhead of this middleware.&lt;/p&gt;</content><category term="python"></category><category term="django"></category><category term="performance"></category><category term="load testing"></category></entry><entry><title>Оптимизация производительности Django проектов (часть 1)</title><link href="/../ru/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/../ru/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+to view mixin or decorator. So other endpoints will not have an overhead of this middleware.&lt;/p&gt;</content><category term="python"></category><category term="django"></category><category term="performance"></category><category term="load testing"></category></entry><entry><title>Оптимизация производительности Django проектов (часть 1)</title><link href="/../ru/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/../ru/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Часть 1. Профилирование и настройки Django&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
 батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
-растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
-рассказать о том с какими проблемами …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
+растет и набирает …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Остальные статьи цикла:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Часть 1. Профилирование и настройки Django&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-2/"&gt;Часть 2. Работа с базой данных&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/ru/django-project-optimization-part-3/"&gt;Часть 3. Кэширование&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django это мощный фреймворк используемый в множестве отличных проектов. Из коробки в нем включено много полезных
 батареек, которые значительно ускоряют разработку и соответственно уменьшают ее стоимость. Однако, когда проект
 растет и набирает аудиторию, вы неизбежно столкнетесь с проблемами производительности. В этом посте я попробую
 рассказать о том с какими проблемами вы можете столкнуться и как их решить.&lt;/p&gt;
