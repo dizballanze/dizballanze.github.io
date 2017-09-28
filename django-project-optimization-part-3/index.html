@@ -301,9 +301,14 @@ model signals of corresponding models.</p>
 Few examples:</p>
 <div class="highlight"><pre><span></span><span class="n">CACHEOPS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">'blog.author'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'all'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>  <span class="c1"># cache all queries to `Author` model for an hour</span>
+
     <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'fetch'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">10</span><span class="p">},</span>  <span class="c1"># cache `Article` fetch queries for 10 minutes</span>
+    <span class="c1"># Or</span>
     <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'get'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">15</span><span class="p">},</span>  <span class="c1"># cache `Article` get queries for 15 minutes</span>
+    <span class="c1"># Or</span>
     <span class="s1">'blog.article'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'ops'</span><span class="p">:</span> <span class="s1">'count'</span><span class="p">,</span> <span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">3</span><span class="p">},</span>  <span class="c1"># cache `Article` fetch queries for 3 hours</span>
+
+    <span class="s1">'*.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>
     <span class="s1">'*.*'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'timeout'</span><span class="p">:</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span><span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
