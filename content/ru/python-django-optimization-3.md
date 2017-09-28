@@ -317,9 +317,13 @@ CACHEOPS = {
 ```python
 CACHEOPS = {
     'blog.author': {'ops': 'all', 'timeout': 60 * 60},  # cache all queries to `Author` model for an hour
+
     'blog.article': {'ops': 'fetch', 'timeout': 60 * 10},  # cache `Article` fetch queries for 10 minutes
+    # Or
     'blog.article': {'ops': 'get', 'timeout': 60 * 15},  # cache `Article` get queries for 15 minutes
+    # Or
     'blog.article': {'ops': 'count', 'timeout': 60 * 60 * 3},  # cache `Article` fetch queries for 3 hours
+
     '*.*': {'timeout': 60 * 60},
 }
 ```
