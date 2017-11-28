@@ -50,6 +50,7 @@ Some own projects made in WB-Tech:
 Last books I read
 ----------------
 
+- "The Rust Programming Language"
 - "No bullshit guide to linear algebra" Ivan Savov
 - "Make Your Own Neural Network" Tariq Rashid
 - "No bullshit guide to math and physics" Ivan Savov
