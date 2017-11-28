@@ -10,12 +10,11 @@ Hi, my name is Yuri Shikanov and I'am a software developer.
 
 I'm working at [WB-Tech](https://wbtech.pro/) from May 2011. My current position is Team Lead.
 
-
 Few technologies I worked with:
 ----------------------------------------
 
--   Python / C / Erlang 
--   Django / Flask / Celery
+-   Python / C / Erlang / Rust
+-   Django / Flask / Celery / Django REST Framework
 -   Node.JS / CoffeeScript / Express
 -   Socket.io / Faye / Crossbar.io
 -   SQL / Postgresql / MySQL 

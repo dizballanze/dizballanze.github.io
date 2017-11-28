@@ -13,8 +13,8 @@ Lang: ru
 Некоторые из используемых технологий/ЯП:
 ----------------------------------------
 
--   Python / C / Erlang 
--   Django / Flask / Celery
+-   Python / C / Erlang / Rust
+-   Django / Flask / Celery / Django REST Framework
 -   Node.JS / CoffeeScript / Express
 -   Socket.io / Faye / Crossbar.io
 -   SQL / Postgresql / MySQL 
