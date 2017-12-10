@@ -49,6 +49,7 @@ Some own projects made in WB-Tech:
 Last books I read
 ----------------
 
+- "Refactoring: Improving the Design of Existing Code" Martin Fowler
 - "The Rust Programming Language"
 - "No bullshit guide to linear algebra" Ivan Savov
 - "Make Your Own Neural Network" Tariq Rashid

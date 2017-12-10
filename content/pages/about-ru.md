@@ -49,6 +49,7 @@ Open Source проекты:
 Последние прочитанные книги:
 ---------------------
 
+- "Refactoring: Improving the Design of Existing Code" Martin Fowler
 - "The Rust Programming Language"
 - "No bullshit guide to linear algebra" Ivan Savov
 - "Make Your Own Neural Network" Tariq Rashid
