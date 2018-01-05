@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Обработка нестандартных HTTP методов в списках сущностей в Django Rest Framework</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">Author</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/drafts/django-rest-framework-delete-put-patch-actions-on-list-ru.html" rel="bookmark"
+         title="Permalink to Обработка нестандартных HTTP методов в списках сущностей в Django Rest Framework">Обработка нестандартных HTTP методов в списках сущностей в Django Rest Framework</a></h2>
+    <time class="published" datetime="2018-01-05T16:03:00+03:00"><nobr>05 янв 2018</nobr></time>
+  </header>
+  <div class="entry-content">
+    <p>Т.к. не смог сам нагуглить решение этого вопроса, решил написать небольшую заметка о том, как сделать обработку
+DELETE/PUT/PATCH запросов к списку сущностей через ViewSet в Django Rest Framework. По-умолчанияю, DRF ограничивает
+запросы к списку сущностей в ViewSet методами GET для получения списка и POST для создания сущности.</p>
+<p>За формирование списка маршрутов для ViewSet отвечает Router. Это происходит когда в <code>urls.py</code> вы пишите, что-то вроде:</p>
+<div class="highlight"><pre><span></span><span class="n">router</span> <span class="o">=</span> <span class="n">routers</span><span class="o">.</span><span class="n">DefaultRouter</span><span class="p">()</span>
+<span class="n">router</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="sa">r</span><span class="s1">'messages'</span><span class="p">,</span> <span class="n">MessagesViewSet</span><span class="p">,</span> <span class="n">base_name</span><span class="o">=</span><span class="s1">'messages'</span><span class="p">)</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">path</span><span class="p">(</span><span class="s1">'api/'</span><span class="p">,</span> <span class="p">(</span><span class="n">router</span><span class="o">.</span><span class="n">urls</span><span class="p">,</span> <span class="s1">'api'</span><span class="p">,</span> <span class="s1">'api'</span><span class="p">)),</span>
+<span class="p">]</span>
+</pre></div>
+<p>Список маршрутов строится из 2х частей:</p>
+<ul>
+<li>Заренее известных стандартных маршрутов, например, получение списка сущностей <code>GET /users/john-doe/messages</code> или
+удаление определенной сущности <code>DELETE /users/john-doe/messages/42</code>. </li>
+<li>Кастомных маршуртов заданных при помощи декораторов <code>@detail_route</code> и <code>@list_route</code>.</li>
+</ul>
+<p>Для того, чтобы добавить возможность обработки дополнительных HTTP методов к стандартным маршрутам viewset, нужно
+дополнить соответствие HTTP методов к методам ViewSet класса, которое определено в атрибуте <code>routes</code>
+класса <code>SimpleRouter</code>.</p>
+<p>Для примера добавим возможность выполнять DELETE запросы к списку сущностей. Это может быть удобно, если ViewSet
+отвечает за обработку дочерних сущностей к основной и мы хотим иметь возможность удаления всех дочерних сущностей
+одним HTTP запросом.</p>
+<p>Создадим подкласс <code>DefaultRouter</code> и переопределим в нем атрибут routes:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rest_framework</span> <span class="kn">import</span> <span class="n">routers</span>
+
+
+<span class="k">class</span> <span class="nc">MyRouter</span><span class="p">(</span><span class="n">routers</span><span class="o">.</span><span class="n">DefaultRouter</span><span class="p">):</span>
+
+    <span class="n">routes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">Route</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="sa">r</span><span class="s1">'^{prefix}{trailing_slash}$'</span><span class="p">,</span>
+            <span class="n">mapping</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">'get'</span><span class="p">:</span> <span class="s1">'list'</span><span class="p">,</span>
+                <span class="s1">'post'</span><span class="p">:</span> <span class="s1">'create'</span><span class="p">,</span>
+                <span class="s1">'delete'</span><span class="p">:</span> <span class="s1">'destroy_list'</span>
+            <span class="p">},</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">'{basename}-list'</span><span class="p">,</span>
+            <span class="n">initkwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">'suffix'</span><span class="p">:</span> <span class="s1">'List'</span><span class="p">}</span>
+        <span class="p">),</span>
+        <span class="n">DynamicListRoute</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="sa">r</span><span class="s1">'^{prefix}/{methodname}{trailing_slash}$'</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">'{basename}-{methodnamehyphen}'</span><span class="p">,</span>
+            <span class="n">initkwargs</span><span class="o">=</span><span class="p">{}</span>
+        <span class="p">),</span>
+        <span class="n">Route</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="sa">r</span><span class="s1">'^{prefix}/{lookup}{trailing_slash}$'</span><span class="p">,</span>
+            <span class="n">mapping</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">'get'</span><span class="p">:</span> <span class="s1">'retrieve'</span><span class="p">,</span>
+                <span class="s1">'put'</span><span class="p">:</span> <span class="s1">'update'</span><span class="p">,</span>
+                <span class="s1">'patch'</span><span class="p">:</span> <span class="s1">'partial_update'</span><span class="p">,</span>
+                <span class="s1">'delete'</span><span class="p">:</span> <span class="s1">'destroy'</span>
+            <span class="p">},</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">'{basename}-detail'</span><span class="p">,</span>
+            <span class="n">initkwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">'suffix'</span><span class="p">:</span> <span class="s1">'Instance'</span><span class="p">}</span>
+        <span class="p">),</span>
+        <span class="n">DynamicDetailRoute</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="sa">r</span><span class="s1">'^{prefix}/{lookup}/{methodname}{trailing_slash}$'</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">'{basename}-{methodnamehyphen}'</span><span class="p">,</span>
+            <span class="n">initkwargs</span><span class="o">=</span><span class="p">{}</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+</pre></div>
+<p>Здесь мы добавили новый маршрут <code>'delete': 'destroy_list'</code>, все остальное также как в родительском классе. В <code>urls.py</code>
+нужно заменить создание стандартного роутера на <code>MyRouter</code>. Теперь для обработки DELETE запросов на
+список сущностей нужно в ViewSet добавить метод <code>destroy_list</code>:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rest_framework</span> <span class="kn">import</span> <span class="n">viewsets</span><span class="p">,</span> <span class="n">status</span>
+
+
+<span class="k">class</span> <span class="nc">UsersMessagesViewSet</span><span class="p">(</span><span class="n">viewsets</span><span class="o">.</span><span class="n">ModelViewSet</span><span class="p">):</span>
+
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">destroy_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_queryset</span><span class="p">()</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">)</span>
+</pre></div>
+<p>В случае, если в ViewSet классе не будет этого метода на запросы будут просто возвращать
+<code>405 Method not allowed</code>.</p>
+<p>По аналогии можно добавить обработку PUT/PATCH в списки сущностей или даже других кастомных HTTP методов.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2017
+        </footer><!-- /#contentinfo -->
+</body>
+</html>
