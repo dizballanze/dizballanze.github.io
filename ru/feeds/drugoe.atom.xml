@@ -3193,32 +3193,4 @@ getInstance.&lt;/p&gt;
 &lt;p&gt;Как вы видите в PHP 5 есть все необходимые средства для написания
 объектно-ориентированных программ и соответственно использования
 шаблонов проектирования. В следующих топиках данного цикла я постараюсь
-рассмотреть основные шаблоны проектирования и их реализацию с учётом
-особенностей нашего любимого языка - PHP :)&lt;/p&gt;
-&lt;h2 id="navigatsiia-po-tsiklu"&gt;Навигация по циклу:&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;Базовые шаблоны&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="/PHP/gateway-shliuz/"&gt;Gateway (шлюз)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/PHP/special-case-osobyi-sluchai/"&gt;Special Case (особый случай)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Шаблоны генерации объектов&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="/PHP/singleton-odinochka/"&gt;Singleton (одиночка)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/PHP/factory-method-fabrichnyi-metod/"&gt;Factory Method (фабричный метод)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/PHP/abstract-factory-abstraktnaia-fabrika/"&gt;Abstract Factory (абстрактная фабрика)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/PHP/prototype-prototip/"&gt;Prototype (прототип)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/PHP/builder-stroitel/"&gt;Builder (строитель)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/PHP/lazy-initialization-otlozhennaia-initsializatsiia/"&gt;Lazy Initialization (отложенная инициализация)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Шаблоны корпоративных приложений&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="/PHP/registry-reestr/"&gt;Registry (реестр)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;</content><category term="PHP"></category><category term="ООП"></category><category term="Паттерны проектирования"></category></entry></feed>
+рассмотреть основные шаблоны проектирования и их реализацию.&lt;/p&gt;</content><category term="PHP"></category><category term="ООП"></category><category term="Паттерны проектирования"></category></entry></feed>
