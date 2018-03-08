@@ -1,4 +1,4 @@
-Title: Author
+Title: About
 Slug: about-me
 Date: 2017-06-14 18:57
 Author: Admin
@@ -49,6 +49,7 @@ Some own projects made in WB-Tech:
 Last books I read
 ----------------
 
+- "Undergraduate Probability" Richard F. Bass
 - "Refactoring: Improving the Design of Existing Code" Martin Fowler
 - "The Rust Programming Language"
 - "No bullshit guide to linear algebra" Ivan Savov

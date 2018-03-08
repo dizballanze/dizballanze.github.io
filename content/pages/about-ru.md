@@ -1,4 +1,4 @@
-Title: Автор
+Title: About
 Slug: about-me
 Date: 2010-11-25 16:32
 Author: Admin
@@ -49,6 +49,7 @@ Open Source проекты:
 Последние прочитанные книги:
 ---------------------
 
+- "Undergraduate Probability" Richard F. Bass
 - "Refactoring: Improving the Design of Existing Code" Martin Fowler
 - "The Rust Programming Language"
 - "No bullshit guide to linear algebra" Ivan Savov
