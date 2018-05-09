@@ -1,4 +1,4 @@
-Title: Pay attention to the coverage report
+Title: Pay attention to the code coverage report
 Slug: test-coverage-report-in-use
 Date: 2018-04-29 12:28
 Author: Admin
