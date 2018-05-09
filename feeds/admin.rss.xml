@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>Tech blog by @dizballanze - Admin</title><link>/</link><description></description><lastBuildDate>Wed, 14 Jun 2017 16:47:00 +0300</lastBuildDate><item><title>Django project optimization guide (part 1)</title><link>/django-project-optimization-part-1/</link><description>&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+<rss version="2.0"><channel><title>Tech blog by @dizballanze - Admin</title><link>/</link><description></description><lastBuildDate>Sun, 29 Apr 2018 12:28:00 +0300</lastBuildDate><item><title>Pay attention to the coverage report</title><link>/test-coverage-report-in-use/</link><description>&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
+look at code coverage report? If not too often, when …&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Admin</dc:creator><pubDate>Sun, 29 Apr 2018 12:28:00 +0300</pubDate><guid isPermaLink="false">tag:None,2018-04-29:/test-coverage-report-in-use/</guid></item><item><title>Django project optimization guide (part 1)</title><link>/django-project-optimization-part-1/</link><description>&lt;p&gt;Other parts of this guide:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
 &lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;

@@ -1,5 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/en/" rel="alternate"></link><link href="http://dizballanze.com/feeds/all.atom.xml" rel="self"></link><id>/en/</id><updated>2017-09-18T09:00:00+03:00</updated><entry><title>Django project optimization guide (part 3)</title><link href="/en/django-project-optimization-part-3/" rel="alternate"></link><published>2017-09-18T09:00:00+03:00</published><updated>2017-09-18T09:00:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-09-18:/en/django-project-optimization-part-3/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/en/" rel="alternate"></link><link href="http://dizballanze.com/feeds/all.atom.xml" rel="self"></link><id>/en/</id><updated>2018-04-29T12:28:00+03:00</updated><entry><title>Pay attention to the coverage report</title><link href="/en/test-coverage-report-in-use/" rel="alternate"></link><published>2018-04-29T12:28:00+03:00</published><updated>2018-04-29T12:28:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-04-29:/en/test-coverage-report-in-use/</id><summary type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
+look at code coverage report? If not too often, when …&lt;/p&gt;</summary><content type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
+look at code coverage report? If not too often, when this post is for you. I'll try to show you how code coverage
+report opens a lot of useful data for developers, which in the end allows improving code quality.&lt;/p&gt;
+&lt;h2 id="testing"&gt;Testing&lt;/h2&gt;
+&lt;h3 id="code-without-tests"&gt;Code without tests&lt;/h3&gt;
+&lt;p&gt;Most obvious benefit from code coverage report is an ability to detect which code isn't testing. Often this means that
+you need to add a test(s) for this code to make sure that it works properly. And which is no less important, that it
+will continue to work properly with further application development.&lt;/p&gt;
+&lt;p&gt;Sometimes you can think, that one or the other code section is too simple and can't have any bugs. Accordingly,
+you can avoid wasting time writing tests for it. In this moments you shouldn't forget, that code is changing and every
+change may cause &lt;a href="https://en.wikipedia.org/wiki/Software_regression"&gt;regression&lt;/a&gt;. Each test can save you from hours of
+debugging.&lt;/p&gt;
+&lt;h3 id="running-of-not-expected-code-bug"&gt;Running of not expected code bug&lt;/h3&gt;
+&lt;p&gt;Another case then a test passed but coverage report shows that code, that you expected to run, actually haven't run.&lt;/p&gt;
+&lt;p&gt;This may occur due to a bug in a test. Another function is used instead of the right one, which returns the same result.
+A bug like this leads to false sense of confidence, that code is working and regressions are tracked which isn't true.
+Finally, it may cause deploying of broken code to the production and you'll have a hard time to debug this.&lt;/p&gt;
+&lt;p&gt;The same result can be because of a bug in the code. For example, misconfigured web-application routing sends requests
+to the wrong method, which occasionally returns expected response. This may lead to deploying the broken code to the
+production and that would be hard to find this bug relying only on tests.&lt;/p&gt;
+&lt;p&gt;Reviewing code coverage report before sending changes to the repository, you can find such kind of bugs and prevent
+them before they cause damage, not to mention the time savings.&lt;/p&gt;
+&lt;h2 id="dead-code_1"&gt;Dead code&lt;/h2&gt;
+&lt;h3 id="unused-code"&gt;Unused code&lt;/h3&gt;
+&lt;p&gt;In some cases, code coverage report can help you to find code which isn't used anymore. For example, private methods,
+which aren't called anywhere.&lt;/p&gt;
+&lt;p&gt;There is nothing pleasant about wasting time on reading a dead code and trying to understand why it is needed. Code
+like this should be removed promptly. If you think you may need this code in future - still remove it. You can restore
+it from version control system if needed.&lt;/p&gt;
+&lt;h3 id="dead-code-in-tests"&gt;Dead code in tests&lt;/h3&gt;
+&lt;p&gt;Another less obvious example of dead code - dead code in tests. You can have a test method in which you're looping over
+a list of some objects and make asserts on each of them. If the list for some reason turns out to be empty, the test
+will pass although none of the asserts actually occur. This kind of bugs is easy to discover with code coverage report
+because loop body will be shown as not covered.&lt;/p&gt;
+&lt;h2 id="conclusion_1"&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Code coverage report is a very important tool for a developer. You should look into the report after each change.
+Ideally, this should be a part of your CI pipeline. If covered lines number was increased build should fail. Or at
+least you should get a warning about this. This allows to avoid many bugs and increase overall code health.&lt;/p&gt;</content></entry><entry><title>Обращайте внимание на отчет о покрытии кода тестами</title><link href="/en/../ru/test-coverage-report-in-use/" rel="alternate"></link><published>2018-04-29T12:28:00+03:00</published><updated>2018-04-29T12:28:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-04-29:/en/../ru/test-coverage-report-in-use/</id><summary type="html">&lt;p&gt;Если вы читаете этот пост, вы скорее всего, пишите юнит-тесты (и правильно делаете). Также с большой вероятностью
+вы знаете о метрике &lt;strong&gt;покрытие кода&lt;/strong&gt;, которая показывает какой код был выполнен в процессе тестирования.
+Но так ли часто вы заглядываете в отчет о покрытии кода? Если ответ отрицательный, то этот пост для …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Если вы читаете этот пост, вы скорее всего, пишите юнит-тесты (и правильно делаете). Также с большой вероятностью
+вы знаете о метрике &lt;strong&gt;покрытие кода&lt;/strong&gt;, которая показывает какой код был выполнен в процессе тестирования.
+Но так ли часто вы заглядываете в отчет о покрытии кода? Если ответ отрицательный, то этот пост для вас.
+Я постараюсь показать, как отчет о покрытии кода открывает для разработчика множество интересных и
+полезных данных, в конечном счете позволяющих улучшить качество кода.&lt;/p&gt;
+&lt;h2 id="testirovanie"&gt;Тестирование&lt;/h2&gt;
+&lt;h3 id="kod-bez-testov"&gt;Код без тестов&lt;/h3&gt;
+&lt;p&gt;Самой очевидной пользой от отчета о покрытии кода является возможность определить какой код не тестируется.
+Часто это означает, что вам нужно добавить тест(ы) для этого кода, чтобы убедиться, что он работает так, как ожидается
+и что не менее важно, что он продолжит корректно работать при дальнейшей развитии приложения.&lt;/p&gt;
+&lt;p&gt;Сейчас вам может показаться, что тот или иной участок кода слишком простой и ошибок в нем быть не может, соответственно
+можно не тратить время на написание тестов к нему. В такие моменты важно не забывать, что код меняется и каждое
+изменение может привести к &lt;a href="https://ru.wikipedia.org/wiki/%D0%A0%D0%B5%D0%B3%D1%80%D0%B5%D1%81%D1%81%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B5_%D1%82%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5"&gt;регрессии&lt;/a&gt;
+и написанный заранее тест, может сберечь часы потраченные на дебаг.&lt;/p&gt;
+&lt;h3 id="bag-pri-kotorom-ispolniaetsia-ne-ozhidaemyi-kod"&gt;Баг при котором исполняется не ожидаемый код&lt;/h3&gt;
+&lt;p&gt;Более редкий кейс, когда тест проходит, но отчет о покрытии кода показывает, что код, который ожидается, что будет
+выполнен, на самом деле не выполняется.&lt;/p&gt;
+&lt;p&gt;Это может быть из-за бага в тесте, вместо нужного метода вызывается другой, который возвращает такой же результат.
+Такая ошибка вызывает уверенность в том, что код работает и регрессии отслеживаются, хотя это не так.
+В итоге это может привести к попаданию багов на продакшн с вытекающими последствиями, а также к длительному
+процессу поиска ошибки.&lt;/p&gt;
+&lt;p&gt;Такой же результат может быть из-за бага в коде, например, роутинг веб-приложения настроен неправильно и запрос
+отправляется на другой метод, который по случайности возвращает ожидаемый результат. Это приводит к попаданию
+неработающего кода на продакшн и найти ошибку в таком случае довольно сложно, если опираться только на тесты.&lt;/p&gt;
+&lt;p&gt;Изучая отчет о покрытии кода перед отправкой изменений в репозиторий, позволяет достаточно быстро находить такие ошибки
+и исправлять их прежде чем они нанесут ущерб, не говоря уже об экономии времени.&lt;/p&gt;
+&lt;h2 id="mertvyi-kod_1"&gt;Мертвый код&lt;/h2&gt;
+&lt;h3 id="staryi-kod-kotoryi-uzhe-nigde-ne-ispolzuetsia"&gt;Старый код, который уже нигде не используется&lt;/h3&gt;
+&lt;p&gt;В некоторых случаях, отчет о покрытии может помочь выявить код, который уже нигде не используется. Например, приватные
+методы, которые больше нигде не вызываются, в том числе в тестах, т.к. тестировать нужно только публичный интерфейс.&lt;/p&gt;
+&lt;p&gt;Нет ничего приятного в трате времени на изучение кода, который в итоге оказывается мертвым. Такой код следует сразу же
+удалять, чтобы он не мешал дальнейшей поддержке приложения. Если вам кажется, что этот код может когда-то пригодиться -
+все равно удалите его, если он не нужен прямо сейчас. При необходимости достать этот код из системы контроля версий
+не составит труда.&lt;/p&gt;
+&lt;h3 id="mertvyi-kod-v-testakh"&gt;Мертвый код в тестах&lt;/h3&gt;
+&lt;p&gt;Еще один более хитрый пример мертвого кода - мертвый код в тестах. В цикле вы проходите по списку объектов и
+выполняете проверки на каждом из них. Если список по какой-то причине оказывается пустым - тест проходит, хотя
+ни одной проверки выполнено не было. Такие ошибки также легко найти при помощи отчета о покрытии кода, т.к. тело
+цикла будет показано как не покрытый код.&lt;/p&gt;
+&lt;h2 id="zakliuchenie_1"&gt;Заключение&lt;/h2&gt;
+&lt;p&gt;Отчет о покрытии кода является очень важным инструментом в руках разработчика. После каждого изменения нужно смотреть
+как изменится отчет. В идеале, это должно происходить автоматически и входить в CI pipeline. Если количество не
+покрытых строк увеличилось - билд должен падать или по крайней мере должно отправляться предупреждение об этом.
+Это позволит избежать ряда ошибок и в целом поддерживать код в более здоровом состоянии.&lt;/p&gt;</content></entry><entry><title>Django project optimization guide (part 3)</title><link href="/en/django-project-optimization-part-3/" rel="alternate"></link><published>2017-09-18T09:00:00+03:00</published><updated>2017-09-18T09:00:00+03:00</updated><author><name>Yuri Shikanov</name></author><id>tag:None,2017-09-18:/en/django-project-optimization-part-3/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="/en/django-project-optimization-part-1"&gt;Part 1. Profiling and Django settings&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;

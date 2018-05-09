@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Admin</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/admin.atom.xml" rel="self"></link><id>/</id><updated>2017-06-14T16:47:00+03:00</updated><entry><title>Django project optimization guide (part 1)</title><link href="/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze - Admin</title><link href="/" rel="alternate"></link><link href="http://dizballanze.com/feeds/admin.atom.xml" rel="self"></link><id>/</id><updated>2018-04-29T12:28:00+03:00</updated><entry><title>Pay attention to the coverage report</title><link href="/test-coverage-report-in-use/" rel="alternate"></link><published>2018-04-29T12:28:00+03:00</published><updated>2018-04-29T12:28:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-04-29:/test-coverage-report-in-use/</id><summary type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
+look at code coverage report? If not too often, when …&lt;/p&gt;</summary><content type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
+look at code coverage report? If not too often, when this post is for you. I'll try to show you how code coverage
+report opens a lot of useful data for developers, which in the end allows improving code quality.&lt;/p&gt;
+&lt;h2 id="testing"&gt;Testing&lt;/h2&gt;
+&lt;h3 id="code-without-tests"&gt;Code without tests&lt;/h3&gt;
+&lt;p&gt;Most obvious benefit from code coverage report is an ability to detect which code isn't testing. Often this means that
+you need to add a test(s) for this code to make sure that it works properly. And which is no less important, that it
+will continue to work properly with further application development.&lt;/p&gt;
+&lt;p&gt;Sometimes you can think, that one or the other code section is too simple and can't have any bugs. Accordingly,
+you can avoid wasting time writing tests for it. In this moments you shouldn't forget, that code is changing and every
+change may cause &lt;a href="https://en.wikipedia.org/wiki/Software_regression"&gt;regression&lt;/a&gt;. Each test can save you from hours of
+debugging.&lt;/p&gt;
+&lt;h3 id="running-of-not-expected-code-bug"&gt;Running of not expected code bug&lt;/h3&gt;
+&lt;p&gt;Another case then a test passed but coverage report shows that code, that you expected to run, actually haven't run.&lt;/p&gt;
+&lt;p&gt;This may occur due to a bug in a test. Another function is used instead of the right one, which returns the same result.
+A bug like this leads to false sense of confidence, that code is working and regressions are tracked which isn't true.
+Finally, it may cause deploying of broken code to the production and you'll have a hard time to debug this.&lt;/p&gt;
+&lt;p&gt;The same result can be because of a bug in the code. For example, misconfigured web-application routing sends requests
+to the wrong method, which occasionally returns expected response. This may lead to deploying the broken code to the
+production and that would be hard to find this bug relying only on tests.&lt;/p&gt;
+&lt;p&gt;Reviewing code coverage report before sending changes to the repository, you can find such kind of bugs and prevent
+them before they cause damage, not to mention the time savings.&lt;/p&gt;
+&lt;h2 id="dead-code_1"&gt;Dead code&lt;/h2&gt;
+&lt;h3 id="unused-code"&gt;Unused code&lt;/h3&gt;
+&lt;p&gt;In some cases, code coverage report can help you to find code which isn't used anymore. For example, private methods,
+which aren't called anywhere.&lt;/p&gt;
+&lt;p&gt;There is nothing pleasant about wasting time on reading a dead code and trying to understand why it is needed. Code
+like this should be removed promptly. If you think you may need this code in future - still remove it. You can restore
+it from version control system if needed.&lt;/p&gt;
+&lt;h3 id="dead-code-in-tests"&gt;Dead code in tests&lt;/h3&gt;
+&lt;p&gt;Another less obvious example of dead code - dead code in tests. You can have a test method in which you're looping over
+a list of some objects and make asserts on each of them. If the list for some reason turns out to be empty, the test
+will pass although none of the asserts actually occur. This kind of bugs is easy to discover with code coverage report
+because loop body will be shown as not covered.&lt;/p&gt;
+&lt;h2 id="conclusion_1"&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Code coverage report is a very important tool for a developer. You should look into the report after each change.
+Ideally, this should be a part of your CI pipeline. If covered lines number was increased build should fail. Or at
+least you should get a warning about this. This allows to avoid many bugs and increase overall code health.&lt;/p&gt;</content></entry><entry><title>Django project optimization guide (part 1)</title><link href="/django-project-optimization-part-1/" rel="alternate"></link><published>2017-06-14T16:47:00+03:00</published><updated>2017-06-14T16:47:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2017-06-14:/django-project-optimization-part-1/</id><summary type="html">&lt;p&gt;Other parts of this guide:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Part 1. Profiling and Django settings&lt;/li&gt;
 &lt;li&gt;&lt;a href="/en/django-project-optimization-part-2/"&gt;Part 2. Working with database&lt;/a&gt;&lt;/li&gt;

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Pay attention to the coverage report</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">About</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/test-coverage-report-in-use/" rel="bookmark"
+         title="Permalink to Pay attention to the coverage report">Pay attention to the coverage report</a></h2>
+    <time class="published" datetime="2018-04-29T12:28:00+03:00"><nobr>29 Apr 2018</nobr></time>
+  </header>
+  <div class="entry-content">
+    <p>If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+have heard about <strong>code coverage</strong> metric. Which shows what code has run during testing. But how often do you actually
+look at code coverage report? If not too often, when this post is for you. I'll try to show you how code coverage
+report opens a lot of useful data for developers, which in the end allows improving code quality.</p>
+<h2 id="testing">Testing</h2>
+<h3 id="code-without-tests">Code without tests</h3>
+<p>Most obvious benefit from code coverage report is an ability to detect which code isn't testing. Often this means that
+you need to add a test(s) for this code to make sure that it works properly. And which is no less important, that it
+will continue to work properly with further application development.</p>
+<p>Sometimes you can think, that one or the other code section is too simple and can't have any bugs. Accordingly,
+you can avoid wasting time writing tests for it. In this moments you shouldn't forget, that code is changing and every
+change may cause <a href="https://en.wikipedia.org/wiki/Software_regression">regression</a>. Each test can save you from hours of
+debugging.</p>
+<h3 id="running-of-not-expected-code-bug">Running of not expected code bug</h3>
+<p>Another case then a test passed but coverage report shows that code, that you expected to run, actually haven't run.</p>
+<p>This may occur due to a bug in a test. Another function is used instead of the right one, which returns the same result.
+A bug like this leads to false sense of confidence, that code is working and regressions are tracked which isn't true.
+Finally, it may cause deploying of broken code to the production and you'll have a hard time to debug this.</p>
+<p>The same result can be because of a bug in the code. For example, misconfigured web-application routing sends requests
+to the wrong method, which occasionally returns expected response. This may lead to deploying the broken code to the
+production and that would be hard to find this bug relying only on tests.</p>
+<p>Reviewing code coverage report before sending changes to the repository, you can find such kind of bugs and prevent
+them before they cause damage, not to mention the time savings.</p>
+<h2 id="dead-code_1">Dead code</h2>
+<h3 id="unused-code">Unused code</h3>
+<p>In some cases, code coverage report can help you to find code which isn't used anymore. For example, private methods,
+which aren't called anywhere.</p>
+<p>There is nothing pleasant about wasting time on reading a dead code and trying to understand why it is needed. Code
+like this should be removed promptly. If you think you may need this code in future - still remove it. You can restore
+it from version control system if needed.</p>
+<h3 id="dead-code-in-tests">Dead code in tests</h3>
+<p>Another less obvious example of dead code - dead code in tests. You can have a test method in which you're looping over
+a list of some objects and make asserts on each of them. If the list for some reason turns out to be empty, the test
+will pass although none of the asserts actually occur. This kind of bugs is easy to discover with code coverage report
+because loop body will be shown as not covered.</p>
+<h2 id="conclusion_1">Conclusion</h2>
+<p>Code coverage report is a very important tool for a developer. You should look into the report after each change.
+Ideally, this should be a part of your CI pipeline. If covered lines number was increased build should fail. Or at
+least you should get a warning about this. This allows to avoid many bugs and increase overall code health.</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2018
+        </footer><!-- /#contentinfo -->
+</body>
+</html>
