@@ -49,6 +49,7 @@ Open Source проекты:
 Последние прочитанные книги:
 ---------------------
 
+- "Scrum: a Breathtakingly Brief and Agile Introduction" Chris Sims, Hillary Louise Johnson
 - "Undergraduate Probability" Richard F. Bass
 - "Refactoring: Improving the Design of Existing Code" Martin Fowler
 - "The Rust Programming Language"
