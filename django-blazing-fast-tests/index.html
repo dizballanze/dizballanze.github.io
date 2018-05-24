@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="HandheldFriendly" content="true">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Blazing fast tests in Django</title>
+    <link rel="stylesheet" href="/theme/css/native.css" />
+    <link rel="stylesheet" type="text/css" href="/theme/css/main.css" />
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&amp;subset=cyrillic" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Mono&amp;subset=cyrillic" rel="stylesheet">
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-20497524-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+	
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+  "HTML-CSS": {
+  styles: {
+  ".MathJax .mo, .MathJax .mi": {color: "black ! important"}}
+  },
+  tex2jax: {inlineMath: [['$','$'], ['\\\\(','\\\\)']],processEscapes: true}
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body id="index" class="home">
+        <header id="banner" class="body">
+            <h1><a href="/">Tech blog by @dizballanze <strong></strong></a></h1>
+            <div id="langs">
+                <a href="/">En</a>
+                <a href="/ru/">Ru</a>
+            </div>
+        </header><!-- /#banner -->
+        <nav id="menu"><ul>
+            <li><a href="/about-me/">About</a></li>
+            <li><a href="https://wbtech.pro/">WB–Tech</a></li>
+            <li><a href="https://debugmail.io/">DebugMail</a></li>
+        </ul>
+        </nav><!-- /#menu -->
+<section id="content" class="body">
+  <header>
+    <h2 class="entry-title">
+      <a href="/django-blazing-fast-tests/" rel="bookmark"
+         title="Permalink to Blazing fast tests in Django">Blazing fast tests in Django</a></h2>
+    <time class="published" datetime="2018-05-24T11:27:00+03:00"><nobr>24 May 2018</nobr></time>
+  </header>
+  <div class="entry-content">
+    <p>Slow tests not only waste developers time on waiting but also make it difficult to follow TDD best practices
+(such as red-green testing). If it needs minutes or even longer to run test suit, it leads to infrequent whole suit run.
+Which in its turn leads to late bugs discovery and fix.</p>
+<p>In this post, I'll tell how to speed up tests of your Django application. Also, I'll describe what kills your tests
+performance. I will use simple tests suit as an example in this post. You can find it
+<a href="https://github.com/dizballanze/blazing-fast-django-tests-example/tree/initial">on GitHub</a>.</p>
+<h2 id="parallel-testing">Parallel testing</h2>
+<p>The most simple way to speed up tour tests without the need to make any code changes - run tests in parallel.
+Django provides <code>--parallel</code> option for running tests in parallel. This parameter also accepts an optional number of
+processes. If this number wasn't provided it uses processes count equal to count of processor cores. For most of the
+cases, this is optimal.</p>
+<p>Sequential running of tests from <a href="https://github.com/dizballanze/blazing-fast-django-tests-example/tree/initial">the example</a>
+on my machine:</p>
+<div class="highlight"><pre><span></span># python manage.py test
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 8.012s
+</pre></div>
+<p>Let's try to use <code>--parallel</code> option:</p>
+<div class="highlight"><pre><span></span># python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 2.628s
+</pre></div>
+<p>As you can see tests completed more than 3 times faster.</p>
+<blockquote>
+<p>It's worth noting that Django distributes execution of different test cases between different processes. Consequently,
+if you have fewer test cases then processor cores Django will decrease the count of processes to match count of test cases.
+In our example, we have only 3 test cases, so parallelism is limited to 3 processes. On real projects you probably
+have hundreds or even thousands of test cases and this problem won't touch you.</p>
+<p>In some cases Django can't collect tracebacks on tests failures in parallel mode. In that case, you need to re-run
+tests sequentially.</p>
+</blockquote>
+<h2 id="use-weak-passwords-hashing-algorithm">Use weak passwords hashing algorithm</h2>
+<p>By default, Django uses a computationally difficult algorithm for passwords hashing. Regularly in new Django versions,
+the hashing algorithm is reinforced. It needs for security, so intruder will need a lot of computing power to break passwords.</p>
+<p>We don't need such a strong algorithm in tests. We can go with something faster, such as MD5.
+Let's add switching to MD5 for tests to <code>settings.py</code>:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">TESTING</span> <span class="o">=</span> <span class="s1">'test'</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
+
+<span class="k">if</span> <span class="n">TESTING</span><span class="p">:</span>
+    <span class="n">PASSWORD_HASHERS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">'django.contrib.auth.hashers.MD5PasswordHasher'</span><span class="p">,</span>
+    <span class="p">]</span>
+</pre></div>
+<p>And run tests again:</p>
+<div class="highlight"><pre><span></span># python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.564s
+</pre></div>
+<p>4.65x times faster 🚀 I saw how this simple hack accelerated huge test suit by an order of magnitude.</p>
+<h2 id="create-data-only-when-we-need-it">Create data only when we need it</h2>
+<p>A frequent mistake that slows down tests execution is to have a base test case with huge <code>setUp</code> method that creates data
+for the whole test suit. At first sight, it may seem convenient, but it kills your tests performance because
+<strong>all</strong> data are created before <strong>each</strong> test no matter if you need them in this particular test or not.</p>
+<p>To fix this problem you need to simplify <code>setUp</code> method. Ideally fully remove <code>setUp</code> method from the base test case.
+Test data should be created in particular test cases only when they are needed.</p>
+<p>I added <a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/45d89a2ee690e5077a7d957acd77aa4ceb1c41b8">corresponding changes</a>
+to our example. Let's see how this will affect tests running time:</p>
+<div class="highlight"><pre><span></span># python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.353s
+</pre></div>
+<p>That's 60% more speed up.</p>
+<h2 id="setuptestdata">setUpTestData</h2>
+<p>Base Django test case allows creating test data on the level of the test case instead of the test method. This allows
+vastly accelerate tests execution. You need to move data creation to class method <code>setUpTestData</code>.</p>
+<blockquote>
+<p>Objects created in <code>setUpTestData</code> shouldn't change while test running because it can lead to instability due to
+not fully isolated tests.</p>
+</blockquote>
+<p>I added changes to the example
+<a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/5594cac4fd93c699b572f6946ce0a04ad96495f5">here</a>.
+Let's run tests again:</p>
+<div class="highlight"><pre><span></span># python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.349s
+</pre></div>
+<p>Seems that we don't get the significant speed up. Let's see what's happen if we add
+<a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/c865ff7f72b04a0f72e8edfe3c523f1ee00b923e">some more tests</a>.
+Without <code>setUpTestData</code> I get <code>0.536s</code> duration and with <code>setUpTestData</code> - <code>0.348s</code>. As you can see with <code>setUpTestData</code>
+duration doesn't grow on adding new tests (besides duration of running the test itself) because test data aren't created
+before each test.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>It's desirable to pay attention to the speed of the tests from the very beginning of the development. Using simple methods
+you can get very fast tests and get maximum benefit from automatic testing.</p>
+<p>live long and prosper 🖖</p>
+  </div>
+</section>
+        <footer id="contentinfo" class="body">
+            (c) 2010-2018
+        </footer><!-- /#contentinfo -->
+</body>
+</html>

@@ -1,5 +1,195 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/en/" rel="alternate"></link><link href="http://dizballanze.com/feeds/all.atom.xml" rel="self"></link><id>/en/</id><updated>2018-04-29T12:28:00+03:00</updated><entry><title>Pay attention to the code coverage report</title><link href="/en/test-coverage-report-in-use/" rel="alternate"></link><published>2018-04-29T12:28:00+03:00</published><updated>2018-04-29T12:28:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-04-29:/en/test-coverage-report-in-use/</id><summary type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Tech blog by @dizballanze</title><link href="/en/" rel="alternate"></link><link href="http://dizballanze.com/feeds/all.atom.xml" rel="self"></link><id>/en/</id><updated>2018-05-24T11:27:00+03:00</updated><entry><title>Blazing fast tests in Django</title><link href="/en/django-blazing-fast-tests/" rel="alternate"></link><published>2018-05-24T11:27:00+03:00</published><updated>2018-05-24T11:27:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-05-24:/en/django-blazing-fast-tests/</id><summary type="html">&lt;p&gt;Slow tests not only waste developers time on waiting but also make it difficult to follow TDD best practices
+(such as red-green testing). If it needs minutes or even longer to run test suit, it leads to infrequent whole suit run.
+Which in its turn leads to late bugs discovery …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Slow tests not only waste developers time on waiting but also make it difficult to follow TDD best practices
+(such as red-green testing). If it needs minutes or even longer to run test suit, it leads to infrequent whole suit run.
+Which in its turn leads to late bugs discovery and fix.&lt;/p&gt;
+&lt;p&gt;In this post, I'll tell how to speed up tests of your Django application. Also, I'll describe what kills your tests
+performance. I will use simple tests suit as an example in this post. You can find it
+&lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/tree/initial"&gt;on GitHub&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="parallel-testing"&gt;Parallel testing&lt;/h2&gt;
+&lt;p&gt;The most simple way to speed up tour tests without the need to make any code changes - run tests in parallel.
+Django provides &lt;code&gt;--parallel&lt;/code&gt; option for running tests in parallel. This parameter also accepts an optional number of
+processes. If this number wasn't provided it uses processes count equal to count of processor cores. For most of the
+cases, this is optimal.&lt;/p&gt;
+&lt;p&gt;Sequential running of tests from &lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/tree/initial"&gt;the example&lt;/a&gt;
+on my machine:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 8.012s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Let's try to use &lt;code&gt;--parallel&lt;/code&gt; option:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 2.628s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As you can see tests completed more than 3 times faster.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;It's worth noting that Django distributes execution of different test cases between different processes. Consequently,
+if you have fewer test cases then processor cores Django will decrease the count of processes to match count of test cases.
+In our example, we have only 3 test cases, so parallelism is limited to 3 processes. On real projects you probably
+have hundreds or even thousands of test cases and this problem won't touch you.&lt;/p&gt;
+&lt;p&gt;In some cases Django can't collect tracebacks on tests failures in parallel mode. In that case, you need to re-run
+tests sequentially.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="use-weak-passwords-hashing-algorithm"&gt;Use weak passwords hashing algorithm&lt;/h2&gt;
+&lt;p&gt;By default, Django uses a computationally difficult algorithm for passwords hashing. Regularly in new Django versions,
+the hashing algorithm is reinforced. It needs for security, so intruder will need a lot of computing power to break passwords.&lt;/p&gt;
+&lt;p&gt;We don't need such a strong algorithm in tests. We can go with something faster, such as MD5.
+Let's add switching to MD5 for tests to &lt;code&gt;settings.py&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="n"&gt;TESTING&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'test'&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;TESTING&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;PASSWORD_HASHERS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+        &lt;span class="s1"&gt;'django.contrib.auth.hashers.MD5PasswordHasher'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And run tests again:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.564s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;4.65x times faster 🚀 I saw how this simple hack accelerated huge test suit by an order of magnitude.&lt;/p&gt;
+&lt;h2 id="create-data-only-when-we-need-it"&gt;Create data only when we need it&lt;/h2&gt;
+&lt;p&gt;A frequent mistake that slows down tests execution is to have a base test case with huge &lt;code&gt;setUp&lt;/code&gt; method that creates data
+for the whole test suit. At first sight, it may seem convenient, but it kills your tests performance because
+&lt;strong&gt;all&lt;/strong&gt; data are created before &lt;strong&gt;each&lt;/strong&gt; test no matter if you need them in this particular test or not.&lt;/p&gt;
+&lt;p&gt;To fix this problem you need to simplify &lt;code&gt;setUp&lt;/code&gt; method. Ideally fully remove &lt;code&gt;setUp&lt;/code&gt; method from the base test case.
+Test data should be created in particular test cases only when they are needed.&lt;/p&gt;
+&lt;p&gt;I added &lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/45d89a2ee690e5077a7d957acd77aa4ceb1c41b8"&gt;corresponding changes&lt;/a&gt;
+to our example. Let's see how this will affect tests running time:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.353s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;That's 60% more speed up.&lt;/p&gt;
+&lt;h2 id="setuptestdata"&gt;setUpTestData&lt;/h2&gt;
+&lt;p&gt;Base Django test case allows creating test data on the level of the test case instead of the test method. This allows
+vastly accelerate tests execution. You need to move data creation to class method &lt;code&gt;setUpTestData&lt;/code&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Objects created in &lt;code&gt;setUpTestData&lt;/code&gt; shouldn't change while test running because it can lead to instability due to
+not fully isolated tests.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;I added changes to the example
+&lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/5594cac4fd93c699b572f6946ce0a04ad96495f5"&gt;here&lt;/a&gt;.
+Let's run tests again:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.349s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Seems that we don't get the significant speed up. Let's see what's happen if we add
+&lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/c865ff7f72b04a0f72e8edfe3c523f1ee00b923e"&gt;some more tests&lt;/a&gt;.
+Without &lt;code&gt;setUpTestData&lt;/code&gt; I get &lt;code&gt;0.536s&lt;/code&gt; duration and with &lt;code&gt;setUpTestData&lt;/code&gt; - &lt;code&gt;0.348s&lt;/code&gt;. As you can see with &lt;code&gt;setUpTestData&lt;/code&gt;
+duration doesn't grow on adding new tests (besides duration of running the test itself) because test data aren't created
+before each test.&lt;/p&gt;
+&lt;h2 id="conclusion"&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;It's desirable to pay attention to the speed of the tests from the very beginning of the development. Using simple methods
+you can get very fast tests and get maximum benefit from automatic testing.&lt;/p&gt;
+&lt;p&gt;live long and prosper 🖖&lt;/p&gt;</content></entry><entry><title>Быстрые тесты в Django</title><link href="/en/../ru/django-blazing-fast-tests/" rel="alternate"></link><published>2018-05-24T11:27:00+03:00</published><updated>2018-05-24T11:27:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-05-24:/en/../ru/django-blazing-fast-tests/</id><summary type="html">&lt;p&gt;Медленные тесты не только тратят время разработчиков на ожидание, но и усложняют следование лучших практик TDD
+(red-green testing). Когда тестовый набор выполняется несколько минут или дольше - это приводит к тому, что
+весь набор тестов запускают редко и баги, которые можно было бы исправить раньше и быстрее, откладываются.&lt;/p&gt;
+&lt;p&gt;В этом посте …&lt;/p&gt;</summary><content type="html">&lt;p&gt;Медленные тесты не только тратят время разработчиков на ожидание, но и усложняют следование лучших практик TDD
+(red-green testing). Когда тестовый набор выполняется несколько минут или дольше - это приводит к тому, что
+весь набор тестов запускают редко и баги, которые можно было бы исправить раньше и быстрее, откладываются.&lt;/p&gt;
+&lt;p&gt;В этом посте я расскажу как ускорить тесты вашего Django приложения и рассмотрю, что убивает скорость ваших тестов.
+В качестве примера буду использовать простой набор тестов, который вы можете найти
+&lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/tree/initial"&gt;на GitHub&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id="parallelnye-testy"&gt;Параллельные тесты&lt;/h2&gt;
+&lt;p&gt;Самый простой способ ускорить выполнение тестов без внесения каких-либо изменений в код - запуск тестов параллельно.
+Для этого в Django нужно задать параметр &lt;code&gt;--parallel&lt;/code&gt; при запуске тестов, также этот параметр принимает опционально
+количество процессов. Если количество процессов не задано - берется равное количеству ядер процессора, для большинства
+случаев это оптимально.&lt;/p&gt;
+&lt;p&gt;Последовательное выполнение тестов &lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/tree/initial"&gt;из примера&lt;/a&gt;
+на моей машине длится:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 8.012s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Если запустить с параметром &lt;code&gt;--parallel&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 2.628s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Тесты выполнились больше чем в 3 раза быстрее.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Стоит отметить, что Django распределяет выполнение различных тест кейсов (подклассов &lt;code&gt;unittest.TestCase&lt;/code&gt;) между
+разными процессами. Следовательно, если у вас тест кейсов меньше, чем количество ядер у процессора, то Django
+уменьшить количество процессов до количества тест кейсов. В нашем примере только 3 тест кейса, что ограничивает
+параллелизм 3мя процессами. На реальных проектах у вас как правило будут сотни или даже тысячи тест кейсов
+и эта проблема не будет актуальной.&lt;/p&gt;
+&lt;p&gt;Также при запуске тестов параллельно, Django иногда не может собрать трейсбеки ошибок, в случае ошибки вам придется
+перезапустить весь набор тестов последовательно.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id="ispolzovanie-slabogo-algoritma-kheshirovaniia-parolei"&gt;Использование слабого алгоритма хэширования паролей&lt;/h2&gt;
+&lt;p&gt;По-умолчанию, Django использует вычислительно сложный алгоритм хэширования паролей и регулярно в новых версиях Django
+этот алгоритм еще сильнее усложняется. Это нужно для безопасности, чтобы перебор паролей требовал огромного количества
+вычислительных ресурсов.&lt;/p&gt;
+&lt;p&gt;Для тестовых целей нам не нужен такой сложный алгоритм хэширования, мы можем использовать что-то быстрое, например, MD5.
+Добавим в &lt;code&gt;settings.py&lt;/code&gt; переключение на MD5 при запуске приложения в режиме тестирования:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="n"&gt;TESTING&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'test'&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;TESTING&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;PASSWORD_HASHERS&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+        &lt;span class="s1"&gt;'django.contrib.auth.hashers.MD5PasswordHasher'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Протестируем время выполнения тестов после этого изменения:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.564s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Быстрее в 4.65x раз 🚀 Я видел, как этот простой хак увеличивал скорость выполнения огромного набора теста на порядок.&lt;/p&gt;
+&lt;h2 id="sozdaem-dannye-kogda-oni-nuzhny"&gt;Создаем данные, когда они нужны&lt;/h2&gt;
+&lt;p&gt;Частой ошибкой, которая замедляет выполнение выполнение тестов является наличие базового тест кейса в котором
+создается огромное количество тестовых данных в &lt;code&gt;setUp&lt;/code&gt; методе, а все остальные тест кейсы наследуют от него.
+На первый взгляд этот подход может показаться удобным, но он полностью убивает скорость ваших тестов, т.к.
+перед запуском &lt;strong&gt;каждого&lt;/strong&gt; теста выполняется создание &lt;strong&gt;всех&lt;/strong&gt; данных, даже тех, которые не нужны в данном тесте.&lt;/p&gt;
+&lt;p&gt;Для решения этой проблемы нужно по максимуму упростить общий &lt;code&gt;setUp&lt;/code&gt; метод, в идеале лучше вообще удалить его. Создание
+тестовых данных же вынести в конкретные тест кейсы и создавать только те данные, которые действительно нужны.&lt;/p&gt;
+&lt;p&gt;Я внес &lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/45d89a2ee690e5077a7d957acd77aa4ceb1c41b8"&gt;соответствующие изменения&lt;/a&gt;
+в наш пример. Посмотрим как это отразится на времени выполнения тестов:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.353s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Еще на 60% быстрее.&lt;/p&gt;
+&lt;h2 id="setuptestdata"&gt;setUpTestData&lt;/h2&gt;
+&lt;p&gt;Базовый тест кейс Django предоставляет возможность создавать тестовые данные на уровне тест кейса, а не каждого теста.
+Это позволяет значительно ускорить выполнение тестов. Для этого нужно вынести создание данных в метод класса
+&lt;code&gt;setUpTestData&lt;/code&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Созданные в &lt;code&gt;setUpTestData&lt;/code&gt; объекты не должы меняться в процессе тестирования
+иначе это может привести к не стабильным тестам, т.к. тесты не будут полностью изолированными.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/5594cac4fd93c699b572f6946ce0a04ad96495f5"&gt;Здесь&lt;/a&gt;
+я добавил изменения в пример. Посмотрим на время выполнения тестов:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# python manage.py test --parallel
+...........
+----------------------------------------------------------------------
+Ran 11 tests in 0.349s
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Существенного преимущества мы не получили, но давайте проверим, что будет, если
+&lt;a href="https://github.com/dizballanze/blazing-fast-django-tests-example/commit/c865ff7f72b04a0f72e8edfe3c523f1ee00b923e"&gt;добавить еще несколько тестов&lt;/a&gt;.
+Без &lt;code&gt;setUpTestData&lt;/code&gt; я получил результат &lt;code&gt;0.563s&lt;/code&gt;, с &lt;code&gt;setUpTestData&lt;/code&gt; - &lt;code&gt;0.348s&lt;/code&gt;. Т.е. при использовании &lt;code&gt;setUpTestData&lt;/code&gt;
+при добавлении новых тестов время практически не растет (кроме времени выполнения самого теста), т.к. не нужно для
+каждого нового теста заново создавать данные.&lt;/p&gt;
+&lt;h2 id="zakliuchenie"&gt;Заключение&lt;/h2&gt;
+&lt;p&gt;Желательно с самого начала разработки обращать внимание на скорость выполнения тестов. Используя ряд не сложных методов
+вы можете добиться очень быстрого выполнения тестов и получать максимальную пользу от автоматического тестирования.&lt;/p&gt;
+&lt;p&gt;live long and prosper 🖖&lt;/p&gt;</content></entry><entry><title>Pay attention to the code coverage report</title><link href="/en/test-coverage-report-in-use/" rel="alternate"></link><published>2018-04-29T12:28:00+03:00</published><updated>2018-04-29T12:28:00+03:00</updated><author><name>Admin</name></author><id>tag:None,2018-04-29:/en/test-coverage-report-in-use/</id><summary type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
 have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
 look at code coverage report? If not too often, when …&lt;/p&gt;</summary><content type="html">&lt;p&gt;If you are reading this post, you probably write unit-tests (and that's a good thing). Also, with high probability you
 have heard about &lt;strong&gt;code coverage&lt;/strong&gt; metric. Which shows what code has run during testing. But how often do you actually
