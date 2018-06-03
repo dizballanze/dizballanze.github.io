@@ -27,6 +27,7 @@ Few technologies I worked with:
 Open Source projects:
 -------------
 
+-  [m00dbot](https://github.com/dizballanze/m00dbot) - Telegram bot for self-testing of anxiety and depression.
 -  [ngx_http_avatars_gen_module](https://github.com/dizballanze/ngx_http_avatars_gen_module) - generating avatars on-the-fly with Nginx.
 -  [hastable](https://github.com/dizballanze/hashtable) - async hash table server in C.
 -  [django-admin-env-notice](https://github.com/dizballanze/django-admin-env-notice) - package for visually distinguish environments in Django Admin

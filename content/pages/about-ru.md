@@ -27,6 +27,7 @@ Lang: ru
 Open Source проекты:
 -------------
 
+-  [m00dbot](https://github.com/dizballanze/m00dbot) - Telegram бот для тестирования тревоги и депрессии.
 -  [ngx_http_avatars_gen_module](https://github.com/dizballanze/ngx_http_avatars_gen_module) - generating avatars on-the-fly with Nginx.
 -  [hastable](https://github.com/dizballanze/hashtable) - async hash table server in C.
 -  [django-admin-env-notice](https://github.com/dizballanze/django-admin-env-notice) - пакет для того чтобы визуально различать окружения в Django Admin.
