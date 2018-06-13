@@ -50,6 +50,7 @@ Some own projects made in WB-Tech:
 Last books I read
 ----------------
 
+- "Kanban: Successful Evolutionary Change for Your Technology Business" David J. Anderson
 - "Scrum: a Breathtakingly Brief and Agile Introduction" Chris Sims, Hillary Louise Johnson
 - "Undergraduate Probability" Richard F. Bass
 - "Refactoring: Improving the Design of Existing Code" Martin Fowler
